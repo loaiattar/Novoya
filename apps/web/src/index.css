@@ -1,0 +1,71 @@
+:root {
+  --text: #3d3a44;
+  --text-strong: #0e0c12;
+  --bg: #ffffff;
+  --border: #e5e4e7;
+  --ok: #157a3c;
+  --error: #b42318;
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #c9c6cf;
+    --text-strong: #f5f4f7;
+    --bg: #121015;
+    --border: #2c2a31;
+    --ok: #4ade80;
+    --error: #f87171;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+h1 {
+  color: var(--text-strong);
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+
+.app-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  color: var(--text-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.api-status {
+  list-style: none;
+  padding: 0;
+}
+
+.api-status [data-state='ok'] {
+  color: var(--ok);
+}
+
+.api-status [data-state='error'] {
+  color: var(--error);
+}

@@ -1,0 +1,53 @@
+name: API
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths: ["apps/api/**", ".github/workflows/api.yml"]
+  push:
+    branches: [main, dev]
+    paths: ["apps/api/**", ".github/workflows/api.yml"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/api
+
+jobs:
+  checks:
+    name: API checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: novoya
+          POSTGRES_PASSWORD: novoya
+          POSTGRES_DB: novoya
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U novoya -d novoya"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      NOVOYA_DATABASE_URL: postgresql+asyncpg://novoya:novoya@localhost:5432/novoya
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.1"
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Tests
+        run: uv run pytest
+      - name: Migrations apply
+        run: uv run alembic upgrade head
+      - name: openapi.json is up to date
+        run: |
+          uv run python -m novoya_api.openapi > /tmp/openapi.json
+          diff -u openapi.json /tmp/openapi.json || {
+            echo "::error::apps/api/openapi.json is out of date. Run: uv run python -m novoya_api.openapi > openapi.json"
+            exit 1
+          }
