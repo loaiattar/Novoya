@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from novoya_api.config import get_settings
-from novoya_api.models import Base
+from novoya_api.infrastructure.db.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

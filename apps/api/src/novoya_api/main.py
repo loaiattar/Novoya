@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from novoya_api.config import get_settings
-from novoya_api.routers import health
+from novoya_api.presentation.http.routers import health
 
 
 def create_app() -> FastAPI:

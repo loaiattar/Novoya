@@ -3,8 +3,8 @@ from collections.abc import AsyncIterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from novoya_api.db import get_session
 from novoya_api.main import create_app
+from novoya_api.presentation.http.dependencies import get_database_probe
 
 
 @pytest.fixture
@@ -25,14 +25,11 @@ async def test_health_is_ok(client):
 
 
 async def test_db_health_returns_503_when_database_fails(app, client):
-    class BrokenSession:
-        async def execute(self, *args, **kwargs):
+    class BrokenProbe:
+        async def ping(self) -> None:
             raise ConnectionError("database down")
 
-    async def broken_session():
-        yield BrokenSession()
-
-    app.dependency_overrides[get_session] = broken_session
+    app.dependency_overrides[get_database_probe] = BrokenProbe
     response = await client.get("/health/db")
     assert response.status_code == 503
     assert response.json() == {"status": "error"}
