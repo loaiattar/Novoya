@@ -22,7 +22,7 @@ docker compose up --build
 
 If a port is already taken on your machine, override it: `API_PORT=8001 docker compose up`.
 
-To work without Docker, see [apps/api](apps/api/README.md) and [apps/web](apps/web/README.md). The architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and the frontend is explained in [docs/FRONTEND.md](docs/FRONTEND.md).
+To work without Docker, see [apps/api](apps/api/README.md) and [apps/web](apps/web/README.md). The architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and the backend's Clean Architecture is explained in [docs/BACKEND.md](docs/BACKEND.md).
 
 ## Contributing
 

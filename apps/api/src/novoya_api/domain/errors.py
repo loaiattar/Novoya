@@ -12,5 +12,9 @@ class NotFound(DomainError):
     """The requested object does not exist, or the caller may not see it."""
 
 
+class PermissionDenied(DomainError):
+    """The caller is known but may not do this, for example a client calling an agent action."""
+
+
 class InvalidTransition(DomainError):
     """A status change that the rules do not allow, for example quoting a plan twice."""
