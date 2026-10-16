@@ -64,39 +64,46 @@ flowchart LR
 | Part | Tech | Job |
 |---|---|---|
 | `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing, partners and offers) |
-| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Clean Architecture: domain, use cases, adapters (database, LLM, PDF, email, Google sign-in) and the REST API |
+| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Modular monolith with Clean Architecture: accounts, catalog, wishes, planning and quoting modules, each with domain, use cases, adapters and REST endpoints |
 | Database | PostgreSQL | Users, partners and offers, wishes, plans, quotes |
 | LLM | OpenRouter, called with the OpenAI Python SDK | Check coverage, build the panel, write the plan |
 
 There is no worker, no queue and no MCP server in this version. Nothing runs in the background: every AI call happens during a request and takes a few seconds.
 
-### Backend layers: Clean Architecture
+### Backend: modules + Clean Architecture
 
-The backend follows Clean Architecture. It has four layers, and source code dependencies only point inward:
+The backend is a modular monolith: one application and one database, split by business module, with the same Clean Architecture layers inside every module.
+
+| Module | Owns |
+|---|---|
+| `accounts` | Users, Google sign-in, client and agent roles, language, deleting an account |
+| `catalog` | Partners, offers, covered destinations |
+| `wishes` | The wish, the coverage check, the preference panel |
+| `planning` | The plan built from offers, its status machine, the agent's negotiation |
+| `quoting` | The quote: total, validity, PDF, email, accept or reject |
+| `shared` | Domain errors, common value objects, database session, LLM client |
+
+Inside each module, source code dependencies only point inward:
 
 ```mermaid
 flowchart LR
-  P[presentation<br/>FastAPI routers, schemas] --> A
-  I[infrastructure<br/>SQLAlchemy, OpenRouter,<br/>WeasyPrint, SMTP, Google] --> A
+  P[presentation<br/>FastAPI router, schemas] --> A
+  I[infrastructure<br/>tables, SQLAlchemy, OpenRouter,<br/>WeasyPrint, SMTP, Google] --> A
   A[application<br/>use cases + ports] --> D[domain<br/>entities, rules]
 ```
 
-| Layer | Holds | Knows about |
-|---|---|---|
-| Domain | Entities (User, Partner, Offer, Wish, Plan, Quote), value objects (Money, DateRange, Tag), business rules such as the allowed plan status changes, domain errors | Nothing else. Pure Python |
-| Application | One use case per user action (`send_wish`, `generate_plan`, `request_quote`, `send_quote`, `decide_quote`...) and the ports they need: `PlanRepository`, `PlanGenerator`, `QuoteRenderer`, `QuoteNotifier`... | Domain |
-| Infrastructure | Adapters that implement the ports: SQLAlchemy repositories, the OpenRouter client and travel tools, the WeasyPrint PDF, the SMTP email, Google OAuth | Application, domain |
-| Presentation | FastAPI routers and Pydantic schemas. They turn a request into a use case call, and a result or a domain error into a response | Application, domain |
+- **Domain**: entities and business rules, such as the plan's allowed status changes. Pure Python.
+- **Application**: one use case per user action and the ports (interfaces) it needs.
+- **Infrastructure**: adapters that implement the ports with real tools, and the module's tables.
+- **Presentation**: the module's FastAPI router and schemas, and its composition root that plugs adapters into use cases.
 
-The composition root (`main.py` and `presentation/http/dependencies.py`) plugs the adapters into the use cases. What this buys us:
+Modules talk to each other only through a small `public.py`. A use case that needs another module declares a port, and an adapter in its infrastructure calls the other module's `public.py`. So each module can change its internals freely, and one developer can own a module.
 
-- Business rules are tested without a database, a web server or an LLM, with fake ports.
-- Changing a tool touches one adapter. Switching LLM model or provider changes `infrastructure/llm` only; moving from SMTP to an email API changes `infrastructure/email` only.
-- A test (`tests/test_architecture.py`) reads every import and fails in CI if a layer breaks the rule, so the structure stays clean over time.
+A test (`tests/test_architecture.py`) reads every import and fails in CI if a layer or a module breaks these rules. The full explanation is in [BACKEND.md](BACKEND.md).
 
 ### Travel tools, in-process
 
-The agent orchestrator gives the LLM two tools through the `tools` parameter (tool calling). They are plain Python functions in `apps/api` (`infrastructure/llm/tools`) that read the catalog through the `OfferRepository` port:
+The agent orchestrator gives the LLM two tools through the `tools` parameter (tool calling). They are plain Python functions in the `planning` module (`infrastructure/llm/tools.py`) that read the catalog through `catalog.public`:
 
 - `covered_destinations()`: the countries and cities where at least one partner is active.
 - `search_offers(destination, tags, persons, dates)`: active offers that match.
@@ -247,15 +254,20 @@ novoya/
     web/                     React + TanStack (pnpm)
     api/                     FastAPI (uv)
       src/novoya_api/
-        domain/              entities, value objects, rules, errors
-        application/         use_cases/, ports/
-        infrastructure/      db/, llm/, pdf/, email/, auth/
-        presentation/http/   routers/, schemas/, dependencies.py
-        main.py              composition root
-      tests/                 unit tests with fake ports, API tests, test_architecture.py
+        accounts/ catalog/ wishes/ planning/ quoting/
+          public.py          what other modules may use
+          domain/            entities, rules
+          application/       use_cases/, ports/
+          infrastructure/    db/models.py, adapters
+          presentation/http/ router.py, schemas.py, dependencies.py
+        health/              the complete example module
+        shared/              errors, value objects, db session, LLM client
+        main.py              includes each module's router
+      tests/                 fake-port unit tests, API tests, test_architecture.py
       alembic/               migrations
   docs/
     ARCHITECTURE.md
+    BACKEND.md               the backend architecture in detail
     adr/                     one file per decision (0001-use-fastapi.md ...)
   docker-compose.yml         postgres, api, web, mailpit
   .github/workflows/         branch rules, lint + tests per app
