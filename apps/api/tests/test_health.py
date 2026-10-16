@@ -3,8 +3,8 @@ from collections.abc import AsyncIterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from novoya_api.health.presentation.http.dependencies import get_database_probe
 from novoya_api.main import create_app
-from novoya_api.presentation.http.dependencies import get_database_probe
 
 
 @pytest.fixture

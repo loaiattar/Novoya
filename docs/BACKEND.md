@@ -1,190 +1,175 @@
 # Novoya backend architecture
 
-This page explains how the backend in `apps/api` is built: its layers, where each piece of code goes, and the rules that keep it clean. The product, the data model and the API list are in [ARCHITECTURE.md](ARCHITECTURE.md).
+This page explains how the backend in `apps/api` is built: its modules, the layers inside each module, where each piece of code goes, and the rules that keep it clean. The product, the data model and the API list are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## 1. Clean Architecture in one rule
+## 1. Modules, then layers
 
-The backend follows Clean Architecture. The code is split into four layers, and **source code dependencies only point inward**:
+The backend is a **modular monolith built with Clean Architecture**. One application, one database, one deployment, organised in two directions:
+
+- **Vertically, by business module.** Each module owns one part of Novoya: its entities, its rules, its tables and its endpoints.
+- **Horizontally, by Clean Architecture layer, inside every module.** Source code dependencies only point inward.
 
 ```mermaid
-flowchart LR
-  P[Presentation<br/>FastAPI routers, schemas] --> A
-  I[Infrastructure<br/>SQLAlchemy, OpenRouter,<br/>WeasyPrint, SMTP, Google OAuth] --> A
-  A[Application<br/>use cases + ports] --> D[Domain<br/>entities, business rules]
+flowchart TB
+  subgraph M[Each module]
+    direction LR
+    P[presentation<br/>FastAPI router, schemas] --> A
+    I[infrastructure<br/>tables, adapters] --> A
+    A[application<br/>use cases + ports] --> D[domain<br/>entities, rules]
+  end
 ```
 
-The inner layers hold what Novoya *is*: a travel agency that builds plans from partner offers and sends negotiated quotes. The outer layers hold *how* it is delivered today: a web API, PostgreSQL, an LLM from OpenRouter, a PDF library, an SMTP server. Those tools can change without touching the business rules.
-
-How the inner layers use outer tools without importing them: the application layer declares **ports** (interfaces) for what it needs, such as "save a plan" or "render a quote". The infrastructure layer provides **adapters** that implement those ports with real tools. The **composition root** plugs adapters into use cases when a request arrives.
-
-| Layer | Holds | May import |
+| Module | Owns | Issues |
 |---|---|---|
-| Domain | Entities, value objects, business rules, domain errors | The domain and the Python standard library only |
-| Application | Use cases (one per user action) and ports | Domain |
-| Infrastructure | Adapters: database, LLM, PDF, email, Google sign-in | Application, domain, config |
-| Presentation | FastAPI routers, Pydantic schemas, the composition root | Application, domain; infrastructure only in the composition root |
+| `accounts` | Users, Google sign-in, the client and agent roles, the language, deleting an account | #15, #49, #46 |
+| `catalog` | Partners, offers, covered destinations | #17, #18, #20, #21 |
+| `wishes` | The client's wish, the coverage check, the preference panel and its answers | #23, #25, #28 |
+| `planning` | The plan built from offers and its status machine, the agent's negotiation (queue, prices) | #29, #50, #51 |
+| `quoting` | The quote: total, validity, PDF, email, the client's accept or reject | #52, #53, #54 |
+| `health` | Is the API up, does the database answer. The worked example to copy | done |
+| `shared` | The shared kernel: domain errors, common value objects, the database session, the LLM client | |
 
-`tests/test_architecture.py` checks these rules on every import, in CI (section 8).
+Why both: layers keep business rules independent from tools (FastAPI, PostgreSQL, OpenRouter, WeasyPrint, SMTP). Modules keep each part of the business in one folder, so one developer can own a module and conflicts stay rare.
 
 ## 2. Folders
 
 ```
-apps/api/
-  src/novoya_api/
-    main.py                     creates the FastAPI app, includes the routers
-    config.py                   settings from NOVOYA_* environment variables
-    openapi.py                  prints openapi.json for the frontend
+apps/api/src/novoya_api/
+  main.py              creates the FastAPI app and includes each module's router
+  config.py            settings from NOVOYA_* environment variables
+  openapi.py           prints openapi.json for the frontend
 
-    domain/
-      entities/                 User, Partner, Offer, Wish, Plan, PlanItem, Quote
-      value_objects/            Money, DateRange, Tag, Destination, Panel
-      errors.py                 DomainError, NotFound, InvalidTransition, PermissionDenied
-
+  accounts/  catalog/  wishes/  planning/  quoting/  health/
+    public.py          the only file other modules may import (not in health)
+    domain/            entities, value objects, business rules. Pure Python
     application/
-      ports/                    interfaces the use cases need
-        health.py               DatabaseProbe (done)
-      use_cases/                one module per user action
-        check_database.py       CheckDatabase (done)
-
+      ports/           interfaces the use cases need (typing.Protocol)
+      use_cases/       one module per user action
     infrastructure/
-      db/
-        base.py                 SQLAlchemy declarative Base
-        session.py              engine and session per request
-        models/                 ORM tables, one file per table
-        repositories/           repository ports implemented with SQLAlchemy
-        probe.py                DatabaseProbe implemented with SELECT 1 (done)
-        seed/                   partners and offers for local development
-      llm/                      OpenRouter client, tool-calling orchestrator, tools/, prompts/
-      pdf/                      QuoteRenderer with Jinja2 + WeasyPrint, templates/
-      email/                    QuoteNotifier over SMTP, templates/
-      auth/                     IdentityProvider with Google OAuth
-
+      db/models.py     this module's tables
+      ...              adapters: repositories, LLM, PDF, email, calls to other modules
     presentation/http/
-      routers/                  endpoints, one module per resource
-      schemas/                  Pydantic request and response models
-      dependencies.py           composition root: builds use cases with their adapters
+      router.py        this module's endpoints
+      schemas.py       Pydantic request and response models
+      dependencies.py  composition root: builds use cases with their adapters
 
-  tests/                        see section 7
-  alembic/versions/             database migrations
+  shared/
+    domain/            errors.py (DomainError, NotFound, PermissionDenied, InvalidTransition),
+                       value objects (Money, DateRange, Destination, Locale)
+    application/       UnitOfWork port
+    infrastructure/    db/ (Base, session), llm/ (OpenRouter client, tool-calling loop)
+    presentation/      domain error → HTTP response handler
 ```
 
-Every package's `__init__.py` lists the files planned in it and the issue that adds each one.
+Every package's `__init__.py` lists the files planned in it and the issue that adds each one. `health/` is complete and runs today; the others are ready to fill.
 
-## 3. Domain layer
+## 3. Layers inside a module
 
-The domain is plain Python: dataclasses and functions. It knows nothing about HTTP, SQL or LLMs, so its rules can be read and tested on their own.
-
-### Entities
-
-| Entity | Main fields | Rules it owns |
+| Layer | Holds | May import |
 |---|---|---|
-| `User` | id, email, name, role (`client`, `agent`), locale (`en`, `fr`) | Only agents may handle quotes |
-| `Partner` | id, name, kind, country, city, contacts, active | An inactive partner's offers are never used |
-| `Offer` | id, partner_id, kind, title, description, destination, tags, person limits, availability, featured, active | Fits a number of travellers and a date range or not. **No price** |
-| `Wish` | id, user_id, text, destination, status, panel, selected tags, budget, travellers, dates | Status: `draft` → `not_covered` or `panel_shown` → `answered` → `planned` |
-| `Plan` | id, wish_id, status, items, based_on_preferences, assigned agent | The status machine below |
-| `PlanItem` | offer_id, day, quantity, note, negotiated price, removed | A price is set only while the plan is `negotiating` |
-| `Quote` | id, number, plan_id, total, currency, locale, valid until, decision | Total = sum of the prices of the items not removed. Valid 7 days. Answered once, before it expires |
+| `domain/` | Entities, value objects, business rules | Its own domain, `shared.domain`, the standard library |
+| `application/` | Use cases and ports | Its own domain and application, `shared.domain`, `shared.application` |
+| `infrastructure/` | Adapters implementing the ports, the module's tables | Its own domain, application and infrastructure, `shared`, `config`, other modules' `public.py` |
+| `presentation/` | Router, schemas, composition root | Its own domain, application and presentation, `shared`, `config`, other modules' `public.py`. Its own infrastructure only in `dependencies.py` |
 
-### The plan status machine
+How the inner layers use tools without importing them: the application layer declares **ports** (interfaces) for what it needs, such as "save a plan" or "render a quote". The infrastructure layer provides **adapters** that implement them. Each module's `dependencies.py`, the **composition root**, plugs adapters into use cases when a request arrives.
+
+## 4. How modules talk to each other
+
+A module never reaches into another module's code or tables. It uses only the other module's `public.py`, and only from the outside of its own layers:
+
+```mermaid
+flowchart LR
+  subgraph W[wishes]
+    WA[application<br/>port: Catalog] 
+    WI[infrastructure<br/>adapter: catalog.py] -. implements .-> WA
+  end
+  subgraph C[catalog]
+    CP[public.py<br/>tags_at, covered_destinations]
+    CA[application<br/>use cases]
+    CP --> CA
+  end
+  WI --> CP
+```
+
+1. The use case in `wishes` needs catalog data, so `wishes/application/ports/` declares a `Catalog` port in its own words.
+2. `wishes/infrastructure/catalog.py` implements that port by calling `catalog.public`.
+3. `catalog/public.py` exposes a few functions and read-only views, backed by catalog's use cases.
+
+So the inner layers of a module never know other modules exist, and each module can change its internals freely as long as its `public.py` stays the same.
+
+| Module | Uses | Through |
+|---|---|---|
+| `wishes` | `catalog` (coverage, tags), `planning` (start a plan) | `catalog.public`, `planning.public` |
+| `planning` | `catalog` (check offer ids, LLM travel tools) | `catalog.public` |
+| `quoting` | `planning` (priced plan, mark quoted, accepted or rejected), `accounts` (email, language) | `planning.public`, `accounts.public` |
+| `accounts` | `wishes`, `planning`, `quoting` (delete a user's data) | each `public.delete_for_user` |
+| all routers | `accounts` (`current_user`, `require_agent`) | `accounts.public` |
+
+Each module owns its tables. Foreign keys across modules are allowed in the database, but code reads another module's data only through `public.py`.
+
+## 5. Inside the modules
+
+### Entities and rules
+
+| Module | Entities | Rules they own |
+|---|---|---|
+| accounts | `User`, `Role`, `Locale` | Only agents handle quotes. `NOVOYA_AGENT_EMAILS` decides who is an agent |
+| catalog | `Partner`, `Offer` | An inactive partner's offers are never used. An offer fits a group size and dates or not. Offers have **no price** |
+| wishes | `Wish`, `Panel`, `Tag` | `draft` → `not_covered` or `panel_shown` → `answered` → `planned`. Selected tags must come from the panel shown |
+| planning | `Plan`, `PlanItem` | The status machine below. Every item is a real, active offer. Only the assigned agent sets prices |
+| quoting | `Quote` | Total = sum of the kept items' prices. Valid 7 days. Answered once, before it expires |
+
+The plan's status machine lives in `planning/domain`:
 
 ```mermaid
 stateDiagram-v2
   [*] --> proposed: generate_plan
   proposed --> requested: request_quote (the plan's client)
   requested --> negotiating: take_plan (an agent)
-  negotiating --> quoted: send_quote (the assigned agent, every item priced)
-  quoted --> accepted: decide_quote (the client, before expiry)
-  quoted --> rejected: decide_quote (the client, before expiry)
+  negotiating --> quoted: quoting.send_quote (every kept item priced)
+  quoted --> accepted: quoting.decide_quote (client, before expiry)
+  quoted --> rejected: quoting.decide_quote (client, before expiry)
 ```
 
-The allowed moves live in `Plan`'s methods, for example `plan.request_quote(by=user)`. Any other move raises `InvalidTransition`. No other layer changes a status directly.
+The allowed moves are methods on `Plan`, for example `plan.request_quote(by=user)`. Any other move raises `InvalidTransition`. `quoting` moves a plan only through `planning.public`.
 
-### Value objects
+### Use cases and ports
 
-Small immutable values compared by content: `Money` (amount and `EUR`), `DateRange` (start before end), `Tag` (section and tag), `Destination` (country and city), `Panel` (the sections and tags shown to the client).
+| Module | Use cases | Endpoints | Ports |
+|---|---|---|---|
+| accounts | `SignIn`, `GetCurrentUser`, `DeleteAccount` | `/auth/google/*`, `/auth/logout`, `GET /me`, `DELETE /me` | UserRepository, IdentityProvider, PersonalDataEraser |
+| catalog | `ListDestinations`, `SearchOffers`, `ManagePartners`, `ManageOffers` | `GET /destinations`, `/admin/partners`, `/admin/offers` | PartnerRepository, OfferRepository |
+| wishes | `SendWish`, `AnswerPanel` | `POST /wishes`, `POST /wishes/{id}/answers` | WishRepository, Catalog, PanelBuilder, PlanStarter |
+| planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
+| quoting | `SendQuote`, `GetQuote`, `DownloadQuotePdf`, `DecideQuote` | `POST /agent/plans/{id}/quote`, `/quotes/{id}`, `/quotes/{id}/pdf`, `/accept`, `/reject` | QuoteRepository, Plans, Users, QuoteRenderer, QuoteNotifier |
+| health | `CheckDatabase` | `GET /health`, `GET /health/db` | DatabaseProbe |
 
-### Errors
+Every module also uses the shared `UnitOfWork` port: one use case is one transaction.
 
-`domain/errors.py` defines what can go wrong in business terms:
+### Adapters
 
-| Error | Meaning |
-|---|---|
-| `NotFound` | The object does not exist, or the caller may not see it |
-| `PermissionDenied` | The caller exists but may not do this (a client calling an agent action) |
-| `InvalidTransition` | A status change the rules forbid, such as quoting a plan twice |
-
-The domain never knows about HTTP status codes. The presentation layer translates these errors (section 6).
-
-## 4. Application layer
-
-### Use cases
-
-One use case per thing a user can do. A use case loads entities through ports, asks the entities to apply their rules, saves the result through ports, and returns a plain result. It never imports a framework.
-
-| Use case | Who | Endpoint | Ports it uses | Issue |
-|---|---|---|---|---|
-| `SignIn` | anyone | `/auth/google/callback` | IdentityProvider, UserRepository | #15, #49 |
-| `ListDestinations` | client | `GET /destinations` | OfferRepository | #21 |
-| `SendWish` | client | `POST /wishes` | WishRepository, OfferRepository, PanelBuilder | #23, #25 |
-| `AnswerPanel` + `GeneratePlan` | client | `POST /wishes/{id}/answers` | WishRepository, OfferRepository, PlanGenerator, PlanRepository | #28, #29 |
-| `RequestQuote` | client | `POST /plans/{id}/request-quote` | PlanRepository | #50 |
-| `ListQuoteQueue` | agent | `GET /agent/plans` | PlanRepository | #51 |
-| `TakePlan` | agent | `POST /agent/plans/{id}/take` | PlanRepository | #51 |
-| `SetItemPrice` | agent | `PATCH /agent/plans/{id}/items/{item_id}` | PlanRepository | #51 |
-| `SendQuote` | agent | `POST /agent/plans/{id}/quote` | PlanRepository, QuoteRepository, QuoteRenderer, QuoteNotifier | #52, #53 |
-| `DecideQuote` | client | `POST /quotes/{id}/accept`, `/reject` | QuoteRepository, PlanRepository | #54 |
-| `DeleteAccount` | client | `DELETE /me` | UserRepository, QuoteRenderer (delete files) | #46 |
-| `ManageCatalog` | agent | `/admin/partners`, `/admin/offers` | PartnerRepository, OfferRepository | #18 |
-| `CheckDatabase` | anyone | `GET /health/db` | DatabaseProbe | done |
-
-### Ports
-
-Ports are `typing.Protocol` interfaces in `application/ports/`. They describe what a use case needs in business words, not how it is done.
-
-| Port | What it offers | Adapter (infrastructure) |
+| Module | Adapter | Tool |
 |---|---|---|
-| `UserRepository`, `PartnerRepository`, `OfferRepository`, `WishRepository`, `PlanRepository`, `QuoteRepository` | Load and save entities, and searches such as `OfferRepository.search(destination, tags, persons, dates)` | `db/repositories/` with SQLAlchemy |
-| `UnitOfWork` | `commit()` and `rollback()`: one use case is one transaction | `db/` with the request's session |
-| `PanelBuilder` | Build a `Panel` for a wish from the offers at its destination | `llm/` with OpenRouter |
-| `PlanGenerator` | Propose plan items for a wish from the offers it may use | `llm/` with OpenRouter and the travel tools |
-| `QuoteRenderer` | Turn a quote into a PDF in the client's language | `pdf/` with Jinja2 + WeasyPrint |
-| `QuoteNotifier` | Tell the client their quote is ready | `email/` over SMTP |
-| `IdentityProvider` | Turn a Google sign-in into an email and a name | `auth/` with Google OAuth |
-| `DatabaseProbe` | Check the database answers | `db/probe.py` (done) |
+| all | `infrastructure/db/` repositories and tables | SQLAlchemy 2 (async) + PostgreSQL |
+| accounts | `google_oauth.py` | Google OAuth, `openid email profile` |
+| wishes | `llm/panel_builder.py` | OpenRouter, through `shared/infrastructure/llm` |
+| planning | `llm/plan_generator.py`, `llm/tools.py` | OpenRouter tool calling; the tools read offers through `catalog.public` |
+| quoting | `pdf/`, `email/` | Jinja2 + WeasyPrint, SMTP (Mailpit locally) |
 
-### The LLM stays outside the rules
+ORM models are not entities. A repository maps rows to entities and back, so no SQLAlchemy object leaves a module's `infrastructure/`.
 
-The LLM is just another adapter behind `PanelBuilder` and `PlanGenerator`. It proposes; the use case decides:
+### The LLM proposes, the use case decides
 
-- `GeneratePlan` receives the items the LLM proposes and keeps only those whose `offer_id` is a real, active offer that fits the travellers and dates. This check is a business rule, so it lives in the domain and runs on every plan, whatever the model returns.
-- If the model fails or returns invalid JSON twice, the adapter raises, and the use case falls back (for example a panel built directly from the offers' tags).
-- Changing the model (`NOVOYA_LLM_MODEL`) or the provider only touches `infrastructure/llm/`.
+The LLM is an adapter behind `PanelBuilder` (wishes) and `PlanGenerator` (planning):
 
-## 5. Infrastructure layer
+- `GeneratePlan` keeps only the items whose `offer_id` is a real, active offer that fits the travellers and dates. That check is a domain rule in `planning`, applied to every plan whatever the model returns.
+- If the model fails or returns invalid JSON twice, the adapter raises and the use case falls back, for example to a panel built from the offers' tags.
+- Changing the model (`NOVOYA_LLM_MODEL`) or the provider touches `shared/infrastructure/llm/` only.
 
-Every tool Novoya uses lives here, and only here:
+### Domain errors and HTTP
 
-| Folder | Implements | Tool |
-|---|---|---|
-| `db/repositories/` | the repositories, `UnitOfWork` | SQLAlchemy 2 (async) + PostgreSQL |
-| `db/models/` | the tables (Alembic reads them) | SQLAlchemy ORM |
-| `llm/` | `PanelBuilder`, `PlanGenerator` | OpenRouter through the `openai` SDK, tool calling |
-| `llm/tools/` | `covered_destinations()`, `search_offers()` for the model | read the catalog through `OfferRepository` |
-| `pdf/` | `QuoteRenderer` | Jinja2 + WeasyPrint |
-| `email/` | `QuoteNotifier` | SMTP (Mailpit locally) |
-| `auth/` | `IdentityProvider` | Google OAuth, `openid email profile` |
-
-ORM models are not entities. A repository maps rows to entities when it loads and entities to rows when it saves, so no SQLAlchemy object ever leaves `infrastructure/db/`.
-
-## 6. Presentation layer
-
-Today the only way in is HTTP with FastAPI.
-
-- **Routers** stay thin: parse the request into a schema, call one use case, turn the result into a response schema.
-- **Schemas** are the Pydantic models of the HTTP API. FastAPI builds `openapi.json` from them, and the frontend generates its client from that file. Schemas are not entities: the API can change shape without changing the domain.
-- **`dependencies.py` is the composition root.** It builds each use case with its adapters as a FastAPI dependency. Tests replace these dependencies with fakes. It also holds `current_user` and `require_agent`.
-- **Domain errors become HTTP codes** in one exception handler:
+Errors are defined once in `shared/domain/errors.py` and turned into HTTP codes by one handler in `shared/presentation`:
 
 | Domain error | HTTP |
 |---|---|
@@ -195,13 +180,13 @@ Today the only way in is HTTP with FastAPI.
 
 "Destination not covered" is not an error: it is a normal result of `SendWish`, returned with status 200 and `not_covered`.
 
-## 7. One request, end to end
+## 6. One request, end to end
 
-The client asks for a quote (`POST /plans/42/request-quote`, #50):
+The client asks for a quote (`POST /plans/42/request-quote`, #50). Everything happens inside `planning`:
 
 ```mermaid
 sequenceDiagram
-  participant R as Router (presentation)
+  participant R as planning router (presentation)
   participant UC as RequestQuote (application)
   participant Repo as PlanRepository (port)
   participant P as Plan (domain)
@@ -218,55 +203,54 @@ sequenceDiagram
   R-->>R: PlanResponse (schema) → 200
 ```
 
-The router never sees SQL, the use case never sees HTTP, and the rule "only the plan's client, only from `proposed`" exists in exactly one place: `Plan.request_quote`.
+The router never sees SQL, the use case never sees HTTP, and the rule "only the plan's client, only from `proposed`" exists in one place: `Plan.request_quote`.
 
-### The example that already runs
+### The module that already runs
 
-`GET /health/db` goes through every layer and is the model to copy:
+`health` goes through every layer and is the model for a new module:
 
 | Layer | File | Role |
 |---|---|---|
-| Application, port | `application/ports/health.py` | `DatabaseProbe` with `ping()` |
-| Application, use case | `application/use_cases/check_database.py` | `CheckDatabase`: returns `True` if the probe answers |
-| Infrastructure | `infrastructure/db/probe.py` | `SqlDatabaseProbe`: `SELECT 1` |
-| Presentation | `presentation/http/dependencies.py` | builds `CheckDatabase(SqlDatabaseProbe(session))` |
-| Presentation | `presentation/http/routers/health.py` | calls the use case, answers 200 or 503 |
+| application | `health/application/ports.py` | `DatabaseProbe` with `ping()` |
+| application | `health/application/use_cases/check_database.py` | `CheckDatabase`: `True` if the probe answers |
+| infrastructure | `health/infrastructure/sql_probe.py` | `SqlDatabaseProbe`: `SELECT 1` |
+| presentation | `health/presentation/http/dependencies.py` | builds `CheckDatabase(SqlDatabaseProbe(session))` |
+| presentation | `health/presentation/http/router.py`, `schemas.py` | calls the use case, answers 200 or 503 |
 
-## 8. Tests
-
-The layers make each kind of test simple:
+## 7. Tests
 
 | What | How | Needs |
 |---|---|---|
 | Domain rules (status machine, totals, validity) | Plain unit tests on entities | Nothing |
-| Use cases | Call the use case with fake ports (in-memory repositories, a fake LLM) | Nothing |
-| Adapters | Run the repositories against a real PostgreSQL | The Postgres service in CI |
+| Use cases | Call the use case with fake ports (in-memory repositories, a fake LLM, a fake catalog) | Nothing |
+| Adapters | Run repositories against a real PostgreSQL | The Postgres service in CI |
 | HTTP | `httpx` against the app, with `app.dependency_overrides` replacing adapters | Nothing |
 | Architecture | `tests/test_architecture.py` | Nothing |
 
-CI never calls the real LLM, SMTP server or Google.
-
-`tests/test_check_database.py` (a use case with a fake port) and `tests/test_health.py` (the HTTP layer with an overridden dependency) are the examples to copy.
+CI never calls the real LLM, SMTP server or Google. `tests/test_check_database.py` (use case with a fake port) and `tests/test_health.py` (HTTP with an overridden dependency) are the examples to copy.
 
 ### The architecture test
 
-`tests/test_architecture.py` reads every import in `src/novoya_api` and fails if:
+`tests/test_architecture.py` reads every import in `src/novoya_api` and fails, with the file and the reason, when:
 
-- the domain imports anything outside the domain, or any framework (FastAPI, SQLAlchemy, Pydantic, `openai`, WeasyPrint, Jinja2...);
-- the application imports infrastructure, presentation or any framework;
-- infrastructure imports presentation;
-- presentation imports infrastructure anywhere except the composition root.
+- a domain or application layer imports a framework (FastAPI, SQLAlchemy, Pydantic, `openai`, WeasyPrint, Jinja2...);
+- a layer imports an outer layer of its own module (for example application → infrastructure);
+- presentation imports infrastructure anywhere but its `dependencies.py`;
+- a module imports another module's internals instead of its `public.py`;
+- a domain or application layer uses another module at all (it must declare a port);
+- `shared` imports a module.
 
-A last test plants a forbidden import in a temporary file and checks that the rule catches it, so the guard cannot silently stop working.
+Two more tests plant forbidden and allowed imports in temporary files, so the guard cannot silently stop working.
 
-## 9. Adding a feature, step by step
+## 8. Adding a feature, step by step
 
-Example: "ask for a quote" (#50).
+Example: "ask for a quote" (#50), in `planning`.
 
-1. **Domain**: add `Plan.request_quote(by)` with its rule, and test it.
-2. **Application**: add the port method you need (`PlanRepository.get`, `save`) and the use case `use_cases/request_quote.py`. Test it with a fake repository.
-3. **Infrastructure**: implement the port in `db/repositories/plans.py`, plus a model and an Alembic migration if a table changes.
-4. **Presentation**: add the response schema, the route in `routers/plans.py`, and the wiring in `dependencies.py`.
-5. Regenerate `openapi.json` (`uv run python -m novoya_api.openapi > openapi.json`) and run `uv run ruff check .`, `uv run pytest`.
+1. **Domain**: add `Plan.request_quote(by)` with its rule in `planning/domain/`, and test it.
+2. **Application**: add the port methods you need (`PlanRepository.get`, `save`) in `planning/application/ports/` and the use case `planning/application/use_cases/request_quote.py`. Test it with a fake repository.
+3. **Infrastructure**: implement the port in `planning/infrastructure/db/`, plus the table in `models.py` and an Alembic migration if a table changes.
+4. **Presentation**: add the schema and the route in `planning/presentation/http/`, and the wiring in `dependencies.py`. Include the router in `main.py` if it is the module's first one.
+5. If another module needs this, expose it in `planning/public.py`, nowhere else.
+6. Regenerate `openapi.json` (`uv run python -m novoya_api.openapi > openapi.json`), then run `uv run ruff check .` and `uv run pytest`.
 
-If step 2 needs to import SQLAlchemy or FastAPI, the code belongs in another layer: the architecture test will say so.
+If a step makes you import SQLAlchemy in a use case, or another module's internals, the code belongs somewhere else: the architecture test will say where.

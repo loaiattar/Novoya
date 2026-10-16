@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -7,7 +8,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from novoya_api.config import get_settings
-from novoya_api.infrastructure.db.models import Base
+from novoya_api.shared.infrastructure.db.base import Base
+
+# Every module keeps its tables in <module>/infrastructure/db/models.py.
+# Import them all so Base.metadata knows every table.
+MODULES = ("accounts", "catalog", "planning", "quoting", "wishes")
+for module in MODULES:
+    importlib.import_module(f"novoya_api.{module}.infrastructure.db.models")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

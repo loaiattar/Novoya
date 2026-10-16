@@ -1,6 +1,6 @@
 """Use cases are tested with fake ports: no database, no FastAPI."""
 
-from novoya_api.application.use_cases.check_database import CheckDatabase
+from novoya_api.health.application.use_cases.check_database import CheckDatabase
 
 
 class FakeProbe:
