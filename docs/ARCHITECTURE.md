@@ -1,18 +1,39 @@
 # Novoya architecture
 
-Novoya is a travel agent. A user signs in with Google, optionally connects Gmail, Google Docs and Instagram, describes the trip they want, refines it in a preference panel, and gets a plan. If they choose nothing, they get a popular plan.
+Novoya is a travel agency with an AI assistant. A client signs in with Google, describes the trip they want, refines it in a preference panel, and gets a proposed plan built only from partner offers. A human travel agent from the agency then negotiates the prices with the partners and sends the client a PDF quote with the total price. The client accepts or rejects it.
+
+Novoya only sells what its partners (prestataires) offer: hotels, guides, transport and activities in the destinations they cover. If no partner covers a destination, Novoya cannot plan a trip there and says so.
+
+Two decisions shape this version:
+
+- **No import of the client's past trips.** Reading Gmail, Google Docs or Instagram to find past trips was refused by the school as not GDPR compliant. Novoya only stores what the client types into it.
+- **No fixed prices.** Partner prices are negotiated for each trip. The AI never shows a price. Only the quote written by a human agent has one.
 
 This document is the starting proposal. Change it by pull request, like code.
 
 ## 1. User flow
 
-1. The user signs in with Google. The first sign-in creates the account. We only ask for `openid email profile` here.
-2. The user can connect sources, one by one and only if they want: Gmail, Google Docs, Instagram. Each one asks for its own permission at that moment, not at sign-in.
-3. An import runs in the background. It finds past trips and bookings (flights, hotels, agency confirmations) and saves them as structured `Trip` records.
-4. The user types what they want ("a calm week by the sea in May").
-5. The agent opens a preference panel: sections, each with tags to pick (style, rhythm, accommodation, activities, food, transport...).
-6. The last step of the panel shows past experiences (from the import), maximum budget, number of travellers.
-7. The agent builds the trip. If the user picked nothing, the backend returns a popular plan that fits the budget, group size and season.
+### Client
+
+1. The client signs in with Google. The first sign-in creates the account. We only ask for `openid email profile`.
+2. The client types what they want ("a calm week by the sea in May").
+3. The AI checks coverage: is there at least one active partner at that destination? If not (for example Japan with no partner there), it says so and suggests covered destinations close to the wish. The flow stops here.
+4. The AI opens a preference panel: sections, each with tags to pick (style, rhythm, accommodation, activities, food, transport...). The tags come from the partner offers at that destination, so the client can only pick what we can deliver.
+5. The last step of the panel asks for the maximum budget, the number of travellers and the dates.
+6. The AI builds a proposed plan from partner offers, day by day, **without prices**. If the client picked no tags, it builds the plan from the wish text, budget and travellers, starting with the offers partners mark as `featured`.
+7. The client asks the agency for a quote on that plan.
+8. When the quote is ready, the client gets an email with a button to log in. They open the quote PDF in their account and accept or reject it.
+
+### Travel agent (agency staff)
+
+1. The agent signs in with Google. Their account has the `agent` role.
+2. The agent sees the list of plans waiting for a quote, with the client's wish, budget, travellers and dates.
+3. The agent takes a plan and negotiates with each partner outside Novoya (phone, email).
+4. For each plan item, the agent enters the negotiated price. They can remove an item a partner cannot deliver.
+5. The agent generates the quote: Novoya computes the total, renders the PDF, makes it visible to the client and emails them.
+6. The agent sees when the client accepts or rejects.
+
+Agents also manage partners and offers in the admin pages.
 
 ## 2. System overview
 
@@ -22,58 +43,87 @@ flowchart LR
     W[React + TanStack Router/Query + TS]
   end
 
-  subgraph Backend [Python backend]
-    API[FastAPI<br/>REST + SSE]
-    AG[Agent orchestrator<br/>LLM loop + MCP client]
-    WK[Worker<br/>import jobs]
+  subgraph Backend [Python backend: apps/api]
+    API[FastAPI REST]
+    AG[Agent orchestrator<br/>LLM tool calling]
+    TL[Travel tools<br/>covered_destinations, search_offers]
+    PDF[Quote PDF<br/>WeasyPrint]
   end
 
-  subgraph MCP [MCP servers, one per source]
-    MG[gmail-mcp]
-    MD[gdocs-mcp]
-    MI[instagram-mcp]
-    MT[travel-mcp<br/>offers, popular plans]
-  end
+  DB[(PostgreSQL)]
+  LLM[[OpenRouter<br/>LLM API]]
 
-  DB[(PostgreSQL + pgvector)]
-  RQ[(Redis<br/>queue + cache)]
-  LLM[[Claude API]]
-  G[[Google APIs]]
-  IG[[Instagram]]
-
-  W -- HTTPS / SSE --> API
+  W -- HTTPS --> API
   API --> AG
-  API --> RQ --> WK
   AG --> LLM
-  AG --> MG & MD & MI & MT
-  WK --> MG & MD & MI
-  MG & MD --> G
-  MI --> IG
-  API & AG & WK --> DB
+  AG --> TL --> DB
+  API --> PDF
+  API --> DB
 ```
 
 | Part | Tech | Job |
 |---|---|---|
-| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Pages, the dynamic panel, streaming the agent's progress |
-| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Auth, REST API, SSE stream, the agent orchestrator |
-| `apps/worker` | Same codebase as the API, run as a worker (ARQ or Celery) | Long imports from Gmail/Docs/Instagram, re-extraction |
-| `mcp/*` | Python MCP SDK | One small server per data source. The agent calls them as tools |
-| Database | PostgreSQL + pgvector | Users, encrypted tokens, trips, wishes, plans, embeddings for search |
-| Cache / queue | Redis | Job queue, rate limits, short-lived cache |
-| LLM | Claude API (Anthropic Python SDK) | Extract trips from emails, build the panel, write the plan |
+| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing, partners and offers) |
+| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Modular monolith with Clean Architecture: accounts, catalog, wishes, planning and quoting modules, each with domain, use cases, adapters and REST endpoints |
+| Database | PostgreSQL | Users, partners and offers, wishes, plans, quotes |
+| LLM | OpenRouter, called with the OpenAI Python SDK | Check coverage, build the panel, write the plan |
 
-### Why MCP servers are separate
+There is no worker, no queue and no MCP server in this version. Nothing runs in the background: every AI call happens during a request and takes a few seconds.
 
-The agent only sees tools such as `gmail.search_bookings(query, since)` or `travel.popular_plans(budget, persons, month)`. It never sees OAuth tokens. The backend passes the user's token to the MCP server for each call. A new source (Outlook, WhatsApp export...) is then a new MCP server, with no change to the agent.
+### Backend: modules + Clean Architecture
 
-## 3. Two modes: import, then search
+The backend is a modular monolith: one application and one database, split by business module, with the same Clean Architecture layers inside every module.
 
-Do not search Gmail live on every request. It is slow and expensive.
+| Module | Owns |
+|---|---|
+| `accounts` | Users, Google sign-in, client and agent roles, language, deleting an account |
+| `catalog` | Partners, offers, covered destinations |
+| `wishes` | The wish, the coverage check, the preference panel |
+| `planning` | The plan built from offers, its status machine, the agent's negotiation |
+| `quoting` | The quote: total, validity, PDF, email, accept or reject |
+| `shared` | Domain errors, common value objects, database session, LLM client |
 
-- **Import (background, once + refresh)**: the worker asks the MCP servers for candidate messages and documents (senders such as booking.com, airbnb, airlines, known agencies; subjects such as "confirmation", "itinerary"). The LLM turns each one into a `Trip` record with a JSON schema. We store the extracted facts and the source link, **not** the raw email.
-- **Search (live, during a chat)**: the agent searches the `trips` table first (SQL + pgvector). It calls an MCP tool live only when it needs a detail that is missing.
+Inside each module, source code dependencies only point inward:
 
-## 4. The dynamic panel
+```mermaid
+flowchart LR
+  P[presentation<br/>FastAPI router, schemas] --> A
+  I[infrastructure<br/>tables, SQLAlchemy, OpenRouter,<br/>WeasyPrint, SMTP, Google] --> A
+  A[application<br/>use cases + ports] --> D[domain<br/>entities, rules]
+```
+
+- **Domain**: entities and business rules, such as the plan's allowed status changes. Pure Python.
+- **Application**: one use case per user action and the ports (interfaces) it needs.
+- **Infrastructure**: adapters that implement the ports with real tools, and the module's tables.
+- **Presentation**: the module's FastAPI router and schemas, and its composition root that plugs adapters into use cases.
+
+Modules talk to each other only through a small `public.py`. A use case that needs another module declares a port, and an adapter in its infrastructure calls the other module's `public.py`. So each module can change its internals freely, and one developer can own a module.
+
+A test (`tests/test_architecture.py`) reads every import and fails in CI if a layer or a module breaks these rules. The full explanation is in [BACKEND.md](BACKEND.md).
+
+### Travel tools, in-process
+
+The agent orchestrator gives the LLM two tools through the `tools` parameter (tool calling). They are plain Python functions in the `planning` module (`infrastructure/llm/tools.py`) that read the catalog through `catalog.public`:
+
+- `covered_destinations()`: the countries and cities where at least one partner is active.
+- `search_offers(destination, tags, persons, dates)`: active offers that match.
+
+When the LLM asks for a tool, the orchestrator runs the function and sends the result back. The LLM never touches the database directly.
+
+### The LLM: OpenRouter
+
+The school asks for a model served through OpenRouter. OpenRouter's API is compatible with OpenAI's, so the backend uses the official `openai` Python SDK with a different base URL:
+
+```python
+client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=settings.openrouter_api_key)
+```
+
+- The model is a setting, `NOVOYA_LLM_MODEL`, so we can switch models without changing code. It must support tool calling (OpenRouter lists this as `tools` in the model's supported parameters).
+- The API key is `NOVOYA_OPENROUTER_API_KEY`. It stays on the server and never reaches the browser.
+- Not every model follows a JSON schema reliably, so the backend validates every answer with Pydantic, retries once, then falls back (see section 3).
+- Tests use a fake client. CI makes no live LLM calls.
+
+## 3. The dynamic panel
 
 The LLM does not write UI. It returns JSON that matches a Pydantic schema, and the frontend renders it with generic components.
 
@@ -90,93 +140,156 @@ The LLM does not write UI. It returns JSON that matches a Pydantic schema, and t
       ]
     }
   ],
-  "past_trips": ["trip_123", "trip_456"],
   "ask_budget": true,
-  "ask_persons": true
+  "ask_persons": true,
+  "ask_dates": true
 }
 ```
 
-The backend validates this JSON. If validation fails, it retries once, then falls back to a fixed default panel. The frontend has one `<PanelSection>` component and one `<TagPicker>`; it never needs to know which sections exist.
+The backend validates this JSON. If validation fails, it retries once, then falls back to a panel built directly from the tags of the offers at that destination. The frontend has one `<PanelSection>` component and one `<TagPicker>`; it never needs to know which sections exist.
 
-## 5. Popular plan fallback
+## 4. Partners, coverage and the no-preference case
 
-If the user submits the panel with no tags:
+Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it.
 
-1. The API skips the LLM planning step.
-2. It reads `popular_plans`, filtered by budget, number of persons and month.
-3. It returns the best match, marked `source: "popular"` so the UI can say so.
+| Case | What happens |
+|---|---|
+| Destination not covered | No panel. The AI explains it and suggests covered destinations. The wish is saved with status `not_covered`, so the team sees which destinations clients ask for and which partners to look for next. |
+| Covered, tags picked | The AI builds the plan from offers that match the tags, travellers and dates. |
+| Covered, no tags picked | The AI builds the plan from the wish text, budget and travellers, starting with `featured` offers. The plan is marked `based_on_preferences: false` so the UI can say so. |
 
-`popular_plans` starts as a hand-curated table. Later it can be filled from what other users booked.
+The AI may only use offers returned by `search_offers`. The backend checks that every item in a plan points to a real, active `offer_id` before saving it.
+
+Offers have no price. The client's budget is saved on the wish and shown to the human agent, who negotiates within it.
+
+## 5. From plan to quote
+
+A plan moves through these statuses:
+
+```mermaid
+stateDiagram-v2
+  [*] --> proposed: AI builds the plan
+  proposed --> requested: client asks for a quote
+  requested --> negotiating: an agent takes it
+  negotiating --> quoted: agent sends the PDF
+  quoted --> accepted: client accepts
+  quoted --> rejected: client rejects
+```
+
+- **proposed**: the client sees the plan, with no price.
+- **requested**: the plan is in the agents' queue.
+- **negotiating**: one agent owns it (`assigned_agent_id`). They enter a negotiated price on each item.
+- **quoted**: every remaining item has a price. The agent clicked "Send quote". The backend computes the total, saves a `quotes` row and renders the PDF.
+- **accepted** or **rejected**: the client's final answer. A rejected client can start a new wish.
+
+### The quote PDF
+
+The PDF is an HTML template (Jinja2) rendered with WeasyPrint. The client reads it in their account.
+
+When the quote is sent, the client gets an email in their language (English or French). It says their offer is available in their account and has one button, "Log in to see my quote", that opens the quote after sign-in. The email holds no PDF, prices or partner names. It is sent over SMTP (`NOVOYA_SMTP_*` settings); locally, Mailpit in docker-compose catches it.
+
+| Shown on the PDF | Not shown |
+|---|---|
+| Quote number, issue date, valid until (7 days after sending) | Partner names: the client sees what is booked, not who provides it |
+| Client, destination, dates, travellers, the agent's contact | A separate agency fee line: any margin is already inside the item prices |
+| The wish text and the tags picked | |
+| The plan day by day: each item, quantity and price | |
+| The total and, under it, the client's maximum budget | |
+| How to accept or reject, and what is not included (flights, other meals, drinks, tips, insurance) | |
+
+The PDF exists in English and French, in the client's language (`users.locale`). Prices are in euros.
 
 ## 6. Data model (first version)
 
 | Table | Main columns |
 |---|---|
-| `users` | id, google_sub, email, name, created_at |
-| `connections` | id, user_id, provider (`gmail`, `gdocs`, `instagram`), scopes, token_encrypted, status, last_sync_at |
-| `trips` | id, user_id, destination, start_date, end_date, persons, price, currency, agency, kind (flight, hotel, package...), source_provider, source_ref, embedding |
-| `wishes` | id, user_id, text, created_at |
-| `panels` | id, wish_id, schema_json, answers_json, budget_max, persons |
-| `plans` | id, wish_id, source (`agent` or `popular`), plan_json, created_at |
-| `popular_plans` | id, title, destination, months, min_budget, max_budget, min_persons, max_persons, plan_json |
+| `users` | id, google_sub, email, name, role (`client`, `agent`), locale (`en`, `fr`), created_at |
+| `partners` | id, name, kind (hotel, guide, transport, activity, agency), country, city, contact_email, contact_phone, active, created_at |
+| `offers` | id, partner_id, kind, title, description, country, city, min_persons, max_persons, available_from, available_to, tags, featured, active |
+| `wishes` | id, user_id, text, destination_country, destination_city, status (`draft`, `not_covered`, `panel_shown`, `answered`, `planned`), panel_json (the panel we showed), selected_tags (what the client clicked, for example `[{"section": "style", "tag": "beach"}]`), budget_max, currency, persons, start_date, end_date, created_at, updated_at |
+| `plans` | id, wish_id, status (`proposed`, `requested`, `negotiating`, `quoted`, `accepted`, `rejected`), based_on_preferences, summary, assigned_agent_id, created_at, updated_at |
+| `plan_items` | id, plan_id, offer_id, day, quantity, note, negotiated_price (empty until the agent fills it), removed |
+| `quotes` | id, number, plan_id, agent_id, total_price, currency (`EUR`), locale, valid_until, pdf_path, sent_at, decided_at, client_comment |
+
+`wishes` holds the whole request: the text, the panel we showed, the tags the client clicked, the budget, the number of travellers and the dates. `panel_json` and `selected_tags` are JSONB columns.
+
+Agents are set by email: the first agents come from the `NOVOYA_AGENT_EMAILS` setting, and their role is set to `agent` when they sign in.
 
 ## 7. API (first version)
+
+Client:
 
 | Method | Path | What it does |
 |---|---|---|
 | GET | `/auth/google/login` | Start Google sign-in |
 | GET | `/auth/google/callback` | Create or load the user, set a session cookie |
-| POST | `/connections/{provider}` | Start the extra consent for Gmail, Docs or Instagram |
-| DELETE | `/connections/{provider}` | Disconnect and delete the token and imported data |
-| POST | `/imports` | Start an import job |
-| GET | `/trips` | Past trips found for the user |
-| POST | `/wishes` | Send the wish. Returns the panel |
-| GET | `/wishes/{id}/stream` | SSE: the agent's progress ("reading your trips...") |
-| POST | `/panels/{id}/answers` | Send tags, budget, persons. Returns the plan |
+| POST | `/auth/logout` | Sign out |
+| GET | `/me` | The signed-in user and their role |
+| GET | `/destinations` | Destinations covered by our partners |
+| POST | `/wishes` | Send the wish. Returns the panel, or `not_covered` with suggested destinations |
+| POST | `/wishes/{id}/answers` | Send the selected tags, budget, travellers and dates. Saves them on the wish and returns the proposed plan |
+| GET | `/plans/{id}` | The plan, day by day, with no prices until it is quoted and no partner names |
+| POST | `/plans/{id}/request-quote` | Ask the agency for a quote |
+| GET | `/quotes/{id}/pdf` | Download the quote PDF |
+| POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment |
+| DELETE | `/me` | Delete the account, its wishes, plans and quotes |
 
-FastAPI generates the OpenAPI file. The frontend generates its TypeScript client and types from it (`@hey-api/openapi-ts` or `orval`), so both sides agree on types without writing them twice.
+Agent (role `agent` only):
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/agent/plans?status=requested` | The quote queue |
+| POST | `/agent/plans/{id}/take` | Assign the plan to me, status `negotiating` |
+| PATCH | `/agent/plans/{id}/items/{item_id}` | Set the negotiated price, or remove the item |
+| POST | `/agent/plans/{id}/quote` | Compute the total, render the PDF, status `quoted` |
+| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers |
+
+FastAPI generates the OpenAPI file. The frontend generates its TypeScript client and types from it with `@hey-api/openapi-ts`, so both sides agree on types without writing them twice.
 
 ## 8. Repository layout
 
 ```
 novoya/
   apps/
-    web/            React + TanStack (pnpm)
-    api/            FastAPI app, agent, worker (uv)
-  mcp/
-    gmail/
-    gdocs/
-    instagram/
-    travel/
+    web/                     React + TanStack (pnpm)
+    api/                     FastAPI (uv)
+      src/novoya_api/
+        accounts/ catalog/ wishes/ planning/ quoting/
+          public.py          what other modules may use
+          domain/            entities, rules
+          application/       use_cases/, ports/
+          infrastructure/    db/models.py, adapters
+          presentation/http/ router.py, schemas.py, dependencies.py
+        health/              the complete example module
+        shared/              errors, value objects, db session, LLM client
+        main.py              includes each module's router
+      tests/                 fake-port unit tests, API tests, test_architecture.py
+      alembic/               migrations
   docs/
     ARCHITECTURE.md
-    adr/            one file per decision (0001-use-fastapi.md ...)
-  docker-compose.yml   postgres, redis, api, worker, web
-  .github/workflows/   branch rules, lint + tests per app
+    BACKEND.md               the backend architecture in detail
+    adr/                     one file per decision (0001-use-fastapi.md ...)
+  docker-compose.yml         postgres, api, web, mailpit
+  .github/workflows/         branch rules, lint + tests per app
 ```
 
-## 9. Constraints to know before we start
+## 9. Privacy (GDPR)
 
-These change the plan, so the team should agree on them first.
+- We store only the Google account (email, name), what the client types (wishes, panel answers, budget, travellers, dates), the plans and the quotes. No mailbox, document or social media data.
+- A privacy page says what we store, why, and for how long.
+- The client can delete their account and everything linked to it (`DELETE /me`).
+- Agents see client data only for the plans in their queue.
 
-- **Gmail is a "restricted" scope.** `gmail.readonly` works in testing with up to 100 listed users. Going public needs Google's verification and a yearly security assessment (CASA), which takes weeks and can cost money. Plan for it.
-- **Google Docs**: `drive.readonly` is also restricted. Use the Google Picker with the `drive.file` scope instead: the user picks the documents to share, and that scope is not restricted.
-- **Instagram**: Meta shut down the Basic Display API in December 2024. The official API now only works for Business and Creator accounts. For personal accounts, the realistic option is to let the user upload the ZIP from Instagram's "Download your information" and parse it. `instagram-mcp` should read that export.
-- **Privacy (GDPR)**: store tokens encrypted, keep only extracted trip facts, let the user see and delete what we imported, and write a privacy policy. Google verification requires the policy anyway.
-- **Real offers**: the plan needs prices and availability from somewhere (Amadeus, Booking affiliate, Skyscanner, partner agencies). This is still open and belongs to `travel-mcp`.
+## 10. Schedule: 5 days, three sprints
 
-## 10. How the team splits the work
+The team is three developers who use Claude Code as a coding assistant. Sprints last two days, so the five days split into two 2-day sprints and a 1-day sprint for the finish.
 
-Agree on the API (section 7) first. Then the front and back can work in parallel against the OpenAPI file, with mocked responses on the frontend.
+| Sprint | Days | Backend | Frontend | Done when |
+|---|---|---|---|---|
+| Sprint 1 | Fri 16, Mon 19 Oct | Merge the M0 setup, Google sign-in with roles, `partners` and `offers` with seed data, OpenRouter LLM client and orchestrator, travel tools, `/destinations`, `/wishes` with coverage check | Login and protected routes, wish input, "not covered" message | A signed-in client sends a wish and gets a panel or a polite "not covered" |
+| Sprint 2 | Tue 20, Wed 21 Oct | Panel from partner tags, `/answers`, plan generation with the offer-id check, `request-quote`, agent queue and pricing endpoints, admin endpoints | Panel renderer with budget, travellers and dates, plan page without prices, agent queue and pricing page | A client gets a plan from real offers and asks for a quote; an agent enters prices |
+| Sprint 3 | Thu 22 Oct | Quote PDF, email to the client, accept and reject, `DELETE /me` | Quote page with PDF and accept/reject, privacy page | The full flow works end to end for the demo |
 
-| Milestone | Backend | Frontend | Done when |
-|---|---|---|---|
-| M0 Setup | FastAPI skeleton, Postgres, Alembic, docker-compose, CI | Vite + TanStack skeleton, generated client, CI | `docker compose up` runs everything |
-| M1 Auth | Google sign-in, sessions, `users` | Login page, protected routes | A user can sign in and out |
-| M2 Wish + panel | `/wishes`, panel JSON from the LLM, validation, fallback panel | Wish input, generic panel renderer, budget and persons | Panel appears for any wish |
-| M3 Plan + popular | Plan generation, `popular_plans` seed data, SSE | Plan page, progress stream, "popular" badge | Empty panel returns a popular plan |
-| M4 Gmail | `gmail-mcp`, import job, trip extraction | Connect button, "your past trips" list | Real bookings show up for test users |
-| M5 Docs + Instagram | `gdocs-mcp` with Picker, `instagram-mcp` from ZIP | Picker, ZIP upload | Trips from both sources appear |
-| M6 Release prep | Google verification, privacy, delete-my-data | Privacy pages, settings | Ready for public users |
+Stretch goals if time is left: admin pages for partners and offers (until then, seed data and the API) and a progress stream while the plan is built.
 
-Each milestone is a set of `feature/...` branches into `dev`, following [CONTRIBUTING.md](../CONTRIBUTING.md). Record big choices (queue library, offers provider, hosting) as short ADRs in `docs/adr/`.
+Each sprint is a set of `feature/...` branches into `dev`, following [CONTRIBUTING.md](../CONTRIBUTING.md). Record big choices as short ADRs in `docs/adr/`.

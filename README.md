@@ -4,7 +4,7 @@ Un agent IA premium et personnalisable pour créer des voyages sur mesure.
 
 ## How we work
 
-We use Scrum with two-week sprints and XP practices (test first, pairing, continuous integration). See [docs/PROCESS.md](docs/PROCESS.md).
+We use Scrum with two-day sprints and XP practices (test first, pairing, continuous integration). See [docs/PROCESS.md](docs/PROCESS.md).
 
 ## Contributing
 
