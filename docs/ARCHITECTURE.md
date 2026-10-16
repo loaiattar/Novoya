@@ -64,15 +64,39 @@ flowchart LR
 | Part | Tech | Job |
 |---|---|---|
 | `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing, partners and offers) |
-| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Auth and roles, REST API, the agent orchestrator, the travel tools, the quote PDF |
+| `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Clean Architecture: domain, use cases, adapters (database, LLM, PDF, email, Google sign-in) and the REST API |
 | Database | PostgreSQL | Users, partners and offers, wishes, plans, quotes |
 | LLM | OpenRouter, called with the OpenAI Python SDK | Check coverage, build the panel, write the plan |
 
 There is no worker, no queue and no MCP server in this version. Nothing runs in the background: every AI call happens during a request and takes a few seconds.
 
+### Backend layers: Clean Architecture
+
+The backend follows Clean Architecture. It has four layers, and source code dependencies only point inward:
+
+```mermaid
+flowchart LR
+  P[presentation<br/>FastAPI routers, schemas] --> A
+  I[infrastructure<br/>SQLAlchemy, OpenRouter,<br/>WeasyPrint, SMTP, Google] --> A
+  A[application<br/>use cases + ports] --> D[domain<br/>entities, rules]
+```
+
+| Layer | Holds | Knows about |
+|---|---|---|
+| Domain | Entities (User, Partner, Offer, Wish, Plan, Quote), value objects (Money, DateRange, Tag), business rules such as the allowed plan status changes, domain errors | Nothing else. Pure Python |
+| Application | One use case per user action (`send_wish`, `generate_plan`, `request_quote`, `send_quote`, `decide_quote`...) and the ports they need: `PlanRepository`, `PlanGenerator`, `QuoteRenderer`, `QuoteNotifier`... | Domain |
+| Infrastructure | Adapters that implement the ports: SQLAlchemy repositories, the OpenRouter client and travel tools, the WeasyPrint PDF, the SMTP email, Google OAuth | Application, domain |
+| Presentation | FastAPI routers and Pydantic schemas. They turn a request into a use case call, and a result or a domain error into a response | Application, domain |
+
+The composition root (`main.py` and `presentation/http/dependencies.py`) plugs the adapters into the use cases. What this buys us:
+
+- Business rules are tested without a database, a web server or an LLM, with fake ports.
+- Changing a tool touches one adapter. Switching LLM model or provider changes `infrastructure/llm` only; moving from SMTP to an email API changes `infrastructure/email` only.
+- A test (`tests/test_architecture.py`) reads every import and fails in CI if a layer breaks the rule, so the structure stays clean over time.
+
 ### Travel tools, in-process
 
-The agent orchestrator gives the LLM two tools through the `tools` parameter (tool calling). They are plain Python functions in `apps/api` that use the same SQLAlchemy session as the rest of the API:
+The agent orchestrator gives the LLM two tools through the `tools` parameter (tool calling). They are plain Python functions in `apps/api` (`infrastructure/llm/tools`) that read the catalog through the `OfferRepository` port:
 
 - `covered_destinations()`: the countries and cities where at least one partner is active.
 - `search_offers(destination, tags, persons, dates)`: active offers that match.
@@ -220,13 +244,21 @@ FastAPI generates the OpenAPI file. The frontend generates its TypeScript client
 ```
 novoya/
   apps/
-    web/            React + TanStack (pnpm)
-    api/            FastAPI app, agent orchestrator, travel tools, PDF (uv)
+    web/                     React + TanStack (pnpm)
+    api/                     FastAPI (uv)
+      src/novoya_api/
+        domain/              entities, value objects, rules, errors
+        application/         use_cases/, ports/
+        infrastructure/      db/, llm/, pdf/, email/, auth/
+        presentation/http/   routers/, schemas/, dependencies.py
+        main.py              composition root
+      tests/                 unit tests with fake ports, API tests, test_architecture.py
+      alembic/               migrations
   docs/
     ARCHITECTURE.md
-    adr/            one file per decision (0001-use-fastapi.md ...)
-  docker-compose.yml   postgres, api, web, mailpit
-  .github/workflows/   branch rules, lint + tests per app
+    adr/                     one file per decision (0001-use-fastapi.md ...)
+  docker-compose.yml         postgres, api, web, mailpit
+  .github/workflows/         branch rules, lint + tests per app
 ```
 
 ## 9. Privacy (GDPR)
