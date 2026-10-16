@@ -26,7 +26,7 @@ All work lives in the **Novoya** GitHub Project. If it is not on the board, it d
 
 Board fields:
 
-- **Sprint**: the two-week iteration the item belongs to. Empty means it is still in the backlog.
+- **Sprint**: the two-day iteration the item belongs to. Empty means it is still in the backlog.
 - **Points**: the estimate, on the Fibonacci scale 1, 2, 3, 5, 8, 13. Anything bigger than 8 gets split.
 - **Priority**: High, Medium or Low. The Product Owner sets it and keeps the backlog ordered.
 
@@ -43,17 +43,16 @@ A story is **Ready** when it is small enough for one sprint, has testable accept
 
 ## Sprints
 
-Sprints last **two weeks**, Monday to Friday of the following week.
+Sprints last **two days**. The project runs for five working days: Sprint 1 (days 1–2), Sprint 2 (days 3–4) and Sprint 3 (day 5, a one-day sprint to finish and demo). See section 10 of [ARCHITECTURE.md](ARCHITECTURE.md).
 
 | Ceremony | When | Length | Output |
 |---|---|---|---|
-| Sprint planning | First Monday of the sprint | 1 hour | Sprint goal and the items moved into the sprint |
-| Daily stand-up | Every working day | 15 minutes | Each person: what I did, what I'll do, what blocks me |
-| Backlog refinement | Middle of the sprint | 45 minutes | Upcoming stories become Ready, with estimates |
-| Sprint review | Last Friday of the sprint | 30 minutes | Demo of the Done work to the Product Owner |
-| Retrospective | Right after the review | 30 minutes | One or two concrete changes for the next sprint |
+| Sprint planning | Morning of the sprint's first day | 30 minutes | Sprint goal and the items moved into the sprint. Refinement happens here too |
+| Daily stand-up | Every morning except planning days | 10 minutes | Each person: what I did, what I'll do, what blocks me |
+| Sprint review | End of the sprint's last day | 20 minutes | Demo of the Done work to the Product Owner |
+| Retrospective | Right after the review | 10 minutes | One concrete change for the next sprint |
 
-At planning, only take what fits the team's recent velocity, which is the average points finished in the last three sprints. Until we have three sprints, start low and adjust.
+At planning, only take what fits two days of work for three people. Sprint 1 sets the velocity; use it to plan Sprint 2 and Sprint 3.
 
 At the end of the sprint, open a pull request from `dev` into `main`. That is the sprint's release.
 
