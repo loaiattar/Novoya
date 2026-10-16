@@ -1,6 +1,6 @@
 # Novoya web
 
-React + TypeScript + Vite, with TanStack Router (file-based routes), TanStack Query and TanStack Form. See [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
+React + TypeScript + Vite, with TanStack Router (file-based routes), TanStack Query and TanStack Form. How the app is built, the folder rules and the page map are in [docs/FRONTEND.md](../../docs/FRONTEND.md).
 
 ## Run locally
 
