@@ -1,0 +1,25 @@
+name: Spike
+description: Time-boxed research to answer one question before estimating a story
+title: "[Spike] "
+labels: ["spike"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question to answer
+    validations:
+      required: true
+  - type: input
+    id: timebox
+    attributes:
+      label: Time box
+      placeholder: e.g. 1 day
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected output
+      description: A short written answer, a prototype, or a recommendation, linked in the issue.
+    validations:
+      required: true
