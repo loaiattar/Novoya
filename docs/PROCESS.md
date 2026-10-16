@@ -23,6 +23,7 @@ All work lives in the **Novoya** GitHub Project. If it is not on the board, it d
 | In progress | Someone is working on it, on a branch |
 | In review | Pull request open into `dev` |
 | Done | Meets the Definition of Done and is merged into `dev` |
+| Cancelled | Dropped from the scope. Closed as "not planned", never moved to Done |
 
 Board fields:
 
@@ -43,7 +44,7 @@ A story is **Ready** when it is small enough for one sprint, has testable accept
 
 ## Sprints
 
-Sprints last **two days**. The project runs for five working days: Sprint 1 (days 1–2), Sprint 2 (days 3–4) and Sprint 3 (day 5, a one-day sprint to finish and demo). See section 10 of [ARCHITECTURE.md](ARCHITECTURE.md).
+Sprints last **two working days**. The project runs for five working days, from Friday 16 to Thursday 22 October 2026 (no weekend work): Sprint 1 (Fri 16 and Mon 19), Sprint 2 (Tue 20 and Wed 21) and Sprint 3 (Thu 22, a one-day sprint to finish and demo). See section 10 of [ARCHITECTURE.md](ARCHITECTURE.md).
 
 | Ceremony | When | Length | Output |
 |---|---|---|---|

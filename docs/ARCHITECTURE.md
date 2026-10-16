@@ -242,9 +242,9 @@ The team is three developers who use Claude Code as a coding assistant. Sprints 
 
 | Sprint | Days | Backend | Frontend | Done when |
 |---|---|---|---|---|
-| Sprint 1 | 1–2 | Merge the M0 setup, Google sign-in with roles, `partners` and `offers` with seed data, OpenRouter LLM client and orchestrator, travel tools, `/destinations`, `/wishes` with coverage check | Login and protected routes, wish input, "not covered" message | A signed-in client sends a wish and gets a panel or a polite "not covered" |
-| Sprint 2 | 3–4 | Panel from partner tags, `/answers`, plan generation with the offer-id check, `request-quote`, agent queue and pricing endpoints, admin endpoints | Panel renderer with budget, travellers and dates, plan page without prices, agent queue and pricing page | A client gets a plan from real offers and asks for a quote; an agent enters prices |
-| Sprint 3 | 5 | Quote PDF, email to the client, accept and reject, `DELETE /me` | Quote page with PDF and accept/reject, privacy page | The full flow works end to end for the demo |
+| Sprint 1 | Fri 16, Mon 19 Oct | Merge the M0 setup, Google sign-in with roles, `partners` and `offers` with seed data, OpenRouter LLM client and orchestrator, travel tools, `/destinations`, `/wishes` with coverage check | Login and protected routes, wish input, "not covered" message | A signed-in client sends a wish and gets a panel or a polite "not covered" |
+| Sprint 2 | Tue 20, Wed 21 Oct | Panel from partner tags, `/answers`, plan generation with the offer-id check, `request-quote`, agent queue and pricing endpoints, admin endpoints | Panel renderer with budget, travellers and dates, plan page without prices, agent queue and pricing page | A client gets a plan from real offers and asks for a quote; an agent enters prices |
+| Sprint 3 | Thu 22 Oct | Quote PDF, email to the client, accept and reject, `DELETE /me` | Quote page with PDF and accept/reject, privacy page | The full flow works end to end for the demo |
 
 Stretch goals if time is left: admin pages for partners and offers (until then, seed data and the API) and a progress stream while the plan is built.
 
