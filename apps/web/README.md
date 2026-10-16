@@ -14,6 +14,32 @@ pnpm dev
 
 The app runs on http://localhost:5173.
 
+## Folders
+
+```
+src/
+  main.tsx, router.tsx   app entry and router setup
+  routes/                pages (TanStack file-based routing)
+    __root.tsx, index.tsx
+    wishes/              send a wish, the preference panel
+    plans/               the proposed plan, "Ask for a quote"
+    quotes/              the quote, PDF download, accept or reject
+    agent/               agent pages: quote queue, pricing
+    admin/               partners and offers
+    settings/            account, delete my data
+  components/            shared components
+    ui/                  buttons, inputs, layout pieces
+    panel/               PanelSection, TagPicker
+    plan/  quote/  agent/
+  api/                   API client setup; generated/ is created by pnpm gen
+  hooks/                 shared React hooks
+  lib/                   small helpers (dates, money formatting)
+  i18n/                  English and French texts
+  test/                  test setup
+```
+
+A page lives in `routes/`; anything used by two pages moves to `components/`.
+
 ## Generated code
 
 Both are created by `pnpm gen`, which `dev`, `build`, `typecheck` and `test` run first. They are not committed.

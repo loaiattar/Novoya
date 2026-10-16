@@ -10,7 +10,6 @@ class Settings(BaseSettings):
 
     env: str = "development"
     database_url: str = "postgresql+asyncpg://novoya:novoya@localhost:5432/novoya"
-    redis_url: str = "redis://localhost:6379/0"
     cors_origins: list[str] = ["http://localhost:5173"]
 
 

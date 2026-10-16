@@ -2,6 +2,33 @@
 
 FastAPI backend. See [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
+## Folders
+
+```
+src/novoya_api/
+  main.py          creates the FastAPI app and includes the routers
+  config.py        settings from NOVOYA_* environment variables
+  db.py            SQLAlchemy engine, session, Base
+  openapi.py       prints openapi.json for the frontend
+  routers/         HTTP endpoints, one module per resource (thin)
+  schemas/         Pydantic request and response models
+  services/        business logic: coverage, panels, plans, quotes, accounts
+  models/          SQLAlchemy models, one file per table
+  auth/            Google sign-in, sessions, client and agent roles
+  agent/           OpenRouter client and tool-calling orchestrator
+    tools/         travel tools: covered_destinations, search_offers
+    prompts/       system prompts
+  pdf/             quote PDF (Jinja2 + WeasyPrint)
+    templates/
+  emails/          "your quote is ready" emails over SMTP
+    templates/
+  seed/            partners and offers for local development
+alembic/versions/  database migrations
+tests/             pytest
+```
+
+Each package's `__init__.py` says what goes in it and which issue adds it. A request goes router → service → models, and the router returns a schema.
+
 ## Run locally
 
 Needs [uv](https://docs.astral.sh/uv/) and a Postgres (`docker compose up db` from the repo root).
@@ -24,7 +51,7 @@ uv run pytest
 
 ## Database migrations
 
-Add models in `src/novoya_api/models.py`, then:
+Add a model in `src/novoya_api/models/` (one file per table) and import it in `models/__init__.py`, then:
 
 ```bash
 uv run alembic revision --autogenerate -m "add users"

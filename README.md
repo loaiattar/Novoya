@@ -19,7 +19,6 @@ docker compose up --build
 | Web (React) | http://localhost:5173 |
 | API (FastAPI) | http://localhost:8000, docs at http://localhost:8000/docs |
 | PostgreSQL | localhost:5432 (user, password and database: `novoya`) |
-| Redis | localhost:6379 |
 
 If a port is already taken on your machine, override it: `API_PORT=8001 docker compose up`.
 
