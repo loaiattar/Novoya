@@ -1,0 +1,5 @@
+packages:
+  - '.'
+
+overrides:
+  undici: 6.21.3

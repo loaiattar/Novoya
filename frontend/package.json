@@ -1,0 +1,46 @@
+{
+  "name": "novoya-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "gen:api": "openapi-ts",
+    "gen:routes": "tsr generate",
+    "gen": "pnpm gen:api && pnpm gen:routes",
+    "dev": "pnpm gen && vite",
+    "build": "pnpm gen && tsc -b && vite build",
+    "typecheck": "pnpm gen && tsc -b",
+    "lint": "oxlint",
+    "test": "pnpm gen && vitest run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-query": "^5.104.2",
+    "@tanstack/react-router": "^1.170.44",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@tanstack/react-query-devtools": "^5.104.2",
+    "@tanstack/react-router-devtools": "^1.167.2",
+    "@tanstack/router-cli": "^1.167.44",
+    "@tanstack/router-plugin": "^1.168.45",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.1.2",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.4"
+  },
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=22"
+  }
+}
