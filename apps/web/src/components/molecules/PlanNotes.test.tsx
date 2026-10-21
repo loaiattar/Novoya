@@ -21,4 +21,4 @@ describe('PlanNotes', () => {
 
     expect(screen.getByText(/not based on your preferences/i)).toBeInTheDocument()
   })
-})
+}) 
