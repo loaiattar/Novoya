@@ -6,7 +6,6 @@
   "wishesLabel": "Your wishes",
   "daysLabel": "Day by day",
   "dayDate": "Day {{number}} · {{date}}",
-  "discoverDay": "Discover this day",
   "cta": {
     "eyebrow": "The conversation goes on",
     "title": "Does this preview feel like you?",
@@ -17,12 +16,9 @@
   "notFound": "This preview doesn't exist.",
   "day": {
     "back": "← Back to the preview",
-    "notFound": "This day doesn't exist."
-  },
-  "period": {
-    "morning": "Morning",
-    "midday": "Midday",
-    "evening": "Evening"
+    "notFound": "This day doesn't exist.",
+    "previous": "← Day {{number}}",
+    "next": "Day {{number}} →"
   },
   "placeHeading": "{{place}},",
   "priceNote": "The price will come in a quote from a Novoya advisor.",

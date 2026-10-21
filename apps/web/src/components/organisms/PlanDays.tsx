@@ -1,12 +1,13 @@
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import type { PlanItemResponse } from '../../api/generated/types.gen'
 import { groupByDay } from '../../domain/plan/days'
 
-import { Chip } from '../atoms/Chip'
+import { PlanItem } from '../molecules/PlanItem'
 
-/** The plan's offers, day by day, on a vertical line. Never a price, never a partner (#31). */
-export function PlanDays({ items }: { items: PlanItemResponse[] }) {
+/** The plan's offers, day by day, on a vertical line, each day linking to its page. Never a price, never a partner (#31). */
+export function PlanDays({ planId, items }: { planId: string; items: PlanItemResponse[] }) {
   const { t } = useTranslation('plan')
   return (
     <section aria-label={t('daysLabel')} className="relative px-5 py-14 md:px-[14vw] md:py-22">
@@ -23,23 +24,15 @@ export function PlanDays({ items }: { items: PlanItemResponse[] }) {
               </span>
             </div>
             <article className="min-w-0 border-t border-line pt-5.5 pb-16">
-              <h2 className="mb-6 text-[34px] leading-tight">{t('live.day', { number: day })}</h2>
+              <h2 className="mb-6 text-[34px] leading-tight">
+                <Link to="/plans/$planId/days/$day" params={{ planId, day: String(day) }} className="underline-offset-4 hover:underline">
+                  {t('live.day', { number: day })}
+                </Link>
+              </h2>
               <ul className="grid gap-6 md:grid-cols-2 md:gap-10">
                 {dayItems.map((item) => (
                   <li key={item.id}>
-                    {item.available ? (
-                      <>
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          {item.kind && <Chip>{t(`live.kind.${item.kind}`)}</Chip>}
-                          {item.quantity > 1 && <Chip>{t('live.quantity', { count: item.quantity })}</Chip>}
-                        </div>
-                        <h3 className="mb-2 font-serif text-lg tracking-normal">{item.title}</h3>
-                        {item.description && <p className="m-0 text-sm leading-relaxed text-muted">{item.description}</p>}
-                      </>
-                    ) : (
-                      <p className="m-0 text-sm text-muted italic">{t('live.unavailable')}</p>
-                    )}
-                    {item.note && <p className="mt-2 text-sm leading-relaxed">{item.note}</p>}
+                    <PlanItem item={item} />
                   </li>
                 ))}
               </ul>

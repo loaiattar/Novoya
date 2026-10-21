@@ -6,7 +6,6 @@
   "wishesLabel": "Vos envies",
   "daysLabel": "Jour par jour",
   "dayDate": "Jour {{number}} · {{date}}",
-  "discoverDay": "Découvrir cette journée",
   "cta": {
     "eyebrow": "La conversation continue",
     "title": "Cet aperçu vous ressemble ?",
@@ -17,12 +16,9 @@
   "notFound": "Cet aperçu n’existe pas.",
   "day": {
     "back": "← Retour à l’aperçu",
-    "notFound": "Cette journée n’existe pas."
-  },
-  "period": {
-    "morning": "Matin",
-    "midday": "Milieu de journée",
-    "evening": "Soir"
+    "notFound": "Cette journée n’existe pas.",
+    "previous": "← Jour {{number}}",
+    "next": "Jour {{number}} →"
   },
   "placeHeading": "{{place}},",
   "priceNote": "Le prix viendra dans un devis, établi par un conseiller Novoya.",

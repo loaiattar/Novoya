@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { formatDay } from '@/lib/format'
@@ -14,8 +13,8 @@ export type DaySummary = {
   mood: string
 }
 
-/** The plan's days on a vertical line, each one linking to its detail page. */
-export function DayTimeline({ planId, days }: { planId: string; days: DaySummary[] }) {
+/** The demo plan's days on a vertical line. Day pages read real plans only (GET /plans/{id}). */
+export function DayTimeline({ days }: { days: DaySummary[] }) {
   const { t, i18n } = useTranslation('plan')
   return (
     <section aria-label={t('daysLabel')} className="relative px-5 py-14 md:px-[14vw] md:py-22">
@@ -31,7 +30,7 @@ export function DayTimeline({ planId, days }: { planId: string; days: DaySummary
                 {String(day.number).padStart(2, '0')}
               </span>
             </div>
-            <article className="grid gap-3.5 border-t border-line pt-5.5 pb-16 md:grid-cols-[1fr_1fr_190px] md:gap-10">
+            <article className="grid gap-3.5 border-t border-line pt-5.5 pb-16 md:grid-cols-2 md:gap-10">
               <div>
                 <p className="mb-3 text-xs tracking-[0.15em] text-muted uppercase">
                   {t('dayDate', { number: day.number, date: formatDay(i18n.language, day.date, false) })}
@@ -40,14 +39,6 @@ export function DayTimeline({ planId, days }: { planId: string; days: DaySummary
                 <Chip>{day.mood}</Chip>
               </div>
               <p className="m-0 text-sm leading-relaxed text-muted">{day.text}</p>
-              <Link
-                to="/plans/$planId/days/$day"
-                params={{ planId, day: String(day.number) }}
-                className="flex min-h-11 items-center self-start text-sm text-ink underline underline-offset-4"
-              >
-                {t('discoverDay')} <span aria-hidden="true">&nbsp;↗</span>
-                <span className="sr-only">: {day.title}</span>
-              </Link>
             </article>
           </li>
         ))}

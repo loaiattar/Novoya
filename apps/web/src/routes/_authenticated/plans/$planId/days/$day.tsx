@@ -1,76 +1,97 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { formatDay } from '@/lib/format'
-
+import type { Plan } from '../../../../../api/generated/types.gen'
+import { usePlan } from '../../../../../api/plans'
 import { Eyebrow } from '../../../../../components/atoms/Eyebrow'
-import { ConversationDock } from '../../../../../components/organisms/ConversationDock'
+import { ErrorNote } from '../../../../../components/molecules/ErrorNote'
+import { PlanItem } from '../../../../../components/molecules/PlanItem'
 import { AppShell } from '../../../../../components/templates/AppShell'
-import { DemoBanner } from '../../../../../components/molecules/DemoBanner'
-import { getPlan } from '../../../../../fixtures/plans'
+import { groupByDay } from '../../../../../domain/plan/days'
 
 export const Route = createFileRoute('/_authenticated/plans/$planId/days/$day')({
-  loader: ({ params }) => {
-    const plan = getPlan(params.planId)
-    const day = plan?.days.find((item) => String(item.number) === params.day)
-    if (!plan || !day) throw notFound()
-    return { plan, day }
-  },
-  notFoundComponent: NotFound,
-  component: DayPage,
+  component: DayRoute,
 })
 
-function NotFound() {
+/** A day of the plan, as GET /plans/{id} gives it: the same query as the plan page, so it is cached. */
+function DayRoute() {
+  const { planId, day } = Route.useParams()
   const { t } = useTranslation('plan')
-  return <p className="px-5 pt-32 md:px-[8vw]">{t('day.notFound')}</p>
-}
+  const { plan, signedOut, missing } = usePlan(
+    planId,
+    `/plans/${encodeURIComponent(planId)}/days/${encodeURIComponent(day)}`,
+  )
 
-function DayPage() {
-  const { plan, day } = Route.useLoaderData()
-  const { t, i18n } = useTranslation('plan')
-  // The title on two lines, the second in italics, as in the mockup.
-  const words = day.title.split(' ')
-  const cut = Math.max(1, Math.floor(words.length / 2))
-  const first = words.slice(0, cut).join(' ')
-  const rest = words.slice(cut)
   return (
     <AppShell>
-      <DemoBanner />
-      <main>
-        <Link
-          to="/plans/$planId"
-          params={{ planId: plan.id }}
-          className="mx-6 my-4 inline-flex min-h-11 items-center text-ink underline underline-offset-4 md:mx-[5vw] md:my-6"
-        >
-          {t('day.back')}
-        </Link>
-        <section className="flex flex-col-reverse md:grid md:min-h-[calc(100vh-150px)] md:grid-cols-2">
-          <div className="px-6 pt-11 pb-10 md:px-[9vw] md:py-12 lg:pb-28">
-            <Eyebrow>{t('dayDate', { number: day.number, date: formatDay(i18n.language, day.date, false) })}</Eyebrow>
-            <h1 className="text-[55px] leading-[0.95] md:text-[75px]">
-              {first}{' '}
-              <br />
-              <em>{rest.join(' ')}.</em>
-            </h1>
-            <p className="font-serif text-[19px] leading-relaxed text-muted">{day.intro}</p>
-            <ol className="mt-12">
-              {day.moments.map((moment) => (
-                <li key={moment.time} className="grid grid-cols-[55px_20px_1fr] gap-3">
-                  <time className="text-xs">{moment.time}</time>
-                  <span aria-hidden="true" className="mt-1.5 size-[7px] rounded-full bg-coral" />
-                  <article className="border-l border-line pb-7.5 pl-6">
-                    <small className="text-xs text-muted">{t(`period.${moment.period}`)}</small>
-                    <h2 className="my-1.5 font-serif text-lg tracking-normal">{moment.title}</h2>
-                    <p className="text-sm text-muted">{moment.text}</p>
-                  </article>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <img src={plan.photo} alt={plan.photoAlt} className="block h-[330px] w-full object-cover md:h-full" />
-        </section>
-        <ConversationDock version={plan.version} />
-      </main>
+      {/* Also while trying again after a failure: the click shows that something happens. */}
+      {plan.isPending || signedOut || (plan.isError && plan.isFetching) ? (
+        <p className="px-5 pt-32 text-muted md:px-[8vw]">{t('live.loading')}</p>
+      ) : missing ? (
+        <NotFound message={t('notFound')} />
+      ) : plan.isError ? (
+        <ErrorNote message={t('live.loadFailed')} onRetry={() => plan.refetch()} />
+      ) : (
+        <LiveDay plan={plan.data} day={day} />
+      )}
     </AppShell>
+  )
+}
+
+function NotFound({ message }: { message: string }) {
+  return <p className="px-5 pt-32 md:px-[8vw]">{message}</p>
+}
+
+function LiveDay({ plan, day }: { plan: Plan; day: string }) {
+  const { t } = useTranslation('plan')
+  // A day of the trip is a day with offers, as on the plan page.
+  const days = groupByDay(plan.items)
+  const index = days.findIndex((item) => String(item.day) === day)
+  if (index === -1) return <NotFound message={t('day.notFound')} />
+  const { day: number, items } = days[index]
+  const previous = days[index - 1]
+  const next = days[index + 1]
+
+  return (
+    <main className="px-5 pb-16 md:px-[8vw] md:pb-24">
+      <Link
+        to="/plans/$planId"
+        params={{ planId: plan.id }}
+        className="my-4 inline-flex min-h-11 items-center text-ink underline underline-offset-4 md:my-6"
+      >
+        {t('day.back')}
+      </Link>
+      <section className="pt-8 md:pt-12">
+        <Eyebrow>{t('live.eyebrow')}</Eyebrow>
+        <h1 className="m-0 text-[55px] leading-[0.95] md:text-[75px]">{t('live.day', { number })}</h1>
+      </section>
+      <ul className="mt-10 grid gap-8 border-t border-line pt-8 md:mt-14 md:grid-cols-2 md:gap-10">
+        {items.map((item) => (
+          <li key={item.id} className="min-w-0">
+            <PlanItem item={item} />
+          </li>
+        ))}
+      </ul>
+      <nav aria-label={t('daysLabel')} className="mt-14 flex flex-wrap justify-between gap-4">
+        {previous && (
+          <Link
+            to="/plans/$planId/days/$day"
+            params={{ planId: plan.id, day: String(previous.day) }}
+            className="inline-flex min-h-11 items-center underline underline-offset-4"
+          >
+            {t('day.previous', { number: previous.day })}
+          </Link>
+        )}
+        {next && (
+          <Link
+            to="/plans/$planId/days/$day"
+            params={{ planId: plan.id, day: String(next.day) }}
+            className="ml-auto inline-flex min-h-11 items-center underline underline-offset-4"
+          >
+            {t('day.next', { number: next.day })}
+          </Link>
+        )}
+      </nav>
+    </main>
   )
 }

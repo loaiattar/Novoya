@@ -2,12 +2,7 @@
 import { daysFromToday, timeDaysAgo } from './demoDates'
 import { PHOTOS } from './photos'
 
-/** When in the day: the page translates it. */
-export type Period = 'morning' | 'midday' | 'evening'
-
 // Titles, texts, moods and tags come from the planner (LLM), already in the user's language.
-export type Moment = { time: string; period: Period; title: string; text: string }
-
 export type PlanDay = {
   number: number
   /** ISO date, e.g. 2026-05-12. */
@@ -15,8 +10,6 @@ export type PlanDay = {
   title: string
   text: string
   mood: string
-  intro: string
-  moments: Moment[]
 }
 
 export type Plan = {
@@ -35,12 +28,6 @@ export type Plan = {
   days: PlanDay[]
 }
 
-const moments: Moment[] = [
-  { time: '08:30', period: 'morning', title: 'Petit-déjeuner face à la baie', text: 'Un début de journée tranquille, sans départ précipité.' },
-  { time: '11:00', period: 'midday', title: 'Les criques de l’ouest', text: 'Route panoramique et baignade selon la météo.' },
-  { time: '19:30', period: 'evening', title: 'Retour au vieux port', text: 'Une table locale choisie selon vos envies du moment.' },
-]
-
 const DEMO: Plan = {
   id: 'chania',
   version: 2,
@@ -54,10 +41,10 @@ const DEMO: Plan = {
   photo: PHOTOS.crete,
   photoAlt: 'Eaux turquoise de Crète',
   days: [
-    { number: 1, date: daysFromToday(60), title: 'Arriver, respirer', text: 'Installation face à la mer, temps libre et première soirée douce dans le vieux port.', mood: 'Très doux', intro: 'Une arrivée sans hâte, pour poser les valises et regarder la mer.', moments },
-    { number: 2, date: daysFromToday(61), title: 'La côte au réveil', text: 'Petit-déjeuner au calme, criques de l’ouest et déjeuner tardif les pieds presque dans l’eau.', mood: 'Équilibré', intro: 'Une journée lumineuse, pensée pour laisser la mer donner le tempo.', moments },
-    { number: 3, date: daysFromToday(62), title: 'Chania, côté intime', text: 'Marché, ruelles et rencontre avec une guide locale. Soirée libre selon l’envie.', mood: 'Culture', intro: 'La ville à pied, avec quelqu’un qui la connaît de l’intérieur.', moments },
-    { number: 4, date: daysFromToday(63), title: 'Une journée sans montre', text: 'Plage confidentielle et table de produits crétois. Rien d’autre au programme.', mood: 'Très doux', intro: 'Rien à prévoir, tout à savourer.', moments },
+    { number: 1, date: daysFromToday(60), title: 'Arriver, respirer', text: 'Installation face à la mer, temps libre et première soirée douce dans le vieux port.', mood: 'Très doux' },
+    { number: 2, date: daysFromToday(61), title: 'La côte au réveil', text: 'Petit-déjeuner au calme, criques de l’ouest et déjeuner tardif les pieds presque dans l’eau.', mood: 'Équilibré' },
+    { number: 3, date: daysFromToday(62), title: 'Chania, côté intime', text: 'Marché, ruelles et rencontre avec une guide locale. Soirée libre selon l’envie.', mood: 'Culture' },
+    { number: 4, date: daysFromToday(63), title: 'Une journée sans montre', text: 'Plage confidentielle et table de produits crétois. Rien d’autre au programme.', mood: 'Très doux' },
   ],
 }
 

@@ -297,10 +297,86 @@ describe('back-office and plan screens', () => {
     expect(await screen.findByText('The price will come in a quote from a Novoya advisor.')).toBeInTheDocument()
   })
 
-  it('opens a day of the plan', async () => {
-    renderAt('/plans/chania/days/2')
+  it('shows a day of the plan from the API, without any price', async () => {
+    renderAt(`/plans/${PLAN_ID}/days/2`)
 
-    expect(await screen.findByRole('heading', { name: 'La côte au réveil.' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Chania à pied' })).toBeInTheDocument()
+    expect(screen.getByText('Guide')).toBeInTheDocument()
+    expect(screen.getByText('This offer is no longer available.')).toBeInTheDocument()
+    expect(screen.queryByText('Maison face au port')).not.toBeInTheDocument() // day 1
+    expect(screen.getByRole('link', { name: '← Day 1' })).toHaveAttribute('href', `/plans/${PLAN_ID}/days/1`)
+    expect(screen.queryByRole('link', { name: /→$/ })).not.toBeInTheDocument() // the last day
+    expect(screen.queryByRole('note')).not.toBeInTheDocument() // real data: no demo banner
+    expect(document.body.textContent).not.toContain('€')
+  })
+
+  it('opens a day from the plan at once, from the cached plan', async () => {
+    renderAt(`/plans/${PLAN_ID}`)
+    const day = await screen.findByRole('link', { name: 'Day 2' })
+    // The plan is read again in the background (stale), but the day never waits for it.
+    planAnswer = () => new Promise(() => {})
+    fireEvent.click(day)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
+    expect(screen.queryByText('Loading your plan…')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '← Back to the preview' })).toHaveAttribute('href', `/plans/${PLAN_ID}`)
+  })
+
+  it.each(['0', '3', '9', 'abc'])('says day %s is not a day of the trip', async (day) => {
+    renderAt(`/plans/${PLAN_ID}/days/${day}`)
+
+    expect(await screen.findByText("This day doesn't exist.")).toBeInTheDocument()
+  })
+
+  it.each([
+    ['a plan that does not exist', () => Response.json({ code: 'plan_not_found', detail: 'no plan' }, { status: 404 })],
+    ['a plan the caller may not read', () => Response.json({ code: 'forbidden', detail: 'clients only' }, { status: 403 })],
+    ['an id that is no plan id', () => Response.json({ code: 'invalid_input', detail: 'plan_id: not a UUID' }, { status: 422 })],
+  ])('says the day does not exist for %s, with no retry', async (_, answer) => {
+    planAnswer = answer
+    renderAt(`/plans/${PLAN_ID}/days/1`)
+
+    expect(await screen.findByText("This preview doesn't exist.")).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
+  })
+
+  it('lets the client try again when the day could not be loaded', async () => {
+    planAnswer = () => Response.json({ code: 'unknown', detail: 'boom' }, { status: 500 })
+    renderAt(`/plans/${PLAN_ID}/days/1`)
+
+    expect(await screen.findByText('Your plan could not be loaded.')).toBeInTheDocument()
+    planAnswer = () => Response.json(PLAN)
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(await screen.findByRole('heading', { name: 'Maison face au port' })).toBeInTheDocument()
+  })
+
+  it('sends to the sign-in page from a day when the session ended, to come back to that day', async () => {
+    planAnswer = () => {
+      signedIn = false
+      return Response.json({ code: 'unauthenticated', detail: 'no session' }, { status: 401 })
+    }
+    const { router } = renderAt(`/plans/${PLAN_ID}/days/2`)
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
+    expect(router.state.location.search).toEqual({ redirect: `/plans/${PLAN_ID}/days/2` })
+  })
+
+  it("shows a day in the client's language", async () => {
+    me = { ...ADMIN, role: 'client', locale: 'fr' }
+    renderAt(`/plans/${PLAN_ID}/days/1`)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Jour 1' })).toBeInTheDocument()
+    expect(screen.getByText('Hébergement')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Jour 2 →' })).toBeInTheDocument()
+  })
+
+  it('does not open day pages from the demo plan', async () => {
+    renderAt('/plans/chania')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Chania, au rythme de la mer.' })).toBeInTheDocument()
+    expect(document.querySelector('a[href*="/days/"]')).toBeNull()
   })
 
   it('does not pretend to accept the demo quote', async () => {
@@ -311,7 +387,7 @@ describe('back-office and plan screens', () => {
     expect(screen.getByText(/Answering an offer is coming soon/)).toBeInTheDocument()
   })
 
-  it.each(['/trips', '/plans/chania', '/plans/chania/days/2', '/quotes/NV-2026-0182', '/agent'])(
+  it.each(['/trips', '/plans/chania', '/quotes/NV-2026-0182', '/agent'])(
     'says %s shows demo data',
     async (url) => {
       renderAt(url)

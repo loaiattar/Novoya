@@ -1,11 +1,8 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, isUnauthenticated } from '../../../../api/errors'
-import { getMeQueryKey, getPlanOptions } from '../../../../api/generated/@tanstack/react-query.gen'
 import type { Plan } from '../../../../api/generated/types.gen'
+import { usePlan } from '../../../../api/plans'
 import { Button } from '../../../../components/atoms/Button'
 import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { DemoBanner } from '../../../../components/molecules/DemoBanner'
@@ -36,24 +33,7 @@ function NotFound() {
 /** The plan built from the client's answers, as GET /plans/{id} gives it. */
 function PlanPage({ planId }: { planId: string }) {
   const { t } = useTranslation('plan')
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const plan = useQuery({ ...getPlanOptions({ path: { plan_id: planId } }), retry: false })
-  const signedOut = isUnauthenticated(plan.error)
-
-  // The session ended while on the page: sign in again and come back here. The cached /me
-  // goes first, or the sign-in page would see a session and send the client straight back.
-  // The way back is built from the id, not the current location: that one turns into /login
-  // while navigating, and would nest redirect after redirect.
-  useEffect(() => {
-    if (!signedOut) return
-    queryClient.removeQueries({ queryKey: getMeQueryKey() })
-    void navigate({ to: '/login', search: { redirect: `/plans/${encodeURIComponent(planId)}` }, replace: true })
-  }, [signedOut, queryClient, navigate, planId])
-
-  // 404: not the caller's plan, or no such plan. 403: not a client (an agent, an admin).
-  // 422: the id is not even a plan id. Trying again would never change these.
-  const missing = plan.error instanceof ApiError && [403, 404, 422].includes(plan.error.status)
+  const { plan, signedOut, missing } = usePlan(planId, `/plans/${encodeURIComponent(planId)}`)
 
   return (
     <AppShell>
@@ -85,7 +65,7 @@ function LivePlan({ plan }: { plan: Plan }) {
         <p className="mt-8 max-w-[660px] font-serif text-lg leading-relaxed">{plan.summary}</p>
         {!plan.based_on_preferences && <p className="mt-4 max-w-[660px] text-sm text-muted">{t('live.noPreferences')}</p>}
       </section>
-      <PlanDays items={plan.items} />
+      <PlanDays planId={plan.id} items={plan.items} />
       <QuoteNote />
       <QuoteCall />
     </main>
@@ -99,7 +79,7 @@ function DemoPlanPage() {
       <DemoBanner />
       <main className="lg:pb-24">
         <PlanHeader {...plan} />
-        <DayTimeline planId={plan.id} days={plan.days} />
+        <DayTimeline days={plan.days} />
         <QuoteNote />
         <QuoteCall />
         <ConversationDock version={plan.version} />
