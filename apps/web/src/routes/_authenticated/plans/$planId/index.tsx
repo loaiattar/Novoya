@@ -9,6 +9,7 @@ import { PlanHeader } from '../../../../components/organisms/PlanHeader'
 import { AppShell } from '../../../../components/templates/AppShell'
 import { DemoBanner } from '../../../../components/molecules/DemoBanner'
 import { getPlan } from '../../../../fixtures/plans'
+import { PlanNotes } from '../../../../components/molecules/PlanNotes'
 
 export const Route = createFileRoute('/_authenticated/plans/$planId/')({
   loader: ({ params }) => {
@@ -33,6 +34,8 @@ function PlanPage() {
       <DemoBanner />
       <main className="lg:pb-24">
         <PlanHeader {...plan} />
+        <DayTimeline planId={plan.id} days={plan.days} />
+         <PlanNotes basedOnPreferences={plan.basedOnPreferences} />
         <DayTimeline planId={plan.id} days={plan.days} />
         <section className="bg-ink px-6 py-15 text-white md:flex md:items-end md:justify-between md:px-[8vw] md:py-20">
           <div className="max-w-[660px]">

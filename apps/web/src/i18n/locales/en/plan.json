@@ -24,5 +24,9 @@
     "midday": "Midday",
     "evening": "Evening"
   },
-  "placeHeading": "{{place}},"
+  "placeHeading": "{{place}},",
+  "notes": {
+    "quote": "The price will come in a quote from a travel agent.",
+    "noPreferences": "This plan is not based on your preferences: you picked no tags."
+  }
 }

@@ -29,6 +29,7 @@ export type Plan = {
   endDate: string
   travellers: number
   tags: string[]
+  basedOnPreferences: boolean
   photo: string
   photoAlt: string
   days: PlanDay[]
@@ -50,6 +51,7 @@ const DEMO: Plan = {
   endDate: '2026-05-19',
   travellers: 2,
   tags: ['calme', 'mer', 'cuisine locale'],
+  basedOnPreferences: true,
   photo: PHOTOS.crete,
   photoAlt: 'Eaux turquoise de Crète',
   days: [

@@ -24,5 +24,11 @@
     "midday": "Milieu de journée",
     "evening": "Soir"
   },
-  "placeHeading": "{{place}},"
+  "placeHeading": "{{place}},",
+  
+  "notes": {
+    "quote": "Le prix viendra dans un devis, établi par un conseiller voyage.",
+    "noPreferences": "Ce plan n’est pas construit à partir de vos préférences : vous n’avez choisi aucun tag."
+  }
+
 }
