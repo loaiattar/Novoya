@@ -27,7 +27,6 @@ def upgrade() -> None:
         sa.Column("price_eur", sa.Numeric(precision=10, scale=2), nullable=True),
         sa.Column("label", sa.String(length=255), nullable=False),
         sa.Column("unit", sa.String(length=64), nullable=False),
-        sa.Column("confirmed", sa.Boolean(), server_default=sa.false(), nullable=False),
         sa.CheckConstraint(
             "pricing IN ('included', 'supplement', 'on_quote')", name="ck_plan_extras_pricing"
         ),
