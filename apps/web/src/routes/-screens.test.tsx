@@ -97,7 +97,7 @@ function renderAt(url: string) {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   )
-  return { router }
+  return { router, queryClient }
 }
 
 describe('back-office and plan screens', () => {
@@ -321,6 +321,23 @@ describe('back-office and plan screens', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
     expect(screen.queryByText('Loading your plan…')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '← Back to the preview' })).toHaveAttribute('href', `/plans/${PLAN_ID}`)
+  })
+
+  it('keeps the day on screen when reading the plan again in the background fails', async () => {
+    const { queryClient } = renderAt(`/plans/${PLAN_ID}`)
+    const day = await screen.findByRole('link', { name: 'Day 2' })
+    let fail!: () => void
+    planAnswer = () =>
+      new Promise((resolve) => (fail = () => resolve(Response.json({ code: 'unknown', detail: 'boom' }, { status: 500 }))))
+    fireEvent.click(day)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
+
+    await waitFor(() => expect(fail).toBeDefined())
+    fail()
+
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
+    expect(screen.queryByText('Your plan could not be loaded.')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
   })
 
   it.each(['0', '3', '9', 'abc'])('says day %s is not a day of the trip', async (day) => {

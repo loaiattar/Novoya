@@ -37,15 +37,18 @@ function PlanPage({ planId }: { planId: string }) {
 
   return (
     <AppShell>
-      {/* Also while trying again after a failure: the click shows that something happens. */}
-      {plan.isPending || signedOut || (plan.isError && plan.isFetching) ? (
+      {plan.isPending || signedOut ? (
         <p className="px-5 pt-32 text-muted md:px-[8vw]">{t('live.loading')}</p>
       ) : missing ? (
         <NotFound />
-      ) : plan.isError ? (
-        <ErrorNote message={t('live.loadFailed')} onRetry={() => plan.refetch()} />
-      ) : (
+      ) : plan.data ? (
+        // Kept when reading it again in the background fails: what is on screen is still right.
         <LivePlan plan={plan.data} />
+      ) : plan.isFetching ? (
+        // Trying again after a failure: the click shows that something happens.
+        <p className="px-5 pt-32 text-muted md:px-[8vw]">{t('live.loading')}</p>
+      ) : (
+        <ErrorNote message={t('live.loadFailed')} onRetry={() => plan.refetch()} />
       )}
     </AppShell>
   )

@@ -25,7 +25,7 @@ export function PlanDays({ planId, items }: { planId: string; items: PlanItemRes
             </div>
             <article className="min-w-0 border-t border-line pt-5.5 pb-16">
               <h2 className="mb-6 text-[34px] leading-tight">
-                <Link to="/plans/$planId/days/$day" params={{ planId, day: String(day) }} className="underline-offset-4 hover:underline">
+                <Link to="/plans/$planId/days/$day" params={{ planId, day: String(day) }} className="underline underline-offset-4">
                   {t('live.day', { number: day })}
                 </Link>
               </h2>
