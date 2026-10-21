@@ -2,7 +2,13 @@ from dataclasses import dataclass, replace
 from uuid import UUID
 
 from novoya_api.catalog.application.ports import PartnerRepository
-from novoya_api.catalog.domain import Partner, PartnerKind, PartnerNotFound, normalize_place
+from novoya_api.catalog.domain import (
+    ImportedRow,
+    Partner,
+    PartnerKind,
+    PartnerNotFound,
+    normalize_place,
+)
 from novoya_api.shared.application.unit_of_work import UnitOfWork
 
 
@@ -16,10 +22,12 @@ class UpdatePartnerCommand:
     contact_email: str | None = None
     contact_phone: str | None = None
     active: bool | None = None
+    hidden: bool | None = None
 
 
 class UpdatePartner:
-    """Patch a partner. Deactivating it hides its offers from search without touching them."""
+    """Patch a partner. Deactivating or hiding it hides its offers from search without
+    touching them. An imported partner only changes hidden: DÉTOUR owns the rest (ADR 0014)."""
 
     def __init__(self, partners: PartnerRepository, uow: UnitOfWork) -> None:
         self._partners = partners
@@ -46,7 +54,13 @@ class UpdatePartner:
                 else partner.contact_phone
             ),
             active=cmd.active if cmd.active is not None else partner.active,
+            hidden=cmd.hidden if cmd.hidden is not None else partner.hidden,
         )
+        if partner.imported and replace(updated, hidden=partner.hidden) != partner:
+            raise ImportedRow(
+                "this partner comes from DÉTOUR: change it in DÉTOUR and it arrives with the "
+                "next import. Here you can only hide it."
+            )
         await self._partners.save(updated)
         await self._uow.commit()
         return updated

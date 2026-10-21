@@ -19,6 +19,11 @@ export function formatMonth(locale: string, iso: string): string {
   return new Intl.DateTimeFormat(locale, { ...utc, month: 'long', year: 'numeric' }).format(day(iso))
 }
 
+/** May / mai, for a month number 1-12. */
+export function formatMonthName(locale: string, month: number): string {
+  return new Intl.DateTimeFormat(locale, { ...utc, month: 'long' }).format(Date.UTC(2026, month - 1, 1))
+}
+
 /** 19 Oct, 10:42 / 19 oct., 10:42, in the browser's time zone. */
 export function formatDateTime(locale: string, iso: string): string {
   return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))

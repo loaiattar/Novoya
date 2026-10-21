@@ -23,7 +23,7 @@ export function Manifesto() {
           {t('manifesto.lead')}
         </p>
         <div className="mt-[45px] flex items-start gap-6 leading-[1.65] text-muted md:mt-0">
-          <Seal className="size-[58px] text-2xl" />
+          <Seal className="size-[58px]" />
           <p>
             <strong className="text-ink">{t('manifesto.honestyTitle')}</strong>
             <br />

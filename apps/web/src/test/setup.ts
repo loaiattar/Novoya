@@ -10,7 +10,9 @@ configure({ asyncUtilTimeout: 3000 })
 
 // Vitest runs without globals, so Testing Library cannot unmount between tests by itself.
 // Tests are written against the English texts: switch back after a test that changed it.
+// The language chosen with the switch is kept in localStorage: forget it too.
 afterEach(async () => {
   cleanup()
+  localStorage.clear()
   await i18n.changeLanguage('en')
 })

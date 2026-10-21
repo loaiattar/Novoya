@@ -1,0 +1,15 @@
+{
+  "back": "← Back to home",
+  "eyebrow": "Destinations",
+  "title": "Where our travellers went,",
+  "titleEnd": "in their own words.",
+  "intro": "Reviews published by travellers who agreed to share them, grouped by destination.",
+  "loading": "Loading the reviews…",
+  "loadFailed": "The reviews could not be loaded.",
+  "empty": "No review has been published yet.",
+  "place": "{{city}}, {{country}}",
+  "count_one": "{{count}} review",
+  "count_other": "{{count}} reviews",
+  "rating": "Rated {{rating}} out of 5",
+  "inFrench": "Review in French"
+}

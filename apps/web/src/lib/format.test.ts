@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDay, formatDayRange, formatEuros, formatHoursAgo, formatMonth } from './format'
+import { formatDay, formatDayRange, formatEuros, formatHoursAgo, formatMonth, formatMonthName } from './format'
 
 // Intl puts narrow no-break spaces in some languages: compare with plain spaces.
 const plain = (text: string) => text.replace(/[\u00a0\u2009\u202f]/g, ' ')
@@ -19,6 +19,12 @@ describe('format', () => {
 
   it('writes a month', () => {
     expect(formatMonth('fr', '2026-06-01')).toBe('juin 2026')
+  })
+
+  it('names a month by its number', () => {
+    expect(formatMonthName('en', 5)).toBe('May')
+    expect(formatMonthName('fr', 9)).toBe('septembre')
+    expect(formatMonthName('en', 12)).toBe('December')
   })
 
   it('writes whole euros', () => {

@@ -183,3 +183,42 @@ async def test_one_deadline_covers_the_answer_and_its_retry():
 
     assert time.monotonic() - started < 0.55
     assert reading == DestinationReading(destination=PORTO, suggestions=[])
+
+
+async def test_fallback_matches_a_country_named_in_french():
+    chania = Destination("Greece", "Chania")
+    reader = LlmDestinationReader(FakeOrchestrator(LLMError("every model failed")))
+
+    reading = await reader.read("Une semaine en Grèce, au calme", [chania])
+
+    assert reading == DestinationReading(destination=Destination("Greece"), suggestions=[])
+
+
+async def test_name_matching_reader_finds_a_country_named_in_french():
+    reading = await NameMatchingReader().read("Partir au Maroc en mai", COVERED)
+
+    assert reading == DestinationReading(destination=Destination("Morocco"), suggestions=[])
+
+
+@pytest.mark.parametrize(
+    ("text", "country"),
+    [
+        ("Je rêve de visiter l'Italie en mai", "Italy"),
+        ("Deux semaines d’Espagne, au soleil", "Spain"),
+        ("Un tour de L’Italie", "Italy"),
+    ],
+)
+async def test_a_french_country_after_an_elided_article_is_found(text, country):
+    covered = [Destination("Italy", "Rome"), Destination("Spain", "Seville")]
+
+    reading = await NameMatchingReader().read(text, covered)
+
+    assert reading == DestinationReading(destination=Destination(country), suggestions=[])
+
+
+async def test_cote_d_ivoire_is_still_found_whole():
+    covered = [Destination("Ivory Coast", "Abidjan")]
+
+    reading = await NameMatchingReader().read("Une semaine en Côte d’Ivoire", covered)
+
+    assert reading == DestinationReading(destination=Destination("Ivory Coast"), suggestions=[])

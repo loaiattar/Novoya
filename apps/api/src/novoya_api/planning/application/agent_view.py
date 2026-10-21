@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 
 from novoya_api.planning.application.dto import (
+    AgentPlanExtraView,
     AgentPlanItemView,
     AgentPlanView,
     OfferContact,
@@ -101,7 +102,20 @@ def agent_plan_as_view(
         summary=plan.summary,
         assigned_agent_id=plan.assigned_agent_id,
         items=tuple(items),
+        extras=tuple(
+            AgentPlanExtraView(
+                extra.extra_id,
+                extra.pricing,
+                extra.price_eur,
+                extra.label,
+                extra.unit,
+                needs_quantity_check=extra.needs_quantity_check,
+                confirmed=extra.confirmed,
+            )
+            for extra in plan.extras
+        ),
         total=total,
+        ready_to_quote=plan.ready_to_quote(),
         budget_max=budget,
         currency=trip.currency if trip else None,
         over_budget=budget is not None and total > budget,

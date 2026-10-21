@@ -6,8 +6,23 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.catalog.domain import Offer, OfferKind, Partner, PartnerKind
-from novoya_api.catalog.infrastructure.db.models import OfferRow, PartnerRow
+from novoya_api.catalog.domain import (
+    Extra,
+    ExtraPricing,
+    Offer,
+    OfferKind,
+    Partner,
+    PartnerKind,
+    PriceUnit,
+    Review,
+)
+from novoya_api.catalog.infrastructure.db.models import (
+    DETOUR_SOURCE,
+    ExtraRow,
+    OfferRow,
+    PartnerRow,
+    ReviewRow,
+)
 
 
 def partner_to_entity(row: PartnerRow) -> Partner:
@@ -20,6 +35,8 @@ def partner_to_entity(row: PartnerRow) -> Partner:
         contact_email=row.contact_email,
         contact_phone=row.contact_phone,
         active=row.active,
+        hidden=row.hidden,
+        imported=row.source == DETOUR_SOURCE,
     )
 
 
@@ -39,6 +56,41 @@ def offer_to_entity(row: OfferRow) -> Offer:
         tags=tuple(row.tags),
         featured=row.featured,
         active=row.active,
+        price_eur=row.price_eur,
+        price_unit=PriceUnit(row.price_unit) if row.price_unit is not None else None,
+        opening_months=tuple(row.opening_months),
+        conditions=row.conditions,
+        restrictions=row.restrictions,
+        cancellation=row.cancellation,
+        confirmation_delay_hours=row.confirmation_delay_hours,
+        hidden=row.hidden,
+    )
+
+
+def review_to_entity(row: ReviewRow) -> Review:
+    return Review(
+        id=row.id,
+        country=row.country,
+        city=row.city,
+        rating=row.rating,
+        reviewed_on=row.reviewed_on,
+        text=row.text,
+        author=row.author,
+    )
+
+
+def extra_to_entity(row: ExtraRow) -> Extra:
+    return Extra(
+        id=row.id,
+        category=row.category,
+        label=row.label,
+        description=row.description,
+        pricing=ExtraPricing(row.pricing),
+        supplement_eur=row.supplement_eur,
+        unit=row.unit,
+        constraints=tuple(row.constraints),
+        active=row.active,
+        hidden=row.hidden,
     )
 
 
@@ -50,6 +102,7 @@ def _apply_partner(row: PartnerRow, partner: Partner) -> None:
     row.contact_email = partner.contact_email
     row.contact_phone = partner.contact_phone
     row.active = partner.active
+    row.hidden = partner.hidden
 
 
 def _apply_offer(row: OfferRow, offer: Offer) -> None:
@@ -66,6 +119,14 @@ def _apply_offer(row: OfferRow, offer: Offer) -> None:
     row.tags = list(offer.tags)
     row.featured = offer.featured
     row.active = offer.active
+    row.price_eur = offer.price_eur
+    row.price_unit = offer.price_unit.value if offer.price_unit is not None else None
+    row.opening_months = list(offer.opening_months)
+    row.conditions = offer.conditions
+    row.restrictions = offer.restrictions
+    row.cancellation = offer.cancellation
+    row.confirmation_delay_hours = offer.confirmation_delay_hours
+    row.hidden = offer.hidden
 
 
 class SqlPartnerRepository:
@@ -109,7 +170,12 @@ class SqlOfferRepository:
         stmt = (
             select(OfferRow.country, OfferRow.city)
             .join(PartnerRow, OfferRow.partner_id == PartnerRow.id)
-            .where(OfferRow.active.is_(True), PartnerRow.active.is_(True))
+            .where(
+                OfferRow.active.is_(True),
+                OfferRow.hidden.is_(False),
+                PartnerRow.active.is_(True),
+                PartnerRow.hidden.is_(False),
+            )
             .distinct()
             .order_by(OfferRow.country, OfferRow.city)
         )
@@ -153,3 +219,52 @@ class SqlOfferRepository:
         row = await self._session.get(OfferRow, offer.id)
         assert row is not None
         _apply_offer(row, offer)
+
+
+class SqlReviewRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def list_at(self, country: str | None, city: str | None, limit: int) -> list[Review]:
+        stmt = select(ReviewRow).order_by(ReviewRow.reviewed_on.desc(), ReviewRow.id).limit(limit)
+        if country is not None:
+            stmt = stmt.where(func.lower(ReviewRow.country) == country.lower())
+        if city is not None:
+            stmt = stmt.where(func.lower(ReviewRow.city) == city.lower())
+        return [review_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
+
+class SqlExtraRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def list_all(self) -> list[Extra]:
+        stmt = select(ExtraRow).order_by(ExtraRow.category, ExtraRow.label, ExtraRow.id)
+        return [extra_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
+    async def list_active(self) -> list[Extra]:
+        stmt = (
+            select(ExtraRow)
+            .where(ExtraRow.active.is_(True), ExtraRow.hidden.is_(False))
+            .order_by(ExtraRow.category, ExtraRow.label, ExtraRow.id)
+        )
+        return [extra_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
+    async def list_active_by_ids(self, ids: Sequence[UUID]) -> list[Extra]:
+        if not ids:
+            return []
+        stmt = select(ExtraRow).where(
+            ExtraRow.id.in_(ids), ExtraRow.active.is_(True), ExtraRow.hidden.is_(False)
+        )
+        found = {row.id: extra_to_entity(row) for row in (await self._session.scalars(stmt)).all()}
+        return [found[extra_id] for extra_id in ids if extra_id in found]
+
+    async def get(self, extra_id: UUID) -> Extra | None:
+        row = await self._session.get(ExtraRow, extra_id)
+        return extra_to_entity(row) if row is not None else None
+
+    async def save(self, extra: Extra) -> None:
+        """Only hidden changes in Novoya: the DÉTOUR import owns the rest of an extra."""
+        row = await self._session.get(ExtraRow, extra.id)
+        assert row is not None
+        row.hidden = extra.hidden

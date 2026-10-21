@@ -8,10 +8,10 @@
   "continueWithGoogle": "Continuer avec Google",
   "heroFoot": "Prendre le large",
   "manifesto": {
-    "eyebrow": "La promesse Novoya",
+    "eyebrow": "La promesse {{agency}}",
     "titleStart": "Moins chercher.",
     "titleEnd": "Mieux partir.",
-    "lead": "Vous racontez une envie. Notre concierge IA lui donne une première forme. Puis un agent Novoya la rend possible, avec attention et discernement.",
+    "lead": "Vous racontez une envie. Notre concierge IA lui donne une première forme. Puis un agent {{agency}} la rend possible, avec attention et discernement.",
     "honestyTitle": "Notre parti pris : l’honnêteté.",
     "honestyText": "Nous ne proposons que des destinations où nos partenaires sont actifs. Si nous ne pouvons pas vous y emmener, nous vous le dirons."
   },
@@ -55,7 +55,7 @@
     "steps": {
       "describe": {
         "title": "Je décris",
-        "copy": "Une phrase suffit. Vos mots restent chez Novoya."
+        "copy": "Une phrase suffit. Vos mots restent chez {{agency}}."
       },
       "refine": {
         "title": "Je précise",

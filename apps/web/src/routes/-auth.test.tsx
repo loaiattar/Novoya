@@ -310,7 +310,7 @@ describe('sign-in and sign-out', () => {
     renderAt('/wish')
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Novoya, home' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'DÉTOUR, home' })).toHaveAttribute('href', '/')
   })
 
   describe('the public landing page', () => {

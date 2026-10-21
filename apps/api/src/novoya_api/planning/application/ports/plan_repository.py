@@ -26,7 +26,8 @@ class PlanRepository(Protocol):
     ) -> list[Plan]: ...
 
     async def save(self, plan: Plan) -> None:
-        """Writes the plan row (status, assignee, timestamps). Not the items.
+        """Writes the plan row (status, assignee, timestamps). Not the items. When the plan
+        leaves proposed, also its chosen extras (fixed from then on).
 
         Raises InvalidTransition if another request changed the status since get()."""
         ...
@@ -37,6 +38,12 @@ class PlanRepository(Protocol):
         Price: negotiated_price, and only while the row is not removed (409 otherwise).
         Remove: removed=true and negotiated_price=NULL, after a last-item check.
         Restore: removed=false, leaving any price already in the database.
+
+        Raises InvalidTransition if the status changed since get()."""
+        ...
+
+    async def save_extra(self, plan: Plan, extra_id: UUID) -> None:
+        """Writes the price of one chosen extra, and the plan's updated_at.
 
         Raises InvalidTransition if the status changed since get()."""
         ...

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 
 from novoya_api.accounts.application.dto import ClientInfo, CurrentUserView
+from novoya_api.accounts.application.use_cases.change_locale import ChangeLocale
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
@@ -47,6 +48,7 @@ from novoya_api.accounts.presentation.http.dependencies import (
     CurrentUser,
     SettingsDep,
     callback_url,
+    get_change_locale,
     get_change_password,
     get_change_user_role,
     get_get_account,
@@ -73,11 +75,13 @@ from novoya_api.accounts.presentation.http.schemas import (
     RoleName,
     SignInRequest,
     TokenRequest,
+    UpdateMeRequest,
     UserResponse,
     role_of,
 )
 from novoya_api.config import Settings
 from novoya_api.shared.domain.errors import DomainError
+from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 
 logger = logging.getLogger(__name__)
@@ -347,6 +351,16 @@ async def get_me(
 ) -> MeResponse:
     """The signed-in user, with their role. The web app shows its menus from the role."""
     return MeResponse.of_account(await use_case(user.user_id))
+
+
+@me_router.patch("", operation_id="updateMe")
+async def update_me(
+    body: UpdateMeRequest,
+    user: CurrentUser,
+    use_case: Annotated[ChangeLocale, Depends(get_change_locale)],
+) -> MeResponse:
+    """Change the signed-in user's language (en or fr). Answers like GET /me."""
+    return MeResponse.of_account(await use_case(user.user_id, Locale(body.locale)))
 
 
 @admin_users_router.get("", operation_id="listUsers")

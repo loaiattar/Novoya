@@ -105,7 +105,7 @@ Un atome = un élément. Pas de label + champ + bouton ensemble. Pas d’histoir
 | `Badge` | “populaire”, “couvert” |
 | `Avatar` | photo / initiale |
 | `Divider` | séparation |
-| `LogoMark` | marque |
+| `Logo` | mot-symbole de l’agence, via `Photo` (WebP) |
 | `GoogleLogo` | le « G » de Google (`public/icons/google.svg`) |
 | `SkeletonBone` | placeholder de chargement |
 | `ProgressDot` | un point du rituel de génération |
@@ -136,6 +136,7 @@ C’est le vrai vocabulaire de l’app. Si ce niveau est propre, le reste s’as
 | `PlanDayStamp` | jour + date | “Jour 3 · mercredi” |
 | `FeaturedBadge` | Badge + texte | plan catalogue / populaire |
 | `NavItem` | Icon + label | entrée de navigation |
+| `HomeLink` | Logo dans un lien accueil | marque cliquable |
 | `EmptyNote` | texte + action optionnelle | état vide élégant |
 
 Une molécule **ne sait pas** ce qu’est un “wish” métier. Elle reçoit `value`, `onChange`, `label`.
@@ -148,7 +149,8 @@ Un organisme est une **région** que tu poses dans un template. Toujours aliment
 
 | Nom | Contient | Où on le voit |
 |---|---|---|
-| `AppHeader` | Logo, NavItem, Avatar | presque partout |
+| `AppHeader` | HomeLink, NavItem, Avatar | presque partout |
+| `SiteFooter` | HomeLink, contact confirmé, mentions légales | pages publiques |
 | `WishHero` | WishField, CoverageHint | accueil |
 | `CoverageEmpty` | CoverageHint + SuggestedDestination[] | destination non couverte |
 | `PanelSection` | SectionTitle + TagButton[] | une section du panneau (style, rythme…) |

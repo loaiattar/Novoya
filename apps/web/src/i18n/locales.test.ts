@@ -27,4 +27,18 @@ describe('message files', () => {
     })
     expect(empty).toEqual([])
   })
+
+  // Novoya is the project and the team; the client sees the agency, via {{agency}}.
+  // Only the legal notices name the Novoya team, as the site's developer.
+  it.each(['en', 'fr'])('%s texts never name Novoya outside the legal notices', (language) => {
+    const named = Object.entries(resources[language])
+      .filter(([namespace]) => namespace !== 'legal')
+      .flatMap(([namespace, messages]) => keys(messages).map((key) => `${namespace}.${key}`))
+      .filter((path) => {
+        const [namespace, ...parts] = path.split('.')
+        const value = parts.reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], resources[language][namespace])
+        return typeof value === 'string' && value.includes('Novoya')
+      })
+    expect(named).toEqual([])
+  })
 })

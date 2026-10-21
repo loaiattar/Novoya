@@ -34,7 +34,7 @@
   },
   "confirm": {
     "title": "Changer le rôle de {{name}} ?",
-    "body": "{{name}} passera de {{from}} à {{to}}. Cela change ce que cette personne peut ouvrir dans Novoya.",
+    "body": "{{name}} passera de {{from}} à {{to}}. Cela change ce que cette personne peut ouvrir dans {{agency}}.",
     "action": "Changer le rôle",
     "cancel": "Annuler"
   }

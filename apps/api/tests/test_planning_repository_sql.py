@@ -20,12 +20,12 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 from novoya_api.accounts.infrastructure.db.models import UserModel
-from novoya_api.catalog.infrastructure.db.models import OfferRow, PartnerRow
+from novoya_api.catalog.infrastructure.db.models import ExtraRow, OfferRow, PartnerRow
 from novoya_api.planning.application.ports.plan_repository import ItemWrite
 from novoya_api.planning.application.use_cases.set_item_price import SetItemCommand, SetItemPrice
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.domain.errors import InvalidPlan
-from novoya_api.planning.domain.plan import DraftItem, Plan, PlanItem, PlanStatus
+from novoya_api.planning.domain.plan import DraftItem, Plan, PlanExtra, PlanItem, PlanStatus
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
 from novoya_api.shared.domain.errors import InvalidTransition
 from novoya_api.wishes.domain.wish import Wish
@@ -40,7 +40,9 @@ async def engine(database_url) -> AsyncIterator[AsyncEngine]:  # noqa: F811
     engine = create_async_engine(database_url, poolclass=NullPool)
     async with engine.begin() as connection:
         await connection.execute(
-            text("TRUNCATE plan_items, plans, wishes, offers, partners CASCADE")
+            text(
+                "TRUNCATE plan_extras, plan_items, plans, wishes, extras, offers, partners CASCADE"
+            )
         )
     yield engine
     await engine.dispose()
@@ -583,3 +585,135 @@ async def test_a_stale_restore_does_not_roll_back_a_price(engine, wish_id, offer
     assert read is not None
     assert read.items[0].removed is False
     assert read.items[0].negotiated_price == Decimal("150.00")
+
+
+async def _add_extras(engine: AsyncEngine) -> tuple[UUID, UUID]:
+    bag = ExtraRow(
+        id=uuid4(),
+        category="transport",
+        label="Extra bag",
+        description="One more bag in the hold",
+        pricing="supplement",
+        supplement_eur=25,
+        unit="per bag",
+        constraints=[],
+        active=True,
+    )
+    guide = ExtraRow(
+        id=uuid4(),
+        category="activity",
+        label="Private guide",
+        description="A guide for the group",
+        pricing="on_quote",
+        supplement_eur=None,
+        unit="per activity",
+        constraints=[],
+        active=True,
+    )
+    async with new_session(engine) as session:
+        session.add_all([bag, guide])
+        await session.commit()
+    return bag.id, guide.id
+
+
+async def test_save_writes_the_chosen_extras_when_the_quote_is_requested(
+    engine, wish_id, offer_ids
+):
+    hotel, _boat = offer_ids
+    bag, guide = await _add_extras(engine)
+    plan = Plan.propose(wish_id, True, "Sun and sea", [DraftItem(hotel, 1, 7, None)], 8, NOW)
+    await add_plan(engine, plan)
+    extras = [
+        PlanExtra(extra_id=bag, pricing="supplement", price_eur=Decimal("25.00")),
+        PlanExtra(extra_id=guide, pricing="on_quote", price_eur=None),
+    ]
+
+    async with new_session(engine) as session:
+        repo = SqlPlanRepository(session)
+        loaded = await repo.get(plan.id)
+        loaded.request_quote(NOW, extras)
+        await repo.save(loaded)
+        await session.commit()
+
+    read = await read_plan(engine, plan.id)
+    assert read is not None
+    assert {extra.extra_id: extra for extra in read.extras} == {
+        extra.extra_id: extra for extra in extras
+    }
+
+
+async def test_save_extra_writes_the_price_the_agent_set(engine, wish_id, offer_ids):
+    hotel, _boat = offer_ids
+    _bag, guide = await _add_extras(engine)
+    agent_id = uuid4()
+    await _add_agent(engine, agent_id)
+    plan = Plan.propose(wish_id, True, "Sun and sea", [DraftItem(hotel, 1, 7, None)], 8, NOW)
+    await add_plan(engine, plan)
+    async with new_session(engine) as session:
+        repo = SqlPlanRepository(session)
+        loaded = await repo.get(plan.id)
+        loaded.request_quote(NOW, [PlanExtra(extra_id=guide, pricing="on_quote", price_eur=None)])
+        await repo.save(loaded)
+        loaded.take(agent_id, NOW)
+        await repo.save(loaded)
+        await session.commit()
+
+    async with new_session(engine) as session:
+        repo = SqlPlanRepository(session)
+        loaded = await repo.get(plan.id)
+        loaded.set_extra_price(guide, agent_id, Decimal("45.00"), NOW)
+        await repo.save_extra(loaded, guide)
+        await session.commit()
+
+    read = await read_plan(engine, plan.id)
+    assert read is not None
+    assert read.extras == (
+        PlanExtra(extra_id=guide, pricing="on_quote", price_eur=Decimal("45.00")),
+    )
+    assert read.extras[0].confirmed is True
+
+
+async def test_a_chosen_extra_is_not_confirmed_until_the_agent_prices_it(
+    engine, wish_id, offer_ids
+):
+    hotel, _boat = offer_ids
+    bag, _guide = await _add_extras(engine)
+    plan = Plan.propose(wish_id, True, "Sun and sea", [DraftItem(hotel, 1, 7, None)], 8, NOW)
+    await add_plan(engine, plan)
+    async with new_session(engine) as session:
+        repo = SqlPlanRepository(session)
+        loaded = await repo.get(plan.id)
+        loaded.request_quote(
+            NOW, [PlanExtra(extra_id=bag, pricing="supplement", price_eur=Decimal("25.00"))]
+        )
+        await repo.save(loaded)
+        await session.commit()
+
+    read = await read_plan(engine, plan.id)
+    assert read is not None
+    assert read.extras[0].confirmed is False
+
+
+async def test_the_extra_label_and_unit_are_stored_with_the_plan(engine, wish_id, offer_ids):
+    hotel, _boat = offer_ids
+    bag, _guide = await _add_extras(engine)
+    plan = Plan.propose(wish_id, True, "Sun and sea", [DraftItem(hotel, 1, 7, None)], 8, NOW)
+    await add_plan(engine, plan)
+    chosen = PlanExtra(
+        extra_id=bag,
+        pricing="supplement",
+        price_eur=Decimal("25.00"),
+        label="Extra bag",
+        unit="per bag",
+    )
+
+    async with new_session(engine) as session:
+        repo = SqlPlanRepository(session)
+        loaded = await repo.get(plan.id)
+        loaded.request_quote(NOW, [chosen])
+        await repo.save(loaded)
+        await session.commit()
+
+    read = await read_plan(engine, plan.id)
+    assert read is not None
+    assert [(extra.label, extra.unit) for extra in read.extras] == [("Extra bag", "per bag")]

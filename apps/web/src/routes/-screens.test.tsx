@@ -221,7 +221,7 @@ describe('back-office and plan screens', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Your trip, day by day.' })).toBeInTheDocument()
     expect(screen.getByText(PLAN.summary)).toBeInTheDocument()
     expect(screen.getByText(/You picked no preference/)).toBeInTheDocument()
-    expect(screen.getByText('The price will come in a quote from a Novoya advisor.')).toBeInTheDocument()
+    expect(screen.getByText('The price will come in a quote from a DÉTOUR advisor.')).toBeInTheDocument()
     const days = screen.getAllByRole('heading', { level: 2, name: /^Day / }).map((heading) => heading.textContent)
     expect(days).toEqual(['Day 1', 'Day 2'])
     expect(screen.getByRole('heading', { name: 'Maison face au port' })).toBeInTheDocument()
@@ -294,7 +294,7 @@ describe('back-office and plan screens', () => {
   it('says the demo plan has no price yet', async () => {
     renderAt('/plans/chania')
 
-    expect(await screen.findByText('The price will come in a quote from a Novoya advisor.')).toBeInTheDocument()
+    expect(await screen.findByText('The price will come in a quote from a DÉTOUR advisor.')).toBeInTheDocument()
   })
 
   it('shows a day of the plan from the API, without any price', async () => {
@@ -302,6 +302,7 @@ describe('back-office and plan screens', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Day 2' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Chania à pied' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Chania à pied' })).toHaveAttribute('href', expect.stringMatching(/^\/offers\//))
     expect(screen.getByText('Guide')).toBeInTheDocument()
     expect(screen.getByText('This offer is no longer available.')).toBeInTheDocument()
     expect(screen.queryByText('Maison face au port')).not.toBeInTheDocument() // day 1

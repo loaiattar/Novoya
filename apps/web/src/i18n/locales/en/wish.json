@@ -23,9 +23,9 @@
     }
   },
   "suggestionWish": "A few days in {{place}}, ",
-  "privacy": "✦ Your words stay with Novoya. No import, ever.",
+  "privacy": "✦ Your words stay with {{agency}}. No import, ever.",
   "coverage": {
-    "eyebrow": "Novoya coverage",
+    "eyebrow": "{{agency}} coverage",
     "titleStart": "{{place}} makes us dream too.",
     "titleEnd": "But not yet.",
     "unknownPlace": "This destination",

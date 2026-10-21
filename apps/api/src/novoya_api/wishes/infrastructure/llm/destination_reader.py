@@ -7,6 +7,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, StringConstraints
 
+from novoya_api.catalog.public import canonical_country
 from novoya_api.shared.infrastructure.llm.errors import LLMError
 from novoya_api.shared.infrastructure.llm.orchestrator import Orchestrator
 from novoya_api.shared.infrastructure.llm.structured import run_structured
@@ -91,14 +92,43 @@ class NameMatchingReader:
 
 
 def match_by_name(text: str, covered: Sequence[Destination]) -> Destination | None:
-    """A covered city named in the text, else a covered country; whole words only."""
+    """A covered city named in the text, else a covered country; whole words only. A country
+    can be named in English or in French ("Grèce" -> Greece). Names are matched without
+    context, so a first name that is also a country ("mon ami Maurice") counts: the LLM reads
+    context, this is only its safety net, and the client can correct the destination."""
     for destination in covered:
         if destination.city and _names(text, destination.city):
             return destination
+    named = _countries_named(text)
     for destination in covered:
-        if _names(text, destination.country):
+        if _names(text, destination.country) or destination.country.casefold() in named:
             return Destination(destination.country)
     return None
+
+
+# Longest country name in words, for the French ones: "Bosnie-Herzégovine" is one word,
+# "Côte d’Ivoire" two, "Corée du Sud" three.
+_LONGEST_COUNTRY = 3
+_WORD = re.compile(r"[^\W\d_]+(?:['’][^\W\d_]+)*(?:-[^\W\d_]+)*")
+_ELIDED = re.compile(r"^[ld]['’]", re.IGNORECASE)
+
+
+def _countries_named(text: str) -> set[str]:
+    """English names (casefolded) of the countries the text names, in French or English.
+
+    A French article elided onto the name is dropped ("l'Italie", "d’Espagne"), but only
+    from the first word, so "Côte d’Ivoire" stays whole."""
+    words = _WORD.findall(text)
+    found: set[str] = set()
+    for size in range(1, _LONGEST_COUNTRY + 1):
+        for start in range(len(words) - size + 1):
+            phrase = words[start : start + size]
+            bare = [_ELIDED.sub("", phrase[0]), *phrase[1:]]
+            for candidate in (phrase, bare):
+                country = canonical_country(" ".join(candidate))
+                if country is not None:
+                    found.add(country.casefold())
+    return found
 
 
 def _names(text: str, name: str) -> bool:

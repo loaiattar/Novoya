@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -86,8 +87,26 @@ class AgentPlanItem(BaseModel):
     partner_contact_phone: str | None
 
 
+class AgentPlanExtra(BaseModel):
+    """An extra the client chose. price_eur: the supplement, or what the agent set; null for
+    an included extra and for an on_quote extra not priced yet. needs_quantity_check: a
+    supplement per person, night or day; its amount is counted once, so the agent checks the
+    quantity and confirms it by setting its price, even the same one (confirmed)."""
+
+    extra_id: UUID
+    pricing: Literal["included", "supplement", "on_quote"]
+    price_eur: Decimal | None
+    label: str
+    unit: str
+    needs_quantity_check: bool
+    confirmed: bool
+
+
 class AgentPlan(BaseModel):
-    """The plan as the assigned agent sees it. Prices, partners, running total and budget."""
+    """The plan as the assigned agent sees it. Prices, partners, running total and budget.
+    total counts priced items and priced extras; ready_to_quote is false while a kept item or
+    an on_quote extra has no price, or a supplement that needs a quantity check is not
+    confirmed."""
 
     id: UUID
     wish_id: UUID
@@ -95,7 +114,9 @@ class AgentPlan(BaseModel):
     summary: str
     assigned_agent_id: UUID | None
     items: list[AgentPlanItem]
+    extras: list[AgentPlanExtra]
     total: Decimal
+    ready_to_quote: bool
     budget_max: Decimal | None
     currency: str | None
     over_budget: bool
@@ -115,7 +136,11 @@ class AgentPlan(BaseModel):
             summary=plan.summary,
             assigned_agent_id=plan.assigned_agent_id,
             items=[AgentPlanItem.model_validate(item, from_attributes=True) for item in plan.items],
+            extras=[
+                AgentPlanExtra.model_validate(extra, from_attributes=True) for extra in plan.extras
+            ],
             total=plan.total,
+            ready_to_quote=plan.ready_to_quote,
             budget_max=plan.budget_max,
             currency=plan.currency,
             over_budget=plan.over_budget,
@@ -143,3 +168,15 @@ class SetPlanItemRequest(BaseModel):
         if not priced and not flagged:
             raise ValueError("set a price or set removed")
         return self
+
+
+class RequestQuoteRequest(BaseModel):
+    """The extras the client adds to the plan. Without a body, none."""
+
+    extra_ids: list[UUID] = Field(default_factory=list, max_length=50)
+
+
+class SetPlanExtraRequest(BaseModel):
+    """The price in EUR of an on_quote extra, or an adjusted supplement."""
+
+    price_eur: Decimal = Field(gt=0, max_digits=10, decimal_places=2)

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../api/client'
@@ -467,5 +467,44 @@ describe('the landing page', () => {
 
     expect(await screen.findByRole('link', { name: 'My space' })).toHaveAttribute('href', '/wish')
     expect(screen.queryByRole('link', { name: /Continue with Google/ })).not.toBeInTheDocument()
+  })
+
+  it('shows the agency e-mail in the footer, not the unchecked phone', async () => {
+    signedIn = null
+    renderAt('/')
+
+    expect(await screen.findByRole('link', { name: 'contact@detour-voyages.fr' })).toHaveAttribute(
+      'href',
+      'mailto:contact@detour-voyages.fr',
+    )
+    expect(screen.getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
+    expect(screen.queryByText(/02 40 00 00 00/)).not.toBeInTheDocument()
+    expect(document.querySelector('img[src="/images/logo-1600.webp"]')).not.toBeNull()
+  })
+
+  it('names the client agency in the copy, not Novoya', async () => {
+    signedIn = null
+    renderAt('/')
+
+    expect(await screen.findByText('The DÉTOUR promise')).toBeInTheDocument()
+    expect(screen.queryByText(/Novoya/)).not.toBeInTheDocument()
+    // The seal is the agency's own symbol, not a typed letter.
+    expect(document.querySelector('img[src="/icon-192.png"]')).not.toBeNull()
+  })
+
+  it('opens the legal notices with confirmed facts only', async () => {
+    signedIn = null
+    renderAt('/legal')
+
+    expect(await screen.findByRole('heading', { name: 'Legal notices' })).toBeInTheDocument()
+    expect(screen.getByText(/This website is the website of DÉTOUR Voyages/)).toBeInTheDocument()
+    const notices = within(document.querySelector('dl') as HTMLElement)
+    expect(notices.getByText('DÉTOUR Voyages')).toBeInTheDocument()
+    expect(notices.getByText('contact@detour-voyages.fr')).toBeInTheDocument()
+    expect(notices.getByText('Novoya development team, on behalf of the Novoya project')).toBeInTheDocument()
+    // No publication director until the agency names one: it is a legal role, not a credit.
+    expect(notices.queryByText('Publication director')).not.toBeInTheDocument()
+    expect(screen.queryByText(/IM044120000/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Écluses/)).not.toBeInTheDocument()
   })
 })

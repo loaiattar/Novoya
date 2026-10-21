@@ -163,7 +163,7 @@ The backend validates this JSON. If validation fails, it retries once, then fall
 
 ## 4. Partners, coverage and the no-preference case
 
-Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it.
+Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it. The catalog comes from the client's DÉTOUR export, imported with `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite` ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)): partners, offers, publishable reviews and extras. DÉTOUR owns what it exports: an agent changes it there, and in Novoya only hides a row or features an offer. Countries are stored in English; a wish may name them in English or French.
 
 | Case | What happens |
 |---|---|
@@ -173,7 +173,9 @@ Novoya works with a limited list of partners. The `partners` and `offers` tables
 
 The AI may only use offers returned by `search_offers`. The backend checks that every item in a plan points to a real, active `offer_id` before saving it.
 
-Offers have no price. The client's budget is saved on the wish and shown to the human agent, who negotiates within it.
+An offer may carry the partner's unit price per person. It is shown only on the offer page, as indicative (`GET /offers/{id}`): plans and quotes use the prices the agent negotiates ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). The client's budget is saved on the wish and shown to the human agent, who negotiates within it.
+
+When asking for a quote, the client can add extras (a quiet room, an extra bag, a private guide): `included` ones cost nothing, a `supplement` is counted once at its amount then, and the agent prices `on_quote` ones before the quote can be sent.
 
 ## 5. From plan to quote
 
@@ -223,11 +225,14 @@ The PDF exists in English and French, in the client's language (`users.locale`).
 | `one_time_tokens` | id, user_id, purpose (`email_verification`, `password_reset`), token_hash, expires_at, used_at, created_at |
 | `oauth_states` | state_hash, provider, code_verifier, nonce, redirect_to, expires_at |
 | `role_changes` | id, user_id, old_role, new_role, source (`admin_api`, `cmd_grant_role`), changed_by, changed_at |
-| `partners` | id, name, kind (hotel, guide, transport, activity, agency), country, city, contact_email, contact_phone, active, created_at |
-| `offers` | id, partner_id, kind, title, description, country, city, min_persons, max_persons, available_from, available_to, tags, featured, active |
+| `partners` | id, name, kind (hotel, guide, transport, activity, agency), country, city, contact_email, contact_phone (optional), active, hidden (the agent's switch, kept by the import), source (`detour` when imported), created_at |
+| `offers` | id, partner_id, kind, title, description, country, city, min_persons, max_persons, available_from, available_to, tags, featured, active, hidden, price_eur and price_unit (indicative, per person per night, trip or activity), opening_months, conditions, restrictions, cancellation, confirmation_delay_hours |
+| `reviews` | id, country, city, rating (1 to 5), reviewed_on, text, author ("First name I." or "Voyageur anonyme"), imported_at. Only published, consented reviews |
+| `extras` | id, category, label, description, pricing (`included`, `supplement`, `on_quote`), supplement_eur, unit, constraints, active, hidden |
 | `wishes` | id, user_id, text, destination_country, destination_city, status (`draft`, `not_covered`, `panel_shown`, `answered`, `planned`), panel_json (the panel we showed), selected_tags (what the client clicked, for example `[{"section": "style", "tag": "beach"}]`), budget_max, currency, persons, start_date, end_date, created_at, updated_at |
 | `plans` | id, wish_id, status (`proposed`, `requested`, `negotiating`, `quoted`, `accepted`, `rejected`), based_on_preferences, summary, assigned_agent_id, created_at, updated_at |
 | `plan_items` | id, plan_id, offer_id, day, quantity, note, negotiated_price (empty until the agent fills it), removed |
+| `plan_extras` | plan_id, extra_id, pricing, price_eur (the supplement when requested, or the agent's price for `on_quote`), label and unit (copied when requested), confirmed (the agent set its price; a supplement per person, night or day needs it before the quote) |
 | `quotes` | id, number, plan_id, agent_id, total_price, currency (`EUR`), locale, valid_until, pdf_path, sent_at, decided_at, client_comment |
 
 `wishes` holds the whole request: the text, the panel we showed, the tags the client clicked, the budget, the number of travellers and the dates. `panel_json` and `selected_tags` are JSONB columns.
@@ -236,7 +241,7 @@ Roles live in the database (`users.role`). A new account is `client`, and signin
 
 An account can have Google, a password, or both: `oauth_identities` and `password_credentials` hold one sign-in method each. Sessions are opaque tokens stored hashed in `sessions`, so signing out, resetting a password or changing a role takes effect at the next request. Sessions expire after 7 days without use and 30 days at most.
 
-The browser calls the API at `/api` on the web app's own origin, through a proxy that strips the prefix (Vite locally, the host's rewrites in production). The session cookie is then always first-party, wherever the API is hosted ([ADR 0011](adr/0011-same-origin-api-proxy.md)).
+The browser calls the API at `/api` on the web app's own origin, through a proxy that strips the prefix (Vite locally, the Render static site's rewrite for the demo, [ADR 0013](adr/0013-host-the-demo-on-render.md)). The session cookie is then always first-party, wherever the API is hosted ([ADR 0011](adr/0011-same-origin-api-proxy.md)).
 
 ## 7. API (first version)
 
@@ -256,11 +261,15 @@ Client:
 | POST | `/auth/logout` | Sign out |
 | POST | `/auth/logout-all` | Sign out on every device |
 | GET | `/me` | The signed-in user, their role, language and sign-in methods |
+| PATCH | `/me` | Change the signed-in user's language (`{"locale": "en"}` or `"fr"`); answers like `GET /me` |
 | GET | `/destinations` | Destinations with at least one listed offer (active offer of an active partner) |
+| GET | `/reviews?country=&city=` | Published reviews, newest first. Public |
+| GET | `/offers/{id}` | A listed offer: indicative price, opening months, terms. Never the partner |
+| GET | `/extras` | The extras a client can add to a plan |
 | POST | `/wishes` | Send the wish. Returns the panel, or `not_covered` with suggested destinations |
 | POST | `/wishes/{id}/answers` | Send the selected tags, budget, travellers and dates. Saves them on the wish and returns the proposed plan |
 | GET | `/plans/{id}` | The plan, day by day, with no prices until it is quoted and no partner names |
-| POST | `/plans/{id}/request-quote` | Ask the agency for a quote |
+| POST | `/plans/{id}/request-quote` | Ask the agency for a quote, with optional `extra_ids` |
 | GET | `/quotes/{id}/pdf` | Download the quote PDF |
 | POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment |
 | DELETE | `/me` | Delete the account, its wishes, plans and quotes |
@@ -272,8 +281,10 @@ Agent (roles `agent` and `admin`):
 | GET | `/agent/plans?status=requested` | The quote queue |
 | POST | `/agent/plans/{id}/take` | Assign the plan to me, status `negotiating` |
 | PATCH | `/agent/plans/{id}/items/{item_id}` | Set the negotiated price, or remove the item |
+| PATCH | `/agent/plans/{id}/extras/{extra_id}` | Price an `on_quote` extra, or adjust or confirm a supplement |
 | POST | `/agent/plans/{id}/quote` | Compute the total, render the PDF, status `quoted` |
-| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers |
+| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers. Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
+| GET, PATCH | `/admin/extras` | List extras, hide or show one |
 
 Admin (role `admin` only; an admin can also use every agent route):
 
@@ -314,6 +325,7 @@ novoya/
 ## 9. Privacy (GDPR)
 
 - We store only the account (email, name, first name, last name, role, language), a hash of the password if the user has one, the sessions (with the browser's user agent, never the IP address, kept 30 days at most), what the client types (wishes, panel answers, budget, travellers, dates), the plans and the quotes. No mailbox, document or social media data, no avatar and no Google token.
+- Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). The privacy page (#45) must say so.
 - A privacy page says what we store, why, and for how long.
 - The client can delete their account and everything linked to it (`DELETE /me`).
 - Agents see client data only for the plans in their queue.

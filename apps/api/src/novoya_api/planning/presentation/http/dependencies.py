@@ -15,6 +15,7 @@ from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPla
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
+from novoya_api.planning.application.use_cases.set_extra_price import SetExtraPrice
 from novoya_api.planning.application.use_cases.set_item_price import SetItemPrice
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
@@ -78,6 +79,16 @@ def get_get_agent_plan(session: Annotated[AsyncSession, Depends(get_session)]) -
 
 def get_set_item_price(session: Annotated[AsyncSession, Depends(get_session)]) -> SetItemPrice:
     return SetItemPrice(
+        plans=SqlPlanRepository(session),
+        catalog=PartnerOffers(session),
+        trips=WishTrips(session),
+        uow=SqlAlchemyUnitOfWork(session),
+        clock=SystemClock(),
+    )
+
+
+def get_set_extra_price(session: Annotated[AsyncSession, Depends(get_session)]) -> SetExtraPrice:
+    return SetExtraPrice(
         plans=SqlPlanRepository(session),
         catalog=PartnerOffers(session),
         trips=WishTrips(session),

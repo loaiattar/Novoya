@@ -7,6 +7,7 @@ import pytest
 from novoya_api.accounts.application.dto import ClientInfo
 from novoya_api.accounts.application.services.session_opener import SessionOpener, SessionPolicy
 from novoya_api.accounts.application.use_cases.authenticate_session import AuthenticateSession
+from novoya_api.accounts.application.use_cases.change_locale import ChangeLocale
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
@@ -101,6 +102,7 @@ class Accounts:
             s.sessions, self.tokens, s.uow, self.clock, SessionPolicy()
         )
         self.change_role = ChangeUserRole(s.users, s.role_changes, s.uow, self.clock)
+        self.change_locale = ChangeLocale(s.users, s.credentials, s.identities, s.uow)
         self.forgot = RequestPasswordReset(
             s.users, s.tokens, self.tokens, self.mailer, self.limiter, s.uow, self.clock
         )
@@ -234,6 +236,21 @@ async def test_role_change_applies_to_the_next_request_without_signing_in_again(
     token = await accounts.signed_in()
     await accounts.change_role(ChangeUserRoleCommand(user.id, Role.AGENT, changed_by=None))
     assert (await accounts.authenticate(token)).role is Role.AGENT
+
+
+async def test_change_locale_saves_the_language_and_returns_the_account(accounts):
+    user = await accounts.signed_up()  # registered with fr-FR
+    commits = accounts.store.uow.commits
+    account = await accounts.change_locale(user.id, Locale.EN)
+    assert account.user.locale is Locale.EN
+    assert account.has_password is True
+    assert (await accounts.store.users.get(user.id)).locale is Locale.EN
+    assert accounts.store.uow.commits == commits + 1
+
+
+async def test_change_locale_of_an_unknown_user_fails(accounts):
+    with pytest.raises(UserNotFound):
+        await accounts.change_locale(make_user().id, Locale.FR)
 
 
 async def test_signing_in_again_revokes_the_previous_session(accounts):

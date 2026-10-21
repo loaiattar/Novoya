@@ -38,6 +38,18 @@ uv run uvicorn novoya_api.main:app --reload
 
 The API runs on http://localhost:8000. Interactive docs: http://localhost:8000/docs.
 
+## Import the DÉTOUR catalog
+
+The real catalog comes from the client's DÉTOUR sqlite export ([ADR 0014](../../docs/adr/0014-indicative-prices-and-detour-import.md)). Keep the file outside the repository (`*.sqlite` and `livraison/` are ignored), then:
+
+```bash
+uv run alembic upgrade head
+uv run python -m novoya_api.catalog.infrastructure.detour --source /path/to/detour.sqlite
+# prints the counts only: imported N partners, N offers, N reviews, N extras
+```
+
+It opens the file read-only and writes everything in one transaction: an invalid row stops the import and nothing is written. The error names the DÉTOUR table and id, never a name or an email. Running it again updates the same rows (stable ids), deletes the reviews that are no longer publishable, and deactivates (never deletes) the partners, offers and extras that left the export. Reviews come only from the view `avis_diffusables` (consented and pseudonymised). Once it has run, the development seed refuses to run, so made-up offers never mix with the client's.
+
 ## Accounts and roles
 
 Sign-up is by email and password; the account is a `client` and must confirm its email before signing in. Locally, the emails land in Mailpit: http://localhost:8025 (`docker compose up mailpit`).

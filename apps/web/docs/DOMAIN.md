@@ -70,10 +70,11 @@ apps/web/src/domain/
   plan/           # itinéraire jour par jour
   quote/          # le devis de l’agence
   auth/           # session : nom affiché, redirection sûre, clés des erreurs de connexion
+  agency/         # faits d’agence lus dans brand/agency.json (jamais un to_check)
   i18n/           # quelle langue afficher (resolveLocale)
 ```
 
-Le domaine ne contient **aucun texte affiché** : il renvoie une clé de traduction, et la page la traduit ([I18N.md](I18N.md)).
+Le domaine ne contient **aucun libellé d’interface** : il renvoie une clé de traduction, et la page la traduit ([I18N.md](I18N.md)). Les **faits** d’agence (nom, e-mail, SIRET…) viennent de `brand/agency.json` : ce ne sont pas des textes à traduire.
 
 ### `wish/`
 
@@ -135,6 +136,16 @@ Le devis écrit par l’agent.
 Le total est calculé par le backend. Le front l’affiche, il ne le recalcule pas.
 
 Ne contient pas `QuoteSummary`.
+
+### `agency/`
+
+Les faits de l’agence, lus **une fois** dans `brand/agency.json`.
+
+- un champ `to_check` n’est jamais renvoyé
+- une traduction encore `to_check` (souvent l’anglais) est omise
+- le chemin du logo officiel, pour l’atome `Photo`
+
+Ne contient pas `Logo` ni `SiteFooter`. Les composants passent par `hooks/ui/useAgency`.
 
 ---
 

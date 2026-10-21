@@ -2,7 +2,7 @@
   "eyebrow": "Agency offer No. {{id}}",
   "titleStart": "Your trip",
   "titleEnd": "to {{place}}.",
-  "preparedBy": "Carefully prepared by {{name}}, your Novoya advisor.",
+  "preparedBy": "Carefully prepared by {{name}}, your {{agency}} advisor.",
   "notFound": "This offer doesn't exist.",
   "sheet": {
     "label": "Offer details",

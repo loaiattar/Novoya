@@ -1,15 +1,16 @@
 """RequestQuote is tested with fake ports: a stored plan, its owner, and offer titles."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from uuid import UUID
 
 import pytest
 
-from novoya_api.planning.application.dto import OfferSummary
+from novoya_api.planning.application.dto import ExtraSummary, OfferSummary
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.domain.errors import PlanNotFound
-from novoya_api.planning.domain.plan import DraftItem, Plan, PlanStatus
-from novoya_api.shared.domain.errors import InvalidTransition
+from novoya_api.planning.domain.plan import DraftItem, Plan, PlanExtra, PlanStatus
+from novoya_api.shared.domain.errors import InvalidInput, InvalidTransition
 
 WISH_ID = UUID("00000000-0000-0000-0000-0000000000a1")
 OWNER_ID = UUID("00000000-0000-0000-0000-000000000001")
@@ -18,6 +19,19 @@ NOW = datetime(2026, 10, 19, 9, 0, tzinfo=UTC)
 LATER = datetime(2026, 10, 19, 10, 0, tzinfo=UTC)
 HOTEL_ID = UUID("00000000-0000-0000-0000-0000000000b1")
 HOTEL = OfferSummary(HOTEL_ID, "hotel", "Sea view hotel", "Rooms over the bay", (), False)
+BAG = ExtraSummary(
+    id=UUID("00000000-0000-0000-0000-0000000000c1"),
+    label="Extra bag",
+    pricing="supplement",
+    supplement_eur=Decimal("25"),
+)
+GUIDE = ExtraSummary(
+    id=UUID("00000000-0000-0000-0000-0000000000c2"),
+    label="Private guide",
+    pricing="on_quote",
+    supplement_eur=None,
+)
+INACTIVE_EXTRA = UUID("00000000-0000-0000-0000-0000000000c9")
 
 
 def stored_plan() -> Plan:
@@ -45,8 +59,13 @@ class FakePlans:
 
 
 class FakeCatalog:
+    """Knows two active extras. An inactive or unknown extra is not returned."""
+
     async def summaries_for(self, offer_ids: list[UUID]) -> list[OfferSummary]:
         return [HOTEL] if HOTEL_ID in offer_ids else []
+
+    async def extras_for(self, extra_ids: list[UUID]) -> list[ExtraSummary]:
+        return [extra for extra in (BAG, GUIDE) if extra.id in extra_ids]
 
 
 class FakeWishes:
@@ -133,3 +152,69 @@ async def test_a_plan_that_is_not_proposed_is_an_invalid_transition():
     with pytest.raises(InvalidTransition):
         await use_case(plan.id, OWNER_ID)
     assert uow.commits == 0
+
+
+async def test_requesting_with_extras_keeps_a_snapshot_of_each():
+    plan = stored_plan()
+    use_case, uow = request_quote(plan)
+
+    await use_case(plan.id, OWNER_ID, extra_ids=[BAG.id, GUIDE.id])
+
+    assert plan.extras == (
+        PlanExtra(extra_id=BAG.id, pricing="supplement", price_eur=Decimal("25")),
+        PlanExtra(extra_id=GUIDE.id, pricing="on_quote", price_eur=None),
+    )
+    assert plan.status is PlanStatus.REQUESTED
+    assert uow.commits == 1
+
+
+async def test_requesting_without_extras_keeps_none():
+    plan = stored_plan()
+    use_case, _uow = request_quote(plan)
+
+    await use_case(plan.id, OWNER_ID)
+
+    assert plan.extras == ()
+
+
+@pytest.mark.parametrize(
+    "extra_id",
+    [INACTIVE_EXTRA, UUID("00000000-0000-0000-0000-0000000000cf")],
+    ids=["inactive", "unknown"],
+)
+async def test_an_extra_the_catalog_does_not_list_is_rejected(extra_id):
+    plan = stored_plan()
+    use_case, uow = request_quote(plan)
+
+    with pytest.raises(InvalidInput):
+        await use_case(plan.id, OWNER_ID, extra_ids=[BAG.id, extra_id])
+
+    assert plan.status is PlanStatus.PROPOSED
+    assert uow.commits == 0
+
+
+class LabelledCatalog(FakeCatalog):
+    async def extras_for(self, extra_ids: list[UUID]) -> list[ExtraSummary]:
+        bag = ExtraSummary(
+            id=BAG.id,
+            label="Extra bag",
+            pricing="supplement",
+            supplement_eur=Decimal("25"),
+            unit="per bag",
+        )
+        return [bag] if bag.id in extra_ids else []
+
+
+async def test_the_snapshot_keeps_the_label_and_unit_for_the_agent():
+    plan = stored_plan()
+    use_case = RequestQuote(
+        plans=FakePlans(plan),
+        catalog=LabelledCatalog(),
+        wishes=FakeWishes(),
+        uow=FakeUow(),
+        clock=FixedClock(),
+    )
+
+    await use_case(plan.id, OWNER_ID, extra_ids=[BAG.id])
+
+    assert [(extra.label, extra.unit) for extra in plan.extras] == [("Extra bag", "per bag")]

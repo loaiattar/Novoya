@@ -6,7 +6,10 @@ import { groupByDay } from '../../domain/plan/days'
 
 import { PlanItem } from '../molecules/PlanItem'
 
-/** The plan's offers, day by day, on a vertical line, each day linking to its page. Never a price, never a partner (#31). */
+/**
+ * The plan's offers, day by day, on a vertical line, each day linking to its page. Never a price,
+ * never a partner (#31): each offer opens its own page, where its indicative price is (ADR 0014).
+ */
 export function PlanDays({ planId, items }: { planId: string; items: PlanItemResponse[] }) {
   const { t } = useTranslation('plan')
   return (

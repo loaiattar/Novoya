@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { Avatar } from '../atoms/Avatar'
-import { Logo } from '../atoms/Logo'
+import { HomeLink } from '../molecules/HomeLink'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
+import { LanguageChoice } from './LanguageChoice'
 
 export type Role = 'client' | 'agent' | 'admin'
 
@@ -29,13 +30,10 @@ const navLink =
 /** The header of every signed-in page: brand, main links and the account menu. */
 export function AppHeader({ userName, role = 'client', onSignOut, signingOut = false, signOutError }: Props) {
   const { t } = useTranslation('header')
-  const { t: tCommon } = useTranslation()
   return (
     <header className="fixed inset-x-0 top-0 z-20 border-b border-line bg-paper/90 backdrop-blur-md">
       <div className="flex h-18 items-center justify-between px-5 md:h-22 md:px-[5vw]">
-        <Link to="/" aria-label={tCommon('homeLink')} className="flex min-h-11 items-center no-underline">
-          <Logo />
-        </Link>
+        <HomeLink />
         {userName && (
           <>
             <nav aria-label={t('mainNav')} className="hidden items-center gap-7 lg:flex">
@@ -56,42 +54,45 @@ export function AppHeader({ userName, role = 'client', onSignOut, signingOut = f
                 </Link>
               )}
             </nav>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex min-h-11 items-center gap-2.5 rounded-full text-sm">
-                <Avatar name={userName} />
-                <span className="hidden max-w-48 truncate lg:inline">{userName}</span>
-                <span aria-hidden="true">⌄</span>
-                <span className="sr-only lg:hidden">{t('accountMenu')}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 rounded-none border-0 p-2.5 shadow-menu">
-                {/* Below lg the nav is hidden, so its links live here. */}
-                <div className="lg:hidden">
-                  <DropdownMenuItem asChild>
-                    <Link to="/wish">{t('compose')}</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/trips">{t('myTrips')}</Link>
-                  </DropdownMenuItem>
-                  {role !== 'client' && (
+            <div className="flex items-center gap-2 md:gap-4">
+              <LanguageChoice />
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex min-h-11 items-center gap-2.5 rounded-full text-sm">
+                  <Avatar name={userName} />
+                  <span className="hidden max-w-48 truncate lg:inline">{userName}</span>
+                  <span aria-hidden="true">⌄</span>
+                  <span className="sr-only lg:hidden">{t('accountMenu')}</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 rounded-none border-0 p-2.5 shadow-menu">
+                  {/* Below lg the nav is hidden, so its links live here. */}
+                  <div className="lg:hidden">
                     <DropdownMenuItem asChild>
-                      <Link to="/agent">{t('agencySpace')}</Link>
+                      <Link to="/wish">{t('compose')}</Link>
                     </DropdownMenuItem>
-                  )}
-                  {role === 'admin' && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin">{t('administration')}</Link>
+                      <Link to="/trips">{t('myTrips')}</Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings">{t('settings')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={signingOut} onSelect={onSignOut}>
-                  {signingOut ? t('signingOut') : t('signOut')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    {role !== 'client' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/agent">{t('agencySpace')}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {role === 'admin' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">{t('administration')}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">{t('settings')}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={signingOut} onSelect={onSignOut}>
+                    {signingOut ? t('signingOut') : t('signOut')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </>
         )}
       </div>

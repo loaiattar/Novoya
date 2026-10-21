@@ -22,7 +22,7 @@ flowchart TB
 | Module | Owns | Issues |
 |---|---|---|
 | `accounts` | Users, sign-in with Google or email and password, sessions, the client, agent and admin roles, the language, deleting an account | #15, #49, #46, #59 |
-| `catalog` | Partners, offers, covered destinations | #17, #18, #20, #21 |
+| `catalog` | Partners, offers, covered destinations, published reviews, extras, the DÉTOUR import | #17, #18, #20, #21, #83, #119 |
 | `wishes` | The client's wish, the coverage check, the preference panel and its answers | #23, #25, #28 |
 | `planning` | The plan built from offers and its status machine, the agent's negotiation (queue, prices) | #29, #76, #50, #51 |
 | `quoting` | The quote: total, validity, PDF, email, the client's accept or reject | #52, #53, #54 |
@@ -116,10 +116,10 @@ Each module owns its tables. Foreign keys across modules are allowed in the data
 | Module | Entities | Rules they own |
 |---|---|---|
 | accounts | `User`, `Role`, `PasswordCredential`, `OAuthIdentity`, `AuthSession`, `OneTimeToken`, `RoleChange` | A new account is `client`, and signing in never changes a role. Only an admin changes a role, never their own, and there is always at least one admin. `agent` and `admin` need a verified email. A password account cannot sign in before its email is verified. Only agents (and admins) handle quotes |
-| catalog | `Partner`, `Offer` | An inactive partner's offers are never used. An offer fits a group size and dates or not. Offers have **no price** |
+| catalog | `Partner`, `Offer`, `Review`, `Extra` | An inactive or hidden partner's offers are never used, nor a hidden offer or extra. DÉTOUR owns imported rows: only `featured` and `hidden` change in Novoya (`ImportedRow`, 409). An offer fits a group size and dates or not. An offer's price is **indicative only** (offer page): price and unit come together, more than 0, opening months 1 to 12 ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). A review is rated 1 to 5 and keeps its author as given. An extra is `included`, `supplement` (with an amount more than 0) or `on_quote` (no amount) |
 | wishes | `Wish`, `Panel`, `Tag` | `draft` → `not_covered` or `panel_shown` → `answered` → `planned`. Selected tags must come from the panel shown |
-| planning | `Plan`, `PlanItem` | The status machine below. Every item is a real, active offer. Only the assigned agent sets prices |
-| quoting | `Quote` | Total = sum of the kept items' prices. Valid 7 days. Answered once, before it expires |
+| planning | `Plan`, `PlanItem`, `PlanExtra` | The status machine below. Every item is a real, active offer. Only the assigned agent sets prices. Extras are chosen when the quote is requested; a supplement is counted once (one per person, night or day needs the agent's confirmation), an `on_quote` extra needs the agent's price before the plan is ready to quote, an `included` one is never counted |
+| quoting | `Quote` | Total = sum of the kept items' prices plus the priced extras (each once). Valid 7 days. Answered once, before it expires |
 
 The plan's status machine lives in `planning/domain`:
 
@@ -139,10 +139,10 @@ The allowed moves are methods on `Plan`, for example `plan.request_quote(by=user
 
 | Module | Use cases | Endpoints | Ports |
 |---|---|---|---|
-| accounts | `StartSignIn`, `SignIn`, `Register`, `VerifyEmail`, `SignInWithPassword`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `SignOut`, `SignOutEverywhere`, `GetCurrentUser`, `ListUsers`, `ChangeUserRole`, `DeleteAccount` | `/auth/{provider}/*` (Google), `/auth/register`, `/auth/login`, `/auth/email/*`, `/auth/password/*`, `/auth/logout`, `/auth/logout-all`, `GET /me`, `DELETE /me`, `/admin/users` | UserRepository, PasswordCredentialRepository, OAuthIdentityRepository, SessionRepository, IdentityProvider, PasswordHasher, AuthMailer, RateLimiter, PersonalDataEraser |
-| catalog | `ListDestinations`, `SearchOffers`, `ManagePartners`, `ManageOffers` | `GET /destinations`, `/admin/partners`, `/admin/offers` | PartnerRepository, OfferRepository |
+| accounts | `StartSignIn`, `SignIn`, `Register`, `VerifyEmail`, `SignInWithPassword`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `SignOut`, `SignOutEverywhere`, `GetCurrentUser`, `ChangeLocale`, `ListUsers`, `ChangeUserRole`, `DeleteAccount` | `/auth/{provider}/*` (Google), `/auth/register`, `/auth/login`, `/auth/email/*`, `/auth/password/*`, `/auth/logout`, `/auth/logout-all`, `GET /me`, `PATCH /me`, `DELETE /me`, `/admin/users` | UserRepository, PasswordCredentialRepository, OAuthIdentityRepository, SessionRepository, IdentityProvider, PasswordHasher, AuthMailer, RateLimiter, PersonalDataEraser |
+| catalog | `ListDestinations`, `SearchOffers`, `ManagePartners`, `ManageOffers`, `GetOfferDetail`, `ListReviews`, `ListExtras`, `GetExtras`, `ListAllExtras`, `UpdateExtra` | `GET /destinations`, `GET /offers/{id}`, `GET /reviews`, `GET /extras`, `/admin/partners`, `/admin/offers`, `/admin/extras` | PartnerRepository, OfferRepository, ReviewRepository, ExtraRepository |
 | wishes | `SendWish`, `AnswerPanel` | `POST /wishes`, `POST /wishes/{id}/answers` | WishRepository, Catalog, PanelBuilder, PlanStarter |
-| planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
+| planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice`, `SetExtraPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
 | quoting | `SendQuote`, `GetQuote`, `DownloadQuotePdf`, `DecideQuote` | `POST /agent/plans/{id}/quote`, `/quotes/{id}`, `/quotes/{id}/pdf`, `/accept`, `/reject` | QuoteRepository, Plans, Users, QuoteRenderer, QuoteNotifier |
 | health | `CheckDatabase` | `GET /health`, `GET /health/db` | DatabaseProbe |
 
@@ -153,6 +153,8 @@ Every module also uses the shared `UnitOfWork` port: one use case is one transac
 | Module | Adapter | Tool |
 |---|---|---|
 | all | `infrastructure/db/` repositories and tables | SQLAlchemy 2 (async) + PostgreSQL |
+| catalog | `detour/` (read.py, mapping.py, run.py) | The DÉTOUR sqlite export, opened read-only with `sqlite3`; one transaction, counts only, errors name DÉTOUR ids ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)) |
+| catalog | `countries.py` | Country names in French or English to the English name Novoya stores, from Babel's CLDR names; used by the import and by `catalog.public.canonical_country` |
 | accounts | `google_oauth.py`, `security.py`, `email/` | Google OpenID Connect with Authlib (`openid email profile`, PKCE), Argon2id password hashes, SMTP (Mailpit locally) |
 | wishes | `llm/panel_builder.py` | OpenRouter, through `shared/infrastructure/llm` |
 | planning | `llm/plan_generator.py`, `llm/tools.py` | OpenRouter tool calling; `travel_tools()` reads offers through `catalog.public` and sends them without partner name or contact |

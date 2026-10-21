@@ -121,6 +121,10 @@ class User:
         if self.name is not None and self.first_name is None and self.last_name is None:
             self.first_name, self.last_name = _names_from_display(self.name)
 
+    def change_locale(self, locale: Locale) -> None:
+        """The language of the interface, the emails and the quote PDF."""
+        self.locale = locale
+
     def verify_email(self, now: datetime) -> None:
         if self.email_verified_at is None:
             self.email_verified_at = now

@@ -8,10 +8,10 @@
   "continueWithGoogle": "Continue with Google",
   "heroFoot": "Set sail",
   "manifesto": {
-    "eyebrow": "The Novoya promise",
+    "eyebrow": "The {{agency}} promise",
     "titleStart": "Search less.",
     "titleEnd": "Travel better.",
-    "lead": "You describe a wish. Our AI concierge gives it a first shape. Then a Novoya agent makes it happen, with care and judgement.",
+    "lead": "You describe a wish. Our AI concierge gives it a first shape. Then a {{agency}} agent makes it happen, with care and judgement.",
     "honestyTitle": "Our stance: honesty.",
     "honestyText": "We only offer destinations where our partners are active. If we can't take you there, we'll tell you."
   },
@@ -55,7 +55,7 @@
     "steps": {
       "describe": {
         "title": "I describe",
-        "copy": "One sentence is enough. Your words stay with Novoya."
+        "copy": "One sentence is enough. Your words stay with {{agency}}."
       },
       "refine": {
         "title": "I refine",

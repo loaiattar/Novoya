@@ -9,7 +9,7 @@ class SearchOffers:
 
     With tags, an offer needs at least one of them; offers matching more tags come first.
     Without tags, every fitting offer comes back. Featured offers come first among equals.
-    No budget filter: offers have no price."""
+    No budget filter: the price of a trip is negotiated, an offer's price is only indicative."""
 
     def __init__(self, offers: OfferRepository) -> None:
         self._offers = offers

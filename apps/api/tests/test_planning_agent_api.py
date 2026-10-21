@@ -16,12 +16,14 @@ from novoya_api.main import create_app
 from novoya_api.planning.application.dto import OfferContact, TripBrief
 from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPlan
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
+from novoya_api.planning.application.use_cases.set_extra_price import SetExtraPrice
 from novoya_api.planning.application.use_cases.set_item_price import SetItemPrice
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
-from novoya_api.planning.domain.plan import DraftItem, Plan, PlanStatus
+from novoya_api.planning.domain.plan import DraftItem, Plan, PlanExtra, PlanStatus
 from novoya_api.planning.presentation.http.dependencies import (
     get_get_agent_plan,
     get_list_quote_queue,
+    get_set_extra_price,
     get_set_item_price,
     get_take_plan,
 )
@@ -32,6 +34,7 @@ OTHER_AGENT = UUID("00000000-0000-0000-0000-0000000000ab")
 WISH_ID = UUID("00000000-0000-0000-0000-0000000000a1")
 NOW = datetime(2026, 10, 19, 9, 0, tzinfo=UTC)
 HOTEL_ID = UUID("00000000-0000-0000-0000-0000000000b1")
+GUIDE_ID = UUID("00000000-0000-0000-0000-0000000000c2")
 HOTEL = OfferContact(
     HOTEL_ID,
     "hotel",
@@ -71,6 +74,9 @@ class FakePlans:
         self.plan = plan
 
     async def save_item(self, plan: Plan, item_id: UUID, write) -> None:
+        self.plan = plan
+
+    async def save_extra(self, plan: Plan, extra_id: UUID) -> None:
         self.plan = plan
 
 
@@ -116,7 +122,7 @@ def plan() -> Plan:
         4,
         NOW,
     )
-    plan.request_quote(NOW)
+    plan.request_quote(NOW, [PlanExtra(extra_id=GUIDE_ID, pricing="on_quote", price_eur=None)])
     return plan
 
 
@@ -130,6 +136,9 @@ def app(plan):
     )
     app.dependency_overrides[get_get_agent_plan] = lambda: GetAgentPlan(plans, catalog, trips)
     app.dependency_overrides[get_set_item_price] = lambda: SetItemPrice(
+        plans, catalog, trips, FakeUow(), FixedClock()
+    )
+    app.dependency_overrides[get_set_extra_price] = lambda: SetExtraPrice(
         plans, catalog, trips, FakeUow(), FixedClock()
     )
     app.dependency_overrides[current_user] = lambda: signed_in_as(Role.AGENT)
@@ -205,6 +214,65 @@ async def test_the_assigned_agent_restores_a_removed_item(plan, client):
     assert response.status_code == 200
     assert response.json()["items"][1]["removed"] is False
     assert response.json()["items"][1]["negotiated_price"] is None
+
+
+async def test_the_agent_sees_an_unpriced_extra_on_quote(plan, client):
+    response = await client.post(f"/agent/plans/{plan.id}/take")
+
+    extras = response.json()["extras"]
+    assert [(extra["extra_id"], extra["pricing"]) for extra in extras] == [
+        (str(GUIDE_ID), "on_quote")
+    ]
+    assert extras[0]["price_eur"] is None
+    assert response.json()["total"] == "0"
+
+
+async def test_the_assigned_agent_prices_an_extra(plan, client):
+    await client.post(f"/agent/plans/{plan.id}/take")
+    await client.patch(
+        f"/agent/plans/{plan.id}/items/{plan.items[0].id}", json={"negotiated_price": "120.00"}
+    )
+
+    response = await client.patch(
+        f"/agent/plans/{plan.id}/extras/{GUIDE_ID}", json={"price_eur": "45.00"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["extras"][0]["price_eur"] == "45.00"
+    assert body["total"] == "165.00"
+
+
+async def test_another_agent_cannot_price_an_extra(app, plan, client):
+    await client.post(f"/agent/plans/{plan.id}/take")
+    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.AGENT, OTHER_AGENT)
+
+    response = await client.patch(
+        f"/agent/plans/{plan.id}/extras/{GUIDE_ID}", json={"price_eur": "45.00"}
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.parametrize("price", ["0", "-1"])
+async def test_extra_price_must_be_more_than_zero(plan, client, price):
+    await client.post(f"/agent/plans/{plan.id}/take")
+
+    response = await client.patch(
+        f"/agent/plans/{plan.id}/extras/{GUIDE_ID}", json={"price_eur": price}
+    )
+
+    assert response.status_code == 422
+
+
+async def test_pricing_an_extra_not_on_the_plan_is_not_found(plan, client):
+    await client.post(f"/agent/plans/{plan.id}/take")
+
+    response = await client.patch(
+        f"/agent/plans/{plan.id}/extras/{uuid4()}", json={"price_eur": "45.00"}
+    )
+
+    assert response.status_code == 404
 
 
 async def test_a_client_gets_403_on_agent_routes(plan):
@@ -306,6 +374,8 @@ def test_agent_routes_are_documented(app):
     assert take["operationId"] == "takePlan"
     item = spec["paths"]["/agent/plans/{plan_id}/items/{item_id}"]["patch"]
     assert item["operationId"] == "setPlanItem"
+    extra = spec["paths"]["/agent/plans/{plan_id}/extras/{extra_id}"]["patch"]
+    assert extra["operationId"] == "setPlanExtra"
     for status in ("401", "403", "404"):
         ref = queue["responses"][status]["content"]["application/json"]["schema"]["$ref"]
         assert ref == "#/components/schemas/ErrorResponse", status
@@ -316,3 +386,72 @@ def test_agent_routes_are_documented(app):
     agent_item = spec["components"]["schemas"]["AgentPlanItem"]["properties"]
     assert "negotiated_price" in agent_item
     assert "partner_name" in agent_item
+
+
+async def test_the_agent_sees_what_each_extra_is(plan, client):
+    plan.extras = (
+        PlanExtra(
+            extra_id=GUIDE_ID,
+            pricing="on_quote",
+            price_eur=None,
+            label="Private guide",
+            unit="per activity",
+        ),
+    )
+
+    response = await client.post(f"/agent/plans/{plan.id}/take")
+
+    extra = response.json()["extras"][0]
+    assert (extra["label"], extra["unit"]) == ("Private guide", "per activity")
+
+
+async def test_a_per_person_supplement_waits_for_the_agent_to_confirm_it(plan, client):
+    plan.extras = (
+        PlanExtra(
+            extra_id=GUIDE_ID,
+            pricing="supplement",
+            price_eur=Decimal("25"),
+            label="Breakfast",
+            unit="par personne",
+        ),
+    )
+    await client.post(f"/agent/plans/{plan.id}/take")
+    for item in plan.items:
+        await client.patch(
+            f"/agent/plans/{plan.id}/items/{item.id}", json={"negotiated_price": "100.00"}
+        )
+
+    response = await client.get(f"/agent/plans/{plan.id}")
+
+    extra = response.json()["extras"][0]
+    assert (extra["needs_quantity_check"], extra["confirmed"]) == (True, False)
+    assert response.json()["ready_to_quote"] is False
+
+
+async def test_setting_the_same_price_confirms_a_per_person_supplement(plan, client):
+    plan.extras = (
+        PlanExtra(
+            extra_id=GUIDE_ID, pricing="supplement", price_eur=Decimal("25"), unit="par nuit"
+        ),
+    )
+    await client.post(f"/agent/plans/{plan.id}/take")
+    for item in plan.items:
+        await client.patch(
+            f"/agent/plans/{plan.id}/items/{item.id}", json={"negotiated_price": "100.00"}
+        )
+
+    response = await client.patch(
+        f"/agent/plans/{plan.id}/extras/{GUIDE_ID}", json={"price_eur": "25"}
+    )
+
+    assert response.status_code == 200
+    extra = response.json()["extras"][0]
+    assert (extra["needs_quantity_check"], extra["confirmed"]) == (True, True)
+    assert response.json()["ready_to_quote"] is True
+    assert response.json()["total"] == "225.00"
+
+
+def test_the_agent_extra_schema_has_the_quantity_check(app):
+    extra = app.openapi()["components"]["schemas"]["AgentPlanExtra"]
+
+    assert {"needs_quantity_check", "confirmed"} <= set(extra["required"])

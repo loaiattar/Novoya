@@ -9,7 +9,7 @@
   "cta": {
     "eyebrow": "The conversation goes on",
     "title": "Does this preview feel like you?",
-    "text": "Keep refining it with the concierge, or hand it to a Novoya advisor when it suits you.",
+    "text": "Keep refining it with the concierge, or hand it to a {{agency}} advisor when it suits you.",
     "button": "Ask an advisor for a quote",
     "unavailable": "Asking for a quote is coming soon."
   },
@@ -21,7 +21,7 @@
     "next": "Day {{number}} →"
   },
   "placeHeading": "{{place}},",
-  "priceNote": "The price will come in a quote from a Novoya advisor.",
+  "priceNote": "The price will come in a quote from a {{agency}} advisor.",
   "live": {
     "eyebrow": "Your plan",
     "titleStart": "Your trip,",

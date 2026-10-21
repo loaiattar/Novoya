@@ -1,8 +1,83 @@
 {
   "components": {
     "schemas": {
+      "AdminExtraResponse": {
+        "description": "An extra, for agents: inactive ones (gone from the D\u00c9TOUR export) and hidden ones too.\nhidden is the only field an agent changes; D\u00c9TOUR owns the rest.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "constraints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Constraints",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "pricing": {
+            "enum": [
+              "included",
+              "supplement",
+              "on_quote"
+            ],
+            "title": "Pricing",
+            "type": "string"
+          },
+          "supplement_eur": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplement Eur"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "label",
+          "description",
+          "pricing",
+          "supplement_eur",
+          "unit",
+          "constraints",
+          "active",
+          "hidden"
+        ],
+        "title": "AdminExtraResponse",
+        "type": "object"
+      },
       "AgentPlan": {
-        "description": "The plan as the assigned agent sees it. Prices, partners, running total and budget.",
+        "description": "The plan as the assigned agent sees it. Prices, partners, running total and budget.\ntotal counts priced items and priced extras; ready_to_quote is false while a kept item or\nan on_quote extra has no price, or a supplement that needs a quantity check is not\nconfirmed.",
         "properties": {
           "assigned_agent_id": {
             "anyOf": [
@@ -72,6 +147,13 @@
             ],
             "title": "End Date"
           },
+          "extras": {
+            "items": {
+              "$ref": "#/components/schemas/AgentPlanExtra"
+            },
+            "title": "Extras",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -98,6 +180,10 @@
               }
             ],
             "title": "Persons"
+          },
+          "ready_to_quote": {
+            "title": "Ready To Quote",
+            "type": "boolean"
           },
           "start_date": {
             "anyOf": [
@@ -146,7 +232,9 @@
           "summary",
           "assigned_agent_id",
           "items",
+          "extras",
           "total",
+          "ready_to_quote",
           "budget_max",
           "currency",
           "over_budget",
@@ -158,6 +246,63 @@
           "end_date"
         ],
         "title": "AgentPlan",
+        "type": "object"
+      },
+      "AgentPlanExtra": {
+        "description": "An extra the client chose. price_eur: the supplement, or what the agent set; null for\nan included extra and for an on_quote extra not priced yet. needs_quantity_check: a\nsupplement per person, night or day; its amount is counted once, so the agent checks the\nquantity and confirms it by setting its price, even the same one (confirmed).",
+        "properties": {
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "extra_id": {
+            "format": "uuid",
+            "title": "Extra Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "needs_quantity_check": {
+            "title": "Needs Quantity Check",
+            "type": "boolean"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "pricing": {
+            "enum": [
+              "included",
+              "supplement",
+              "on_quote"
+            ],
+            "title": "Pricing",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "extra_id",
+          "pricing",
+          "price_eur",
+          "label",
+          "unit",
+          "needs_quantity_check",
+          "confirmed"
+        ],
+        "title": "AgentPlanExtra",
         "type": "object"
       },
       "AgentPlanItem": {
@@ -409,11 +554,45 @@
             "title": "Available To",
             "type": "string"
           },
+          "cancellation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation"
+          },
           "city": {
             "maxLength": 64,
             "minLength": 1,
             "title": "City",
             "type": "string"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "confirmation_delay_hours": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Delay Hours"
           },
           "country": {
             "maxLength": 64,
@@ -452,10 +631,59 @@
             "title": "Min Persons",
             "type": "integer"
           },
+          "opening_months": {
+            "items": {
+              "maximum": 12.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "title": "Opening Months",
+            "type": "array"
+          },
           "partner_id": {
             "format": "uuid",
             "title": "Partner Id",
             "type": "string"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "person/night",
+                  "person/trip",
+                  "person/activity"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "restrictions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restrictions"
           },
           "tags": {
             "items": {
@@ -508,10 +736,17 @@
             "type": "string"
           },
           "contact_phone": {
-            "maxLength": 32,
-            "minLength": 1,
-            "title": "Contact Phone",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
           },
           "country": {
             "maxLength": 64,
@@ -542,8 +777,7 @@
           "kind",
           "country",
           "city",
-          "contact_email",
-          "contact_phone"
+          "contact_email"
         ],
         "title": "CreatePartnerRequest",
         "type": "object"
@@ -623,6 +857,71 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExtraResponse": {
+        "description": "An option a client can add to a plan. supplement_eur only for a supplement.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "constraints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Constraints",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "pricing": {
+            "enum": [
+              "included",
+              "supplement",
+              "on_quote"
+            ],
+            "title": "Pricing",
+            "type": "string"
+          },
+          "supplement_eur": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplement Eur"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "label",
+          "description",
+          "pricing",
+          "supplement_eur",
+          "unit",
+          "constraints"
+        ],
+        "title": "ExtraResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -761,6 +1060,168 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "OfferDetailResponse": {
+        "description": "A listed offer for its page. The price is indicative, per person (ADR 0014): the agent\nnegotiates the price of the trip and the quote has it. Never the partner.",
+        "properties": {
+          "available_from": {
+            "format": "date",
+            "title": "Available From",
+            "type": "string"
+          },
+          "available_to": {
+            "format": "date",
+            "title": "Available To",
+            "type": "string"
+          },
+          "cancellation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "confirmation_delay_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Delay Hours"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "hotel",
+              "guide",
+              "transport",
+              "activity",
+              "agency"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_persons": {
+            "title": "Max Persons",
+            "type": "integer"
+          },
+          "min_persons": {
+            "title": "Min Persons",
+            "type": "integer"
+          },
+          "opening_months": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Opening Months",
+            "type": "array"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "person/night",
+                  "person/trip",
+                  "person/activity"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "restrictions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restrictions"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "description",
+          "country",
+          "city",
+          "min_persons",
+          "max_persons",
+          "available_from",
+          "available_to",
+          "tags",
+          "price_eur",
+          "price_unit",
+          "opening_months",
+          "conditions",
+          "restrictions",
+          "cancellation",
+          "confirmation_delay_hours"
+        ],
+        "title": "OfferDetailResponse",
+        "type": "object"
+      },
       "OfferKind": {
         "enum": [
           "hotel",
@@ -773,6 +1234,7 @@
         "type": "string"
       },
       "OfferResponse": {
+        "description": "An offer, for agents. hidden: the agent's switch in Novoya, kept by the import.",
         "properties": {
           "active": {
             "title": "Active",
@@ -788,9 +1250,42 @@
             "title": "Available To",
             "type": "string"
           },
+          "cancellation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation"
+          },
           "city": {
             "title": "City",
             "type": "string"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "confirmation_delay_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Delay Hours"
           },
           "country": {
             "title": "Country",
@@ -802,6 +1297,10 @@
           },
           "featured": {
             "title": "Featured",
+            "type": "boolean"
+          },
+          "hidden": {
+            "title": "Hidden",
             "type": "boolean"
           },
           "id": {
@@ -828,10 +1327,55 @@
             "title": "Min Persons",
             "type": "integer"
           },
+          "opening_months": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Opening Months",
+            "type": "array"
+          },
           "partner_id": {
             "format": "uuid",
             "title": "Partner Id",
             "type": "string"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "person/night",
+                  "person/trip",
+                  "person/activity"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "restrictions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restrictions"
           },
           "tags": {
             "items": {
@@ -859,7 +1403,15 @@
           "available_to",
           "tags",
           "featured",
-          "active"
+          "active",
+          "price_eur",
+          "price_unit",
+          "opening_months",
+          "conditions",
+          "restrictions",
+          "cancellation",
+          "confirmation_delay_hours",
+          "hidden"
         ],
         "title": "OfferResponse",
         "type": "object"
@@ -928,6 +1480,7 @@
         "type": "object"
       },
       "PartnerResponse": {
+        "description": "A partner. imported: it comes from D\u00c9TOUR, which owns everything but hidden (its offers\ntoo, but for featured and hidden): a PATCH of anything else is a 409 imported_row.",
         "properties": {
           "active": {
             "title": "Active",
@@ -942,17 +1495,32 @@
             "type": "string"
           },
           "contact_phone": {
-            "title": "Contact Phone",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
           },
           "country": {
             "title": "Country",
             "type": "string"
           },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "imported": {
+            "title": "Imported",
+            "type": "boolean"
           },
           "kind": {
             "enum": [
@@ -978,7 +1546,9 @@
           "city",
           "contact_email",
           "contact_phone",
-          "active"
+          "active",
+          "hidden",
+          "imported"
         ],
         "title": "PartnerResponse",
         "type": "object"
@@ -1399,6 +1969,22 @@
         "title": "RegisterRequest",
         "type": "object"
       },
+      "RequestQuoteRequest": {
+        "description": "The extras the client adds to the plan. Without a body, none.",
+        "properties": {
+          "extra_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Extra Ids",
+            "type": "array"
+          }
+        },
+        "title": "RequestQuoteRequest",
+        "type": "object"
+      },
       "ResetPasswordRequest": {
         "properties": {
           "new_password": {
@@ -1418,6 +2004,52 @@
           "new_password"
         ],
         "title": "ResetPasswordRequest",
+        "type": "object"
+      },
+      "ReviewResponse": {
+        "description": "A published review. The author is \"First name I.\" or \"Voyageur anonyme\", as given.",
+        "properties": {
+          "author": {
+            "title": "Author",
+            "type": "string"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewed_on": {
+            "format": "date",
+            "title": "Reviewed On",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "country",
+          "city",
+          "rating",
+          "reviewed_on",
+          "text",
+          "author"
+        ],
+        "title": "ReviewResponse",
         "type": "object"
       },
       "SelectedTagIn": {
@@ -1457,6 +2089,28 @@
           "text"
         ],
         "title": "SendWishRequest",
+        "type": "object"
+      },
+      "SetPlanExtraRequest": {
+        "description": "The price in EUR of an on_quote extra, or an adjusted supplement.",
+        "properties": {
+          "price_eur": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Price Eur"
+          }
+        },
+        "required": [
+          "price_eur"
+        ],
+        "title": "SetPlanExtraRequest",
         "type": "object"
       },
       "SetPlanItemRequest": {
@@ -1550,8 +2204,41 @@
         "title": "TokenRequest",
         "type": "object"
       },
+      "UpdateExtraRequest": {
+        "additionalProperties": false,
+        "description": "true hides the extra from clients, false shows it again. The import never changes it.",
+        "properties": {
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hidden"
+        ],
+        "title": "UpdateExtraRequest",
+        "type": "object"
+      },
+      "UpdateMeRequest": {
+        "properties": {
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale"
+        ],
+        "title": "UpdateMeRequest",
+        "type": "object"
+      },
       "UpdateOfferRequest": {
         "additionalProperties": false,
+        "description": "Absent fields are unchanged, and so is null, except for price_eur and price_unit\n(cleared together) and opening_months (cleared to none). An offer of an imported partner\nonly accepts featured and hidden: any other change is a 409 imported_row.",
         "properties": {
           "active": {
             "anyOf": [
@@ -1588,6 +2275,17 @@
             ],
             "title": "Available To"
           },
+          "cancellation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation"
+          },
           "city": {
             "anyOf": [
               {
@@ -1600,6 +2298,29 @@
               }
             ],
             "title": "City"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "confirmation_delay_hours": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Delay Hours"
           },
           "country": {
             "anyOf": [
@@ -1636,6 +2357,17 @@
               }
             ],
             "title": "Featured"
+          },
+          "hidden": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden"
           },
           "kind": {
             "anyOf": [
@@ -1679,6 +2411,62 @@
             ],
             "title": "Min Persons"
           },
+          "opening_months": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 12.0,
+                  "minimum": 1.0,
+                  "type": "integer"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Months"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "person/night",
+                  "person/trip",
+                  "person/activity"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "restrictions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restrictions"
+          },
           "tags": {
             "anyOf": [
               {
@@ -1713,6 +2501,7 @@
       },
       "UpdatePartnerRequest": {
         "additionalProperties": false,
+        "description": "Absent or null fields are unchanged. hidden hides the partner and its offers in Novoya;\nthe D\u00c9TOUR import never changes it. An imported partner only accepts hidden.",
         "properties": {
           "active": {
             "anyOf": [
@@ -1777,6 +2566,17 @@
               }
             ],
             "title": "Country"
+          },
+          "hidden": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden"
           },
           "kind": {
             "anyOf": [
@@ -2010,6 +2810,176 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/extras": {
+      "get": {
+        "description": "All extras, inactive and hidden ones too. Agents only.",
+        "operationId": "listAllExtras",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminExtraResponse"
+                  },
+                  "title": "Response Listallextras",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List All Extras",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/extras/{extra_id}": {
+      "patch": {
+        "description": "Hide an extra from clients, or show it again. Extras come from D\u00c9TOUR, which owns the\nrest: the import never changes hidden. Agents only.",
+        "operationId": "updateExtra",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "extra_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extra Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExtraRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminExtraResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Extra",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/offers": {
       "get": {
         "description": "All offers, including inactive ones. Agents only.",
@@ -2059,6 +3029,16 @@
             },
             "description": "Not Found"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2076,7 +3056,7 @@
         ]
       },
       "post": {
-        "description": "Add an offer for an existing partner. Agents only.",
+        "description": "Add an offer for an existing partner made in Novoya. A partner imported from D\u00c9TOUR gets\nits offers from D\u00c9TOUR: 409 imported_row. Agents only.",
         "operationId": "createOffer",
         "requestBody": {
           "content": {
@@ -2129,6 +3109,16 @@
             },
             "description": "Not Found"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2148,7 +3138,7 @@
     },
     "/admin/offers/{offer_id}": {
       "patch": {
-        "description": "Change an offer. Agents only.",
+        "description": "Change an offer. null clears the price with its unit, or the opening months. An offer of\na partner imported from D\u00c9TOUR only changes featured and hidden: anything else is 409\nimported_row. Agents only.",
         "operationId": "updateOffer",
         "parameters": [
           {
@@ -2212,6 +3202,16 @@
               }
             },
             "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "content": {
@@ -2278,6 +3278,16 @@
               }
             },
             "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "content": {
@@ -2349,6 +3359,16 @@
             },
             "description": "Not Found"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2368,7 +3388,7 @@
     },
     "/admin/partners/{partner_id}": {
       "patch": {
-        "description": "Change a partner. Deactivating it hides its offers from search. Agents only.",
+        "description": "Change a partner. Deactivating or hiding it hides its offers from search. A partner\nimported from D\u00c9TOUR only changes hidden: anything else is 409 imported_row. Agents only.",
         "operationId": "updatePartner",
         "parameters": [
           {
@@ -2432,6 +3452,16 @@
               }
             },
             "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "content": {
@@ -2970,6 +4000,110 @@
           }
         },
         "summary": "Get Agent Plan",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/agent/plans/{plan_id}/extras/{extra_id}": {
+      "patch": {
+        "description": "Set the price in EUR of an on_quote extra, or adjust a supplement. Only the assigned\nagent. 404 if the extra is not on the plan. 409 if the plan is no longer negotiating.",
+        "operationId": "setPlanExtra",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "extra_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Extra Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlanExtraRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Set Plan Extra",
         "tags": [
           "agent"
         ]
@@ -4203,6 +5337,52 @@
         ]
       }
     },
+    "/extras": {
+      "get": {
+        "description": "Options a client can add when asking for a quote. Active ones that no agent hid.",
+        "operationId": "listExtras",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExtraResponse"
+                  },
+                  "title": "Response Listextras",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "List Extras",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "description": "Liveness: the process is up.",
@@ -4337,6 +5517,160 @@
         "tags": [
           "me"
         ]
+      },
+      "patch": {
+        "description": "Change the signed-in user's language (en or fr). Answers like GET /me.",
+        "operationId": "updateMe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Update Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/offers/{offer_id}": {
+      "get": {
+        "description": "A listed offer: indicative price per person, opening months and terms. Never the partner.\nThe agent still negotiates the trip's price. 404 if it is unknown or not listed.",
+        "operationId": "getOffer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Offer",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/plans/{plan_id}": {
@@ -4415,7 +5749,7 @@
     },
     "/plans/{plan_id}/request-quote": {
       "post": {
-        "description": "Ask an agent to price this plan. proposed becomes requested. Never a price here.\n404 if it is missing or not the caller's. 409 if it is not proposed (a second click too).",
+        "description": "Ask an agent to price this plan, with optional extras. proposed becomes requested.\nNever a price here. 404 if it is missing or not the caller's. 409 if it is not proposed\n(a second click too). 422 if an extra is unknown or no longer offered.",
         "operationId": "requestQuote",
         "parameters": [
           {
@@ -4429,6 +5763,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RequestQuoteRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -4484,6 +5835,80 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Request Quote",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/reviews": {
+      "get": {
+        "description": "Published reviews, newest first, at most 100. Public: only reviews the travellers agreed\nto publish, under \"First name I.\" or \"Voyageur anonyme\". Filter by country and city.",
+        "operationId": "listReviews",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewResponse"
+                  },
+                  "title": "Response Listreviews",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
@@ -4491,9 +5916,9 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Request Quote",
+        "summary": "List Reviews",
         "tags": [
-          "planning"
+          "catalog"
         ]
       }
     },

@@ -36,7 +36,7 @@ const DEMO: Quote = {
     { label: 'Hébergement · 6 nuits', amount: 1860 },
     { label: 'Expériences & visites', amount: 420 },
     { label: 'Transferts sur place', amount: 280 },
-    { label: 'Accompagnement Novoya', amount: 190 },
+    { label: 'Accompagnement DÉTOUR', amount: 190 },
   ],
   total: 2750,
   budget: 3500,

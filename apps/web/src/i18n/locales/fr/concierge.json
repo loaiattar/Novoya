@@ -1,9 +1,9 @@
 {
   "you": "Vous :",
-  "novoya": "Novoya :",
+  "novoya": "{{agency}} :",
   "send": "Envoyer",
   "dockLabel": "Conversation avec le concierge",
-  "name": "Concierge Novoya",
+  "name": "Concierge {{agency}}",
   "activeThread": "Fil actif · aperçu v{{version}}",
   "collapse": "Réduire la conversation",
   "expand": "Ouvrir la conversation",

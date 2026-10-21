@@ -16,14 +16,20 @@ from novoya_api.catalog.application.use_cases.create_partner import (
     CreatePartner,
     CreatePartnerCommand,
 )
+from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtras
 from novoya_api.catalog.application.use_cases.list_offers import ListOffers
 from novoya_api.catalog.application.use_cases.list_partners import ListPartners
+from novoya_api.catalog.application.use_cases.update_extra import UpdateExtra, UpdateExtraCommand
 from novoya_api.catalog.application.use_cases.update_offer import UpdateOffer, UpdateOfferCommand
 from novoya_api.catalog.application.use_cases.update_partner import (
     UpdatePartner,
     UpdatePartnerCommand,
 )
 from novoya_api.catalog.domain import (
+    Extra,
+    ExtraNotFound,
+    ExtraPricing,
+    ImportedRow,
     InvalidOffer,
     Offer,
     OfferKind,
@@ -31,16 +37,20 @@ from novoya_api.catalog.domain import (
     Partner,
     PartnerKind,
     PartnerNotFound,
+    PriceUnit,
 )
 from novoya_api.catalog.presentation.http.dependencies import (
     get_create_offer,
     get_create_partner,
+    get_list_all_extras,
     get_list_offers,
     get_list_partners,
+    get_update_extra,
     get_update_offer,
     get_update_partner,
 )
 from novoya_api.main import create_app
+from novoya_api.shared.domain.errors import Conflict
 from novoya_api.shared.domain.value_objects import Locale
 
 USER_ID = UUID("00000000-0000-0000-0000-000000000001")
@@ -112,6 +122,42 @@ class FakeOffers:
 
     async def save(self, offer: Offer) -> None:
         self.by_id[offer.id] = offer
+
+
+class FakeExtras:
+    def __init__(self, extras: list[Extra] | None = None) -> None:
+        self.by_id = {extra.id: extra for extra in extras or []}
+
+    async def list_all(self) -> list[Extra]:
+        return sorted(self.by_id.values(), key=lambda extra: (extra.label, str(extra.id)))
+
+    async def list_active(self) -> list[Extra]:
+        return [extra for extra in await self.list_all() if extra.active and not extra.hidden]
+
+    async def list_active_by_ids(self, ids: Sequence[UUID]) -> list[Extra]:
+        return [self.by_id[i] for i in ids if i in self.by_id and not self.by_id[i].hidden]
+
+    async def get(self, extra_id: UUID) -> Extra | None:
+        return self.by_id.get(extra_id)
+
+    async def save(self, extra: Extra) -> None:
+        self.by_id[extra.id] = extra
+
+
+def _extra(**overrides: object) -> Extra:
+    values: dict[str, object] = {
+        "id": uuid4(),
+        "category": "comfort",
+        "label": "Quiet room",
+        "description": "Away from the street",
+        "pricing": ExtraPricing.INCLUDED,
+        "supplement_eur": None,
+        "unit": "par séjour",
+        "constraints": (),
+        "active": True,
+    }
+    values.update(overrides)
+    return Extra(**values)  # type: ignore[arg-type]
 
 
 def _partner(**overrides: object) -> Partner:
@@ -270,7 +316,7 @@ async def test_update_offer_can_deactivate():
     offers = FakeOffers([offer])
     offers.partners = FakePartners([partner])
 
-    updated = await UpdateOffer(offers, FakeUow())(
+    updated = await UpdateOffer(offers, offers.partners, FakeUow())(
         UpdateOfferCommand(offer_id=offer.id, active=False)
     )
 
@@ -280,7 +326,9 @@ async def test_update_offer_can_deactivate():
 
 async def test_update_missing_offer_is_not_found():
     with pytest.raises(OfferNotFound):
-        await UpdateOffer(FakeOffers(), FakeUow())(UpdateOfferCommand(offer_id=uuid4()))
+        await UpdateOffer(FakeOffers(), FakePartners(), FakeUow())(
+            UpdateOfferCommand(offer_id=uuid4())
+        )
 
 
 async def test_list_offers_includes_inactive_ones():
@@ -293,6 +341,222 @@ async def test_list_offers_includes_inactive_ones():
     listed = await ListOffers(offers)()
 
     assert [offer.title for offer in listed] == ["Hidden", "Shown"]
+
+
+# Rows imported from DÉTOUR: DÉTOUR owns their content, Novoya only featured and hidden.
+
+
+def test_an_imported_row_error_is_a_409_conflict_with_a_stable_code():
+    assert issubclass(ImportedRow, Conflict)
+    assert ImportedRow.code == "imported_row"
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"name": "Renamed"},
+        {"kind": PartnerKind.GUIDE},
+        {"city": "Heraklion"},
+        {"contact_email": "new@elounda.example"},
+        {"contact_phone": "+30 000"},
+        {"active": False},
+    ],
+)
+async def test_the_content_of_an_imported_partner_cannot_change(change):
+    partner = _partner(imported=True, contact_phone=None)
+    partners = FakePartners([partner])
+
+    with pytest.raises(ImportedRow, match="DÉTOUR"):
+        await UpdatePartner(partners, FakeUow())(
+            UpdatePartnerCommand(partner_id=partner.id, **change)
+        )
+
+    assert partners.by_id[partner.id] == partner
+
+
+async def test_an_imported_partner_can_be_hidden():
+    partner = _partner(imported=True)
+    partners = FakePartners([partner])
+
+    updated = await UpdatePartner(partners, FakeUow())(
+        UpdatePartnerCommand(partner_id=partner.id, hidden=True)
+    )
+
+    assert updated.hidden is True
+    assert partners.by_id[partner.id].hidden is True
+
+
+async def test_sending_an_imported_partner_its_own_values_is_not_a_change():
+    partner = _partner(imported=True)
+
+    updated = await UpdatePartner(FakePartners([partner]), FakeUow())(
+        UpdatePartnerCommand(partner_id=partner.id, name=partner.name, city="chania")
+    )
+
+    assert updated == partner
+
+
+def _imported_offer(**overrides: object) -> tuple[FakeOffers, Offer]:
+    partner = _partner(imported=True)
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, **overrides)
+    offers = FakeOffers([offer])
+    offers.partners = FakePartners([partner])
+    return offers, offer
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"title": "Renamed"},
+        {"description": "Another room"},
+        {"tags": ("style:city",)},
+        {"max_persons": 6},
+        {"available_to": date(2026, 9, 30)},
+        {"price_eur": 120},
+        {"opening_months": (5, 6)},
+        {"conditions": "Pay on arrival"},
+        {"active": False},
+        {"kind": OfferKind.ACTIVITY},
+    ],
+)
+async def test_the_content_of_an_imported_offer_cannot_change(change):
+    offers, offer = _imported_offer()
+
+    with pytest.raises(ImportedRow, match="DÉTOUR"):
+        await UpdateOffer(offers, offers.partners, FakeUow())(
+            UpdateOfferCommand(offer_id=offer.id, **change)
+        )
+
+    assert offers.by_id[offer.id] == offer
+
+
+async def test_an_imported_offer_can_be_featured_and_hidden():
+    offers, offer = _imported_offer()
+
+    updated = await UpdateOffer(offers, offers.partners, FakeUow())(
+        UpdateOfferCommand(offer_id=offer.id, featured=True, hidden=True)
+    )
+
+    assert (updated.featured, updated.hidden) == (True, True)
+    assert updated.title == offer.title
+
+
+async def test_clearing_the_price_of_an_imported_offer_is_refused():
+    offers, offer = _imported_offer()
+
+    with pytest.raises(ImportedRow):
+        await UpdateOffer(offers, offers.partners, FakeUow())(
+            UpdateOfferCommand(offer_id=offer.id, cleared=frozenset({"price_eur", "price_unit"}))
+        )
+
+
+async def test_an_offer_cannot_be_added_to_an_imported_partner():
+    partner = _partner(imported=True)
+    offers = FakeOffers()
+
+    with pytest.raises(ImportedRow):
+        await CreateOffer(offers, FakePartners([partner]), FakeUow())(
+            CreateOfferCommand(
+                partner_id=partner.id,
+                kind=OfferKind.HOTEL,
+                title="Stay",
+                description="A room",
+                country="Greece",
+                city="Chania",
+                min_persons=1,
+                max_persons=2,
+                available_from=SEASON[0],
+                available_to=SEASON[1],
+                tags=(),
+            )
+        )
+
+    assert offers.by_id == {}
+
+
+async def test_a_hand_made_offer_stays_fully_editable():
+    partner = _partner()
+    offer = _offer(partner)
+    offers = FakeOffers([offer])
+    offers.partners = FakePartners([partner])
+
+    updated = await UpdateOffer(offers, offers.partners, FakeUow())(
+        UpdateOfferCommand(
+            offer_id=offer.id,
+            title="Renamed",
+            active=False,
+            hidden=True,
+            price_eur=80,
+            price_unit=PriceUnit.PERSON_NIGHT,
+        )
+    )
+
+    assert (updated.title, updated.active, updated.hidden) == ("Renamed", False, True)
+    assert (updated.price_eur, updated.price_unit) == (80, PriceUnit.PERSON_NIGHT)
+
+
+async def test_a_hand_made_partner_stays_fully_editable():
+    partner = _partner()
+
+    updated = await UpdatePartner(FakePartners([partner]), FakeUow())(
+        UpdatePartnerCommand(partner_id=partner.id, name="Renamed", contact_phone="+30 111")
+    )
+
+    assert (updated.name, updated.contact_phone) == ("Renamed", "+30 111")
+
+
+async def test_the_price_and_months_of_a_hand_made_offer_can_be_cleared():
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, opening_months=(5,))
+    offers = FakeOffers([offer])
+    offers.partners = FakePartners([partner])
+
+    updated = await UpdateOffer(offers, offers.partners, FakeUow())(
+        UpdateOfferCommand(
+            offer_id=offer.id, cleared=frozenset({"price_eur", "price_unit", "opening_months"})
+        )
+    )
+
+    assert (updated.price_eur, updated.price_unit, updated.opening_months) == (None, None, ())
+
+
+async def test_clearing_the_price_without_its_unit_is_refused():
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT)
+    offers = FakeOffers([offer])
+    offers.partners = FakePartners([partner])
+
+    with pytest.raises(InvalidOffer):
+        await UpdateOffer(offers, offers.partners, FakeUow())(
+            UpdateOfferCommand(offer_id=offer.id, cleared=frozenset({"price_eur"}))
+        )
+
+
+async def test_an_extra_can_be_hidden_and_shown_again():
+    extra = _extra()
+    extras = FakeExtras([extra])
+
+    hidden = await UpdateExtra(extras, FakeUow())(UpdateExtraCommand(extra.id, hidden=True))
+    assert hidden.hidden is True
+    assert await extras.list_active() == []
+
+    shown = await UpdateExtra(extras, FakeUow())(UpdateExtraCommand(extra.id, hidden=False))
+    assert shown == extra
+
+
+async def test_hiding_a_missing_extra_is_not_found():
+    with pytest.raises(ExtraNotFound):
+        await UpdateExtra(FakeExtras(), FakeUow())(UpdateExtraCommand(uuid4(), hidden=True))
+
+
+async def test_the_admin_extras_list_includes_hidden_and_inactive_ones():
+    extras = FakeExtras(
+        [_extra(label="Gone", active=False), _extra(label="Hidden", hidden=True), _extra()]
+    )
+
+    listed = await ListAllExtras(extras)()
+
+    assert [extra.label for extra in listed] == ["Gone", "Hidden", "Quiet room"]
 
 
 # HTTP
@@ -320,8 +584,11 @@ async def client(app) -> AsyncIterator[AsyncClient]:
         yield c
 
 
-def _as_agent(app, partners: FakePartners, offers: FakeOffers | None = None) -> None:
+def _as_agent(
+    app, partners: FakePartners, offers: FakeOffers | None = None, extras: FakeExtras | None = None
+) -> None:
     offers = offers or FakeOffers()
+    extras = extras or FakeExtras()
     offers.partners = partners
     uow = FakeUow()
     app.dependency_overrides[current_user] = lambda: signed_in_as(Role.AGENT)
@@ -330,7 +597,9 @@ def _as_agent(app, partners: FakePartners, offers: FakeOffers | None = None) -> 
     app.dependency_overrides[get_update_partner] = lambda: UpdatePartner(partners, uow)
     app.dependency_overrides[get_list_offers] = lambda: ListOffers(offers)
     app.dependency_overrides[get_create_offer] = lambda: CreateOffer(offers, partners, uow)
-    app.dependency_overrides[get_update_offer] = lambda: UpdateOffer(offers, uow)
+    app.dependency_overrides[get_update_offer] = lambda: UpdateOffer(offers, partners, uow)
+    app.dependency_overrides[get_list_all_extras] = lambda: ListAllExtras(extras)
+    app.dependency_overrides[get_update_extra] = lambda: UpdateExtra(extras, uow)
 
 
 async def test_admin_partners_without_a_session_returns_401(client):
@@ -372,6 +641,42 @@ async def test_admin_can_create_list_and_deactivate_a_partner(app, client):
     patched = await client.patch(f"/admin/partners/{body['id']}", json={"active": False})
     assert patched.status_code == 200
     assert patched.json()["active"] is False
+
+
+async def test_admin_can_create_a_partner_without_a_phone(app, client):
+    partners = FakePartners()
+    _as_agent(app, partners)
+
+    created = await client.post(
+        "/admin/partners",
+        json={
+            "name": "No Phone Lodge",
+            "kind": "hotel",
+            "country": "Greece",
+            "city": "Chania",
+            "contact_email": "hello@nophone.example",
+        },
+    )
+
+    assert created.status_code == 201
+    assert created.json()["contact_phone"] is None
+
+
+async def test_create_partner_without_a_phone_stores_none():
+    partners = FakePartners()
+
+    created = await CreatePartner(partners, FakeUow())(
+        CreatePartnerCommand(
+            name="No Phone Lodge",
+            kind=PartnerKind.HOTEL,
+            country="Greece",
+            city="Chania",
+            contact_email="hello@nophone.example",
+            contact_phone=None,
+        )
+    )
+
+    assert created.contact_phone is None
 
 
 async def test_admin_offer_create_needs_a_partner(app, client):
@@ -451,6 +756,121 @@ async def test_admin_can_create_and_deactivate_an_offer(app, client):
     assert patched.json()["active"] is False
 
 
+async def test_editing_an_imported_offer_is_a_409_that_names_detour(app, client):
+    offers, offer = _imported_offer()
+    _as_agent(app, offers.partners, offers)
+
+    response = await client.patch(f"/admin/offers/{offer.id}", json={"title": "Renamed"})
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "imported_row"
+    assert "DÉTOUR" in response.json()["detail"]
+
+
+async def test_an_imported_offer_is_featured_and_hidden_over_http(app, client):
+    offers, offer = _imported_offer()
+    _as_agent(app, offers.partners, offers)
+
+    response = await client.patch(
+        f"/admin/offers/{offer.id}", json={"featured": True, "hidden": True}
+    )
+
+    assert response.status_code == 200
+    assert (response.json()["featured"], response.json()["hidden"]) == (True, True)
+
+
+async def test_editing_an_imported_partner_is_a_409(app, client):
+    partner = _partner(imported=True)
+    _as_agent(app, FakePartners([partner]))
+
+    response = await client.patch(f"/admin/partners/{partner.id}", json={"name": "Renamed"})
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "imported_row"
+
+
+async def test_an_imported_partner_is_hidden_over_http(app, client):
+    partner = _partner(imported=True)
+    _as_agent(app, FakePartners([partner]))
+
+    response = await client.patch(f"/admin/partners/{partner.id}", json={"hidden": True})
+
+    assert response.status_code == 200
+    assert (response.json()["hidden"], response.json()["imported"]) == (True, True)
+
+
+async def test_a_null_price_and_unit_clear_the_price(app, client):
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, opening_months=(5,))
+    offers = FakeOffers([offer])
+    _as_agent(app, FakePartners([partner]), offers)
+
+    response = await client.patch(
+        f"/admin/offers/{offer.id}",
+        json={"price_eur": None, "price_unit": None, "opening_months": None},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["price_eur"], body["price_unit"], body["opening_months"]) == (None, None, [])
+
+
+async def test_a_null_price_alone_is_a_422(app, client):
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT)
+    _as_agent(app, FakePartners([partner]), FakeOffers([offer]))
+
+    response = await client.patch(f"/admin/offers/{offer.id}", json={"price_eur": None})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "invalid_offer"
+
+
+async def test_an_absent_price_is_unchanged(app, client):
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, opening_months=(5,))
+    _as_agent(app, FakePartners([partner]), FakeOffers([offer]))
+
+    response = await client.patch(f"/admin/offers/{offer.id}", json={"title": "Renamed"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["price_eur"], body["price_unit"], body["opening_months"]) == (
+        90,
+        "person/night",
+        [5],
+    )
+
+
+async def test_an_agent_hides_an_extra_over_http(app, client):
+    extra = _extra()
+    _as_agent(app, FakePartners(), extras=FakeExtras([extra]))
+
+    response = await client.patch(f"/admin/extras/{extra.id}", json={"hidden": True})
+
+    assert response.status_code == 200
+    assert response.json()["hidden"] is True
+    listed = await client.get("/admin/extras")
+    assert [(row["id"], row["hidden"], row["active"]) for row in listed.json()] == [
+        (str(extra.id), True, True)
+    ]
+
+
+async def test_the_content_of_an_extra_cannot_be_patched(app, client):
+    extra = _extra()
+    _as_agent(app, FakePartners(), extras=FakeExtras([extra]))
+
+    response = await client.patch(f"/admin/extras/{extra.id}", json={"label": "Renamed"})
+
+    assert response.status_code == 422
+
+
+async def test_admin_extras_need_an_agent(app, client):
+    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.CLIENT)
+
+    assert (await client.get("/admin/extras")).status_code == 403
+
+
 def test_admin_catalog_routes_are_documented(app):
     paths = app.openapi()["paths"]
     assert paths["/admin/partners"]["get"]["operationId"] == "listPartners"
@@ -459,6 +879,9 @@ def test_admin_catalog_routes_are_documented(app):
     assert paths["/admin/offers"]["get"]["operationId"] == "listOffers"
     assert paths["/admin/offers"]["post"]["operationId"] == "createOffer"
     assert paths["/admin/offers/{offer_id}"]["patch"]["operationId"] == "updateOffer"
+    assert paths["/admin/extras"]["get"]["operationId"] == "listAllExtras"
+    assert paths["/admin/extras/{extra_id}"]["patch"]["operationId"] == "updateExtra"
+    assert "409" in paths["/admin/offers/{offer_id}"]["patch"]["responses"]
     responses = paths["/admin/partners"]["get"]["responses"]
     for status in ("401", "403", "422"):
         ref = responses[status]["content"]["application/json"]["schema"]["$ref"]

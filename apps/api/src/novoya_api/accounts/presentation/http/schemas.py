@@ -62,6 +62,10 @@ class ChangeRoleRequest(BaseModel):
     role: RoleName
 
 
+class UpdateMeRequest(BaseModel):
+    locale: Literal["en", "fr"]
+
+
 class UserResponse(BaseModel):
     id: UUID
     email: str

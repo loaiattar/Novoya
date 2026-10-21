@@ -46,7 +46,7 @@ from novoya_api.shared.infrastructure.db.session import close_db, get_engine, ge
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 
 API_DIR = Path(__file__).parent.parent
-TABLES = "offers, partners"
+TABLES = "reviews, extras, offers, partners"
 
 
 async def database_answers(url: str) -> bool:

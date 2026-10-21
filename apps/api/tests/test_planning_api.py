@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from uuid import UUID
 
 import pytest
@@ -13,7 +14,7 @@ from novoya_api.accounts.domain.value_objects import Email, UserId
 from novoya_api.accounts.public import current_user
 from novoya_api.catalog.public import OfferKind
 from novoya_api.main import create_app
-from novoya_api.planning.application.dto import OfferSummary
+from novoya_api.planning.application.dto import ExtraSummary, OfferSummary
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.domain.plan import DraftItem, Plan, PlanStatus
@@ -30,6 +31,12 @@ WISH_ID = UUID("00000000-0000-0000-0000-0000000000a1")
 NOW = datetime(2026, 10, 19, 9, 0, tzinfo=UTC)
 HOTEL_ID = UUID("00000000-0000-0000-0000-0000000000b1")
 HOTEL = OfferSummary(HOTEL_ID, "hotel", "Sea view hotel", "Rooms over the bay", (), False)
+BAG = ExtraSummary(
+    id=UUID("00000000-0000-0000-0000-0000000000c1"),
+    label="Extra bag",
+    pricing="supplement",
+    supplement_eur=Decimal("25"),
+)
 
 
 class FakePlans:
@@ -57,6 +64,9 @@ class FixedClock:
 class FakeCatalog:
     async def summaries_for(self, offer_ids: list[UUID]) -> list[OfferSummary]:
         return [HOTEL] if HOTEL_ID in offer_ids else []
+
+    async def extras_for(self, extra_ids: list[UUID]) -> list[ExtraSummary]:
+        return [BAG] if BAG.id in extra_ids else []
 
 
 class FakeWishes:
@@ -189,6 +199,34 @@ async def test_the_owner_requests_a_quote(plan, client):
         "description",
         "available",
     }
+
+
+async def test_the_owner_requests_a_quote_with_extras(plan, client):
+    response = await client.post(
+        f"/plans/{plan.id}/request-quote", json={"extra_ids": [str(BAG.id)]}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "requested"
+    assert [extra.extra_id for extra in plan.extras] == [BAG.id]
+    assert "€" not in response.text
+
+
+async def test_request_quote_with_an_empty_body_still_works(plan, client):
+    response = await client.post(f"/plans/{plan.id}/request-quote", json={})
+
+    assert response.status_code == 200
+    assert plan.extras == ()
+
+
+async def test_request_quote_with_an_unknown_extra_returns_422(plan, client):
+    response = await client.post(
+        f"/plans/{plan.id}/request-quote",
+        json={"extra_ids": ["00000000-0000-0000-0000-0000000000cf"]},
+    )
+
+    assert response.status_code == 422
+    assert plan.status is PlanStatus.PROPOSED
 
 
 async def test_requesting_a_quote_twice_returns_409(plan, client):

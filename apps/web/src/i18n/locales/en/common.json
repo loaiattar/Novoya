@@ -2,10 +2,15 @@
   "tryAgain": "Try again",
   "loading": "Loading…",
   "comingSoon": "Coming soon",
-  "homeLink": "Novoya, home",
+  "homeLink": "{{name}}, home",
   "footer": {
-    "tagline": "Tailor-made travel, with human intelligence.",
-    "legal": "Privacy · Legal notice",
-    "copyright": "© {{year}} Novoya"
+    "since": "Since {{year}}",
+    "destinations": "Destinations and reviews",
+    "legalNotices": "Legal notices",
+    "copyright": "© {{year}} {{name}}"
+  },
+  "language": {
+    "label": "Language",
+    "failed": "The language could not be changed."
   }
 }

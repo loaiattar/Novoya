@@ -62,6 +62,12 @@ def test_a_new_user_is_a_client():
     assert make_user().role is Role.CLIENT
 
 
+def test_a_user_changes_their_language():
+    user = make_user()
+    user.change_locale(Locale.FR)
+    assert user.locale is Locale.FR
+
+
 def test_register_keeps_trimmed_names_and_composes_the_display_name():
     user = User.register(Email("alice@example.com"), " Alice ", " Martin ", Locale.EN, NOW)
     assert user.first_name == "Alice"

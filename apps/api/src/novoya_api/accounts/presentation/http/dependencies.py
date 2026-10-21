@@ -31,6 +31,7 @@ from novoya_api.accounts.application.ports.repositories import (
 from novoya_api.accounts.application.ports.security import PasswordHasher, TokenGenerator
 from novoya_api.accounts.application.services.session_opener import SessionOpener, SessionPolicy
 from novoya_api.accounts.application.use_cases.authenticate_session import AuthenticateSession
+from novoya_api.accounts.application.use_cases.change_locale import ChangeLocale
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import ChangeUserRole
 from novoya_api.accounts.application.use_cases.get_account import GetAccount
@@ -367,6 +368,10 @@ def get_change_password(
 
 def get_get_account(store: StoreDep) -> GetAccount:
     return GetAccount(store.users, store.credentials, store.identities)
+
+
+def get_change_locale(store: StoreDep) -> ChangeLocale:
+    return ChangeLocale(store.users, store.credentials, store.identities, store.uow)
 
 
 def get_list_users(store: StoreDep) -> ListUsers:

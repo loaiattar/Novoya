@@ -15,3 +15,13 @@ dist/
 # Editors
 .idea/
 .vscode/
+
+# Client data exports (DÉTOUR): never committed
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.db
+detour*.sql
+detour*.xlsx
+livraison/
+DETOUR/

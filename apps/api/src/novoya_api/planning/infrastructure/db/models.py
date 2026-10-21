@@ -1,4 +1,4 @@
-"""ORM tables of the planning module: plans, plan_items."""
+"""ORM tables of the planning module: plans, plan_items, plan_extras."""
 
 from datetime import datetime
 from decimal import Decimal
@@ -13,6 +13,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    false,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -61,3 +62,28 @@ class PlanItemModel(Base):
     note: Mapped[str | None] = mapped_column(Text)
     negotiated_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     removed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PlanExtraModel(Base):
+    """An extra the client chose when asking for the quote. price_eur: the supplement as it
+    was then, or what the agent set for an on_quote extra; NULL until then."""
+
+    __tablename__ = "plan_extras"
+    __table_args__ = (
+        CheckConstraint(
+            "pricing IN ('included', 'supplement', 'on_quote')", name="ck_plan_extras_pricing"
+        ),
+        CheckConstraint("price_eur IS NULL OR price_eur > 0", name="ck_plan_extras_price"),
+    )
+
+    plan_id: Mapped[UUID] = mapped_column(
+        ForeignKey("plans.id", ondelete="CASCADE"), primary_key=True
+    )
+    extra_id: Mapped[UUID] = mapped_column(ForeignKey("extras.id"), primary_key=True)
+    pricing: Mapped[str] = mapped_column(String(16))
+    price_eur: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    # Copied from the extra when the quote is requested, so the agent sees what was asked.
+    label: Mapped[str] = mapped_column(String(255))
+    unit: Mapped[str] = mapped_column(String(64))
+    # True once the assigned agent set its price (a supplement per person or night needs it).
+    confirmed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())

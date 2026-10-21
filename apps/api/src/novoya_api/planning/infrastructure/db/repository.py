@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.planning.application.ports.plan_repository import QUEUE_PAGE, ItemWrite
 from novoya_api.planning.domain.errors import InvalidPlan, PlanNotFound
-from novoya_api.planning.domain.plan import Plan, PlanItem, PlanStatus
-from novoya_api.planning.infrastructure.db.models import PlanItemModel, PlanModel
+from novoya_api.planning.domain.plan import Plan, PlanExtra, PlanItem, PlanStatus
+from novoya_api.planning.infrastructure.db.models import PlanExtraModel, PlanItemModel, PlanModel
 from novoya_api.shared.domain.errors import InvalidTransition
 
 
@@ -15,10 +15,11 @@ class SqlPlanRepository:
     """PlanRepository on PostgreSQL. Maps the entity to rows; the caller commits.
 
     save() writes the plan row only, and only if its status is still the one this request
-    read: a late request-quote must not overwrite an agent's take. Item prices go through
-    save_item() writes only the columns of that patch, so a stale tab cannot undo a
-    removal or roll a newer price back. A removal locks the plan row and counts kept
-    items in the database, so two tabs cannot drop the last item.
+    read: a late request-quote must not overwrite an agent's take. When the plan leaves
+    proposed, save() also inserts the chosen extras; their prices go through save_extra().
+    Item prices go through save_item(), which writes only the columns of that patch, so a
+    stale tab cannot undo a removal or roll a newer price back. A removal locks the plan row
+    and counts kept items in the database, so two tabs cannot drop the last item.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -65,7 +66,13 @@ class SqlPlanRepository:
             .order_by(PlanItemModel.day, PlanItemModel.id)
             .execution_options(populate_existing=True)
         )
-        return self._to_plan(row, items)
+        extras = await self._session.scalars(
+            select(PlanExtraModel)
+            .where(PlanExtraModel.plan_id == plan_id)
+            .order_by(PlanExtraModel.extra_id)
+            .execution_options(populate_existing=True)
+        )
+        return self._to_plan(row, items, extras)
 
     async def list_by_status(
         self, status: PlanStatus, *, limit: int = QUEUE_PAGE, offset: int = 0
@@ -81,7 +88,12 @@ class SqlPlanRepository:
         ).all()
         return [self._to_plan(row, ()) for row in rows]
 
-    def _to_plan(self, row: PlanModel, items: Iterable[PlanItemModel]) -> Plan:
+    def _to_plan(
+        self,
+        row: PlanModel,
+        items: Iterable[PlanItemModel],
+        extras: Iterable[PlanExtraModel] = (),
+    ) -> Plan:
         self._read_status[row.id] = row.status
         return Plan(
             id=row.id,
@@ -104,6 +116,17 @@ class SqlPlanRepository:
             created_at=row.created_at,
             updated_at=row.updated_at,
             assigned_agent_id=row.assigned_agent_id,
+            extras=tuple(
+                PlanExtra(
+                    extra_id=extra.extra_id,
+                    pricing=extra.pricing,
+                    price_eur=extra.price_eur,
+                    label=extra.label,
+                    unit=extra.unit,
+                    confirmed=extra.confirmed,
+                )
+                for extra in extras
+            ),
         )
 
     async def save(self, plan: Plan) -> None:
@@ -122,7 +145,42 @@ class SqlPlanRepository:
         )
         if result.rowcount != 1:
             raise InvalidTransition("the plan changed meanwhile, reload it")
+        if read_status == PlanStatus.PROPOSED.value and plan.status is not PlanStatus.PROPOSED:
+            self._session.add_all(
+                PlanExtraModel(
+                    plan_id=plan.id,
+                    extra_id=extra.extra_id,
+                    pricing=extra.pricing,
+                    price_eur=extra.price_eur,
+                    label=extra.label,
+                    unit=extra.unit,
+                    confirmed=extra.confirmed,
+                )
+                for extra in plan.extras
+            )
         self._read_status[plan.id] = plan.status.value
+
+    async def save_extra(self, plan: Plan, extra_id: UUID) -> None:
+        read_status = self._read_status[plan.id]  # KeyError: save_extra() without get() or add()
+        extra = next((entry for entry in plan.extras if entry.extra_id == extra_id), None)
+        if extra is None:
+            raise PlanNotFound("no such extra on this plan")
+        result = await self._session.execute(
+            update(PlanModel)
+            .where(PlanModel.id == plan.id, PlanModel.status == read_status)
+            .values(updated_at=plan.updated_at)
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            raise InvalidTransition("the plan changed meanwhile, reload it")
+        written = await self._session.execute(
+            update(PlanExtraModel)
+            .where(PlanExtraModel.plan_id == plan.id, PlanExtraModel.extra_id == extra_id)
+            .values(price_eur=extra.price_eur, confirmed=extra.confirmed)
+            .execution_options(synchronize_session=False)
+        )
+        if written.rowcount != 1:
+            raise PlanNotFound("no such extra on this plan")
 
     async def save_item(self, plan: Plan, item_id: UUID, write: ItemWrite) -> None:
         read_status = self._read_status[plan.id]  # KeyError: save_item() without get() or add()

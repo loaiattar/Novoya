@@ -1,6 +1,6 @@
 # 0006. No fixed prices: a human agent negotiates and sends a PDF quote
 
-- **Status:** Accepted
+- **Status:** Accepted. Partly replaced by [0014](0014-indicative-prices-and-detour-import.md) (indicative prices on the offer page)
 - **Date:** 2026-10-16
 - **Issue / PR:** #55 (Architecture 0.3)
 

@@ -1,11 +1,12 @@
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.catalog.public import get_offers, search_offers
-from novoya_api.planning.application.dto import OfferContact, OfferSummary
+from novoya_api.catalog.public import get_extras, get_offers, search_offers
+from novoya_api.planning.application.dto import ExtraSummary, OfferContact, OfferSummary
 
 
 class PartnerOffers:
@@ -66,4 +67,19 @@ class PartnerOffers:
                 partner_contact_phone=offer.partner_contact_phone,
             )
             for offer in views
+        ]
+
+    async def extras_for(self, extra_ids: Sequence[UUID]) -> list[ExtraSummary]:
+        extras = await get_extras(extra_ids, session=self._session)
+        return [
+            ExtraSummary(
+                id=extra.id,
+                label=extra.label,
+                pricing=extra.pricing,
+                unit=extra.unit,
+                supplement_eur=(
+                    Decimal(extra.supplement_eur) if extra.supplement_eur is not None else None
+                ),
+            )
+            for extra in extras
         ]

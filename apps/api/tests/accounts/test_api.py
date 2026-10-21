@@ -246,6 +246,44 @@ async def test_me_needs_a_session(client):
     assert response.json()["code"] == "unauthenticated"
 
 
+async def test_patch_me_changes_the_language(client, mailer):
+    await sign_up(client, mailer, "alice@example.com")
+    await sign_in(client, "alice@example.com")
+
+    response = await client.patch("/me", json={"locale": "fr"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["locale"] == "fr"
+    assert body["email"] == "alice@example.com"
+    assert body["sign_in_methods"] == ["password"]
+    assert (await client.get("/me")).json()["locale"] == "fr"
+
+
+@pytest.mark.parametrize("body", [{"locale": "de"}, {"locale": "FR"}, {"locale": None}, {}])
+async def test_patch_me_refuses_another_language(client, mailer, body):
+    await sign_up(client, mailer, "alice@example.com")
+    await sign_in(client, "alice@example.com")
+    response = await client.patch("/me", json=body)
+    assert response.status_code == 422
+    assert response.json()["code"] == "invalid_input"
+
+
+async def test_patch_me_needs_a_session(client):
+    response = await client.patch("/me", json={"locale": "fr"})
+    assert response.status_code == 401
+    assert response.json()["code"] == "unauthenticated"
+
+
+async def test_patch_me_from_another_site_is_refused(client, mailer):
+    await sign_up(client, mailer, "alice@example.com")
+    await sign_in(client, "alice@example.com")
+    response = await client.patch(
+        "/me", json={"locale": "fr"}, headers={"Origin": "https://evil.example"}
+    )
+    assert response.status_code == 403
+    assert (await client.get("/me")).json()["locale"] == "en"
+
+
 async def test_logout_closes_the_session(client, mailer):
     await sign_up(client, mailer, "alice@example.com")
     await sign_in(client, "alice@example.com")

@@ -255,6 +255,20 @@ async def test_users_are_stored_and_found_by_email(session):
     assert await users.get(alice.id) == alice
 
 
+async def test_a_changed_language_is_saved(session):
+    users = SqlUserRepository(session)
+    await users.add(make_user("alice@example.com"))
+    await session.commit()
+
+    alice = await users.get_by_email(Email("alice@example.com"))
+    alice.change_locale(Locale.FR)
+    await users.save(alice)
+    await session.commit()
+
+    row = (await session.execute(text("SELECT locale FROM users"))).one()
+    assert row.locale == "fr"
+
+
 async def test_the_database_refuses_a_second_account_with_the_same_email(session):
     users = SqlUserRepository(session)
     await users.add(make_user("alice@example.com"))

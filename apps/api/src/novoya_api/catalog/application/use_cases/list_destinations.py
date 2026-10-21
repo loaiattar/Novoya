@@ -2,7 +2,7 @@ from novoya_api.catalog.application.ports import OfferRepository
 
 
 class ListDestinations:
-    """Destinations that have at least one listed offer (active offer of an active partner)."""
+    """Destinations with at least one listed offer: active, not hidden, and so is its partner."""
 
     def __init__(self, offers: OfferRepository) -> None:
         self._offers = offers

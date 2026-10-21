@@ -1,13 +1,13 @@
 {
-  "serverUnreachable": "Novoya ne parvient pas à joindre le serveur pour le moment. Veuillez réessayer dans un instant.",
+  "serverUnreachable": "{{agency}} ne parvient pas à joindre le serveur pour le moment. Veuillez réessayer dans un instant.",
   "wishFailed": "Une erreur est survenue, veuillez réessayer.",
   "signIn": {
     "oauth_cancelled": "Vous avez annulé la connexion avec Google.",
     "oauth_failed": "La connexion avec Google n'a pas fonctionné. Veuillez réessayer.",
     "oauth_state_invalid": "Votre connexion a pris trop de temps ou a été commencée dans un autre navigateur. Veuillez réessayer.",
     "oauth_email_not_verified": "Votre adresse e-mail Google n'est pas encore vérifiée.",
-    "oauth_link_not_allowed": "Ce compte Google ne peut pas être associé à votre compte Novoya.",
-    "identity_already_linked": "Ce compte Google est déjà associé à un autre compte Novoya.",
+    "oauth_link_not_allowed": "Ce compte Google ne peut pas être associé à votre compte {{agency}}.",
+    "identity_already_linked": "Ce compte Google est déjà associé à un autre compte {{agency}}.",
     "account_disabled": "Ce compte est désactivé.",
     "user_not_found": "Nous n'avons pas trouvé votre compte. Veuillez vous reconnecter.",
     "too_many_attempts": "Trop de tentatives. Patientez un instant, puis réessayez.",

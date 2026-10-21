@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agency.schema.json",
+  "title": "DÉTOUR agency data",
+  "description": "Agency data extracted from the old showcase site. Every value carries its source (file in the old repo) and a status. Translated texts have fr and en; facts are not translated.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["identity", "contact", "legal", "images"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "extracted_from": { "type": "string" },
+    "extracted_on": { "type": "string", "format": "date" },
+
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trade_name", "tagline", "description_short", "description_long"],
+      "properties": {
+        "trade_name": { "$ref": "#/$defs/sourcedString" },
+        "display_name": { "$ref": "#/$defs/sourcedString" },
+        "company_name": { "$ref": "#/$defs/sourcedString", "description": "Raison sociale" },
+        "founded_year": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "integer", "minimum": 1900, "maximum": 2100 } }
+        },
+        "website": { "$ref": "#/$defs/sourcedUri" },
+        "tagline": { "$ref": "#/$defs/sourcedLocalized" },
+        "logo_baseline": { "$ref": "#/$defs/sourcedLocalized" },
+        "slogan": { "$ref": "#/$defs/sourcedLocalized" },
+        "description_short": { "$ref": "#/$defs/sourcedLocalized" },
+        "description_long": { "$ref": "#/$defs/sourcedLocalized" },
+        "meta_description": { "$ref": "#/$defs/sourcedLocalized" }
+      }
+    },
+
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address", "phone", "email"],
+      "properties": {
+        "address": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": {
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["street", "postal_code", "city", "country"],
+              "properties": {
+                "street": { "type": "string", "minLength": 1 },
+                "postal_code": { "type": "string", "pattern": "^[0-9]{5}$" },
+                "city": { "type": "string", "minLength": 1 },
+                "country": { "type": "string", "pattern": "^[A-Z]{2}$", "description": "ISO 3166-1 alpha-2" }
+              }
+            }
+          }
+        },
+        "phone": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "required": ["display"],
+          "properties": {
+            "value": { "$ref": "#/$defs/phoneE164" },
+            "display": { "type": "string", "pattern": "^0[1-9]( [0-9]{2}){4}$" }
+          }
+        },
+        "email": { "$ref": "#/$defs/sourcedEmail" },
+        "opening_hours": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": {
+            "value": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["days", "opens", "closes"],
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "enum": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] }
+                  },
+                  "opens": { "$ref": "#/$defs/time" },
+                  "closes": { "$ref": "#/$defs/time" }
+                }
+              }
+            }
+          }
+        },
+        "map_link": { "$ref": "#/$defs/sourcedUri" }
+      }
+    },
+
+    "legal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["atout_france_registration"],
+      "properties": {
+        "legal_form": { "$ref": "#/$defs/sourcedString", "description": "e.g. SARL, SAS, SASU, EURL" },
+        "share_capital": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": {
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["amount", "currency"],
+              "properties": {
+                "amount": { "type": "number", "exclusiveMinimum": 0 },
+                "currency": { "const": "EUR" }
+              }
+            }
+          }
+        },
+        "siren": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "string", "pattern": "^[0-9]{9}$" } }
+        },
+        "siret": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "string", "pattern": "^[0-9]{14}$" } }
+        },
+        "rcs": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "string", "pattern": "^RCS [A-Za-zÀ-ÿ' -]+ [0-9]{3} [0-9]{3} [0-9]{3}$", "description": "e.g. « RCS Nantes 123 456 789 »" } }
+        },
+        "vat_number": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "string", "pattern": "^FR[0-9A-Z]{2}[0-9]{9}$" } }
+        },
+        "atout_france_registration": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": { "value": { "type": "string", "pattern": "^IM[0-9]{9}$", "description": "Registre des opérateurs de voyages et de séjours, e.g. IM044120000" } }
+        },
+        "financial_guarantor": { "$ref": "#/$defs/sourcedOrganisation" },
+        "professional_liability_insurer": { "$ref": "#/$defs/sourcedOrganisation" },
+        "publication_director": {
+          "$ref": "#/$defs/sourcedString",
+          "description": "Name or role. A person's name may only be stored with their consent."
+        },
+        "host": { "$ref": "#/$defs/sourcedOrganisation" }
+      }
+    },
+
+    "social": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/sourcedUri" },
+      "propertyNames": { "enum": ["facebook", "instagram", "linkedin", "pinterest", "tiktok", "x", "youtube"] }
+    },
+
+    "credits": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/sourcedString" }
+    },
+
+    "brand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "colors": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": {
+            "value": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "type": "string", "pattern": "^#[0-9A-F]{6}$" }
+            }
+          }
+        },
+        "fonts": {
+          "allOf": [{ "$ref": "#/$defs/sourced" }],
+          "properties": {
+            "value": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "images": {
+      "type": "object",
+      "required": ["logo", "favicon"],
+      "additionalProperties": { "$ref": "#/$defs/image" },
+      "properties": {
+        "logo": {
+          "$ref": "#/$defs/image",
+          "anyOf": [
+            { "properties": { "format": { "const": "svg" } } },
+            { "properties": { "format": { "const": "png" }, "width": { "minimum": 512 } } }
+          ]
+        },
+        "favicon": {
+          "$ref": "#/$defs/image",
+          "anyOf": [
+            { "properties": { "format": { "const": "svg" } } },
+            { "properties": { "format": { "const": "png" }, "width": { "minimum": 512 }, "height": { "minimum": 512 } } }
+          ]
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "status": { "enum": ["confirmed", "to_check"] },
+
+    "sourced": {
+      "type": "object",
+      "required": ["value", "source", "status"],
+      "properties": {
+        "value": true,
+        "source": { "type": "string", "minLength": 1, "description": "File (and place in the file) in the old repository" },
+        "status": { "$ref": "#/$defs/status" },
+        "note": { "type": "string" },
+        "translation_status": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "fr": { "$ref": "#/$defs/status" }, "en": { "$ref": "#/$defs/status" } }
+        }
+      }
+    },
+
+    "sourcedString": {
+      "allOf": [{ "$ref": "#/$defs/sourced" }],
+      "properties": { "value": { "type": "string", "minLength": 1 } },
+      "unevaluatedProperties": false
+    },
+
+    "sourcedUri": {
+      "allOf": [{ "$ref": "#/$defs/sourced" }],
+      "properties": { "value": { "type": "string", "format": "uri", "pattern": "^https://" } },
+      "unevaluatedProperties": false
+    },
+
+    "sourcedEmail": {
+      "allOf": [{ "$ref": "#/$defs/sourced" }],
+      "properties": { "value": { "type": "string", "format": "email", "pattern": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$" } },
+      "unevaluatedProperties": false
+    },
+
+    "sourcedLocalized": {
+      "allOf": [{ "$ref": "#/$defs/sourced" }],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fr", "en"],
+          "properties": {
+            "fr": { "type": "string", "minLength": 1 },
+            "en": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "unevaluatedProperties": false
+    },
+
+    "sourcedOrganisation": {
+      "allOf": [{ "$ref": "#/$defs/sourced" }],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "address": { "type": "string" },
+            "phone": { "$ref": "#/$defs/phoneE164" },
+            "contract_number": { "type": "string" }
+          }
+        }
+      },
+      "unevaluatedProperties": false
+    },
+
+    "phoneE164": { "type": "string", "pattern": "^\\+33[1-9][0-9]{8}$" },
+
+    "time": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+
+    "image": {
+      "type": "object",
+      "required": ["value", "format", "width", "height", "source", "status", "rights"],
+      "properties": {
+        "value": { "type": "string", "pattern": "^images/[a-z0-9-]+\\.(svg|png|jpg|jpeg|webp)$" },
+        "format": { "enum": ["svg", "png", "jpg", "webp"] },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "alt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fr", "en"],
+          "properties": { "fr": { "type": "string" }, "en": { "type": "string" } }
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "rights": { "const": "agency", "description": "Only images the agency owns the rights to may be listed here." },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

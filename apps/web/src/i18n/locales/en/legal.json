@@ -1,0 +1,23 @@
+{
+  "title": "Legal notices",
+  "intro": "This website is the website of {{name}}. It was designed and developed by the Novoya development team, on behalf of the Novoya project.",
+  "publisher": "Publisher",
+  "company": "Company",
+  "legalForm": "Legal form",
+  "shareCapital": "Share capital",
+  "siren": "SIREN",
+  "siret": "SIRET",
+  "rcs": "RCS",
+  "vat": "VAT number",
+  "atoutFrance": "Atout France registration",
+  "guarantor": "Financial guarantor",
+  "insurer": "Professional liability insurer",
+  "publicationDirector": "Publication director",
+  "host": "Host",
+  "email": "E-mail",
+  "address": "Registered office",
+  "phone": "Phone",
+  "madeBy": "Site development",
+  "madeByValue": "Novoya development team, on behalf of the Novoya project",
+  "intellectualProperty": "The agency’s name, logo and texts belong to {{name}}. The website was built by the Novoya development team."
+}

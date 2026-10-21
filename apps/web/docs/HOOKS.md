@@ -36,7 +36,7 @@ Même découpage que `domain/`, pour ne pas tout mélanger dans un `hooks/` four
 ## Règles d’import
 
 ```text
-hooks/ui          ──►  domain          INTERDIT
+hooks/ui          ──►  domain          INTERDIT  (sauf `useAgency` → `domain/agency`)
 hooks/ui          ──►  api             INTERDIT
 hooks/ui          ──►  components      INTERDIT
 
@@ -80,7 +80,7 @@ Ce sont des **noms** pour plus tard, pas des fichiers à remplir maintenant.
 | `hooks/constraints/` | budget, voyageurs, dates | `domain/constraints` |
 | `hooks/plan/` | le plan affiché, jour ouvert | `domain/plan` |
 | `hooks/quote/` | le devis affiché, accepter / refuser | `domain/quote` |
-| `hooks/ui/` | motion, media query, panneau ouvert | personne côté métier |
+| `hooks/ui/` | motion, media query, faits d’agence pour le logo et le pied de page | personne côté métier, sauf `useAgency` → `domain/agency` |
 
 Quand le backend existera : un hook **API** (`useCreateWish`, TanStack Query) vivra dans `api/`, pas dans `hooks/wish/`. Le hook produit pourra *appeler* le hook API depuis la **page**, ou la page appellera les deux. Le domaine reste sans `fetch`.
 

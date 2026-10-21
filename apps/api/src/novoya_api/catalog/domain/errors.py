@@ -1,4 +1,4 @@
-from novoya_api.shared.domain.errors import InvalidInput, NotFound
+from novoya_api.shared.domain.errors import Conflict, InvalidInput, NotFound
 
 
 class InvalidPartner(InvalidInput):
@@ -13,3 +13,14 @@ class PartnerNotFound(NotFound):
 
 class OfferNotFound(NotFound):
     code = "offer_not_found"
+
+
+class ExtraNotFound(NotFound):
+    code = "extra_not_found"
+
+
+class ImportedRow(Conflict):
+    """The row comes from the DÉTOUR export, which owns its content: the change is made in
+    DÉTOUR and arrives with the next import. Novoya only decides featured and hidden."""
+
+    code = "imported_row"

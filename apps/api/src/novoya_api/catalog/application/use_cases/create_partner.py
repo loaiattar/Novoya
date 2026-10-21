@@ -13,7 +13,7 @@ class CreatePartnerCommand:
     country: str
     city: str
     contact_email: str
-    contact_phone: str
+    contact_phone: str | None
     active: bool = True
 
 
@@ -30,7 +30,7 @@ class CreatePartner:
             country=normalize_place(cmd.country),
             city=normalize_place(cmd.city),
             contact_email=cmd.contact_email.strip(),
-            contact_phone=cmd.contact_phone.strip(),
+            contact_phone=cmd.contact_phone.strip() if cmd.contact_phone else None,
             active=cmd.active,
         )
         await self._partners.add(partner)

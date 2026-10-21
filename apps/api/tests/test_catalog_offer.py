@@ -10,6 +10,7 @@ from novoya_api.catalog.domain import (
     OfferKind,
     Partner,
     PartnerKind,
+    PriceUnit,
     normalize_place,
     normalize_tags,
 )
@@ -115,6 +116,23 @@ def test_inactive_offer_is_not_listed():
     assert offer.fits(persons=2, start=date(2026, 5, 1), end=date(2026, 5, 8)) is True
 
 
+def test_a_hidden_offer_is_not_listed():
+    partner = _partner()
+    offer = _offer(partner_id=partner.id, hidden=True)
+    assert offer.is_listed_with(partner) is False
+
+
+def test_a_hidden_partner_hides_its_offers():
+    partner = _partner(hidden=True)
+    offer = _offer(partner_id=partner.id)
+    assert offer.is_listed_with(partner) is False
+
+
+def test_offers_and_partners_are_shown_and_hand_made_by_default():
+    partner = _partner()
+    assert (partner.hidden, partner.imported, _offer().hidden) == (False, False, False)
+
+
 def test_is_listed_with_rejects_another_partner():
     partner = _partner()
     other = _partner()
@@ -165,3 +183,93 @@ def test_normalize_place_capitalises_after_hyphens_and_apostrophes():
 def test_empty_partner_name_is_rejected():
     with pytest.raises(InvalidPartner):
         _partner(name="  ")
+
+
+def test_offer_has_no_price_unless_one_is_given():
+    offer = _offer()
+
+    assert offer.price_eur is None
+    assert offer.price_unit is None
+    assert offer.opening_months == ()
+
+
+def test_offer_keeps_a_price_with_its_unit():
+    offer = _offer(price_eur=85, price_unit=PriceUnit("person/night"), opening_months=(5, 6))
+
+    assert offer.price_eur == 85
+    assert offer.price_unit == "person/night"
+    assert offer.opening_months == (5, 6)
+
+
+@pytest.mark.parametrize(
+    ("price", "unit"),
+    [(85, None), (None, PriceUnit("person/trip"))],
+    ids=["price without unit", "unit without price"],
+)
+def test_offer_price_and_unit_come_together(price, unit):
+    with pytest.raises(InvalidOffer):
+        _offer(price_eur=price, price_unit=unit)
+
+
+@pytest.mark.parametrize("price", [0, -5])
+def test_offer_price_must_be_more_than_zero(price):
+    with pytest.raises(InvalidOffer):
+        _offer(price_eur=price, price_unit=PriceUnit("person/activity"))
+
+
+def test_price_units_are_per_person():
+    assert {unit.value for unit in PriceUnit} == {
+        "person/night",
+        "person/trip",
+        "person/activity",
+    }
+
+
+@pytest.mark.parametrize("months", [(0,), (13,), (5, 13)])
+def test_opening_months_must_be_1_to_12(months):
+    with pytest.raises(InvalidOffer):
+        _offer(opening_months=months)
+
+
+def test_partner_without_a_phone_is_valid():
+    assert _partner(contact_phone=None).contact_phone is None
+
+
+def test_blank_partner_phone_becomes_none():
+    assert _partner(contact_phone="   ").contact_phone is None
+
+
+def test_offer_without_opening_months_fits_any_month_of_its_season():
+    offer = _offer(opening_months=())
+
+    assert offer.fits(persons=2, start=date(2026, 4, 1), end=date(2026, 10, 31)) is True
+
+
+def test_offer_fits_a_trip_inside_its_opening_months():
+    offer = _offer(opening_months=(5, 6))
+
+    assert offer.fits(persons=2, start=date(2026, 5, 25), end=date(2026, 6, 3)) is True
+
+
+@pytest.mark.parametrize(
+    ("start", "end"),
+    [
+        (date(2026, 7, 1), date(2026, 7, 8)),
+        (date(2026, 6, 28), date(2026, 7, 2)),
+        (date(2026, 4, 30), date(2026, 5, 3)),
+    ],
+    ids=["closed month", "ends in a closed month", "starts in a closed month"],
+)
+def test_offer_does_not_fit_a_trip_that_touches_a_closed_month(start, end):
+    offer = _offer(opening_months=(5, 6))
+
+    assert offer.fits(persons=2, start=start, end=end) is False
+
+
+def test_a_trip_over_a_new_year_needs_both_months_open():
+    offer = _offer(
+        available_from=date(2026, 1, 1), available_to=date(2027, 12, 31), opening_months=(12,)
+    )
+
+    assert offer.fits(persons=2, start=date(2026, 12, 28), end=date(2027, 1, 3)) is False
+    assert offer.fits(persons=2, start=date(2026, 12, 20), end=date(2026, 12, 27)) is True
