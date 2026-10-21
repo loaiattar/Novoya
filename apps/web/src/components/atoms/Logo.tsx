@@ -19,6 +19,8 @@ export function Logo({
     <Photo
       src={agency.logo.src}
       alt={decorative ? '' : agency.logo.alt}
+      width={agency.logo.width}
+      height={agency.logo.height}
       sizes="160px"
       // The logo's size (3:1), so the header keeps its space while the image loads.
       width={1536}

@@ -498,11 +498,10 @@ describe('the landing page', () => {
 
     expect(await screen.findByRole('heading', { name: 'Legal notices' })).toBeInTheDocument()
     expect(screen.getByText(/This website is the website of DÉTOUR Voyages/)).toBeInTheDocument()
-    const notices = within(document.querySelector('dl') as HTMLElement)
+    const notices = within(document.querySelector('main dl') as HTMLElement)
     expect(notices.getByText('DÉTOUR Voyages')).toBeInTheDocument()
     expect(notices.getByText('contact@detour-voyages.fr')).toBeInTheDocument()
-    expect(notices.getByText('Novoya development team, on behalf of the Novoya project')).toBeInTheDocument()
-    // No publication director until the agency names one: it is a legal role, not a credit.
+    expect(notices.getByText('DÉTOUR development team, on behalf of the DÉTOUR project')).toBeInTheDocument()
     expect(notices.queryByText('Publication director')).not.toBeInTheDocument()
     expect(screen.queryByText(/IM044120000/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Écluses/)).not.toBeInTheDocument()

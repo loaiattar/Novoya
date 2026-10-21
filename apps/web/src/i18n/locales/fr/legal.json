@@ -1,6 +1,6 @@
 {
   "title": "Mentions légales",
-  "intro": "Ce site est le site internet de {{name}}. Il a été conçu et développé par l’équipe de développement Novoya, au nom du projet Novoya.",
+  "intro": "Ce site est le site internet de {{name}}. Il a été conçu et développé par l’équipe de développement DÉTOUR, au nom du projet DÉTOUR.",
   "publisher": "Éditeur",
   "company": "Raison sociale",
   "legalForm": "Forme juridique",
@@ -18,6 +18,6 @@
   "address": "Siège social",
   "phone": "Téléphone",
   "madeBy": "Réalisation",
-  "madeByValue": "Équipe de développement Novoya, au nom du projet Novoya",
-  "intellectualProperty": "Le nom, le logo et les textes de l’agence appartiennent à {{name}}. Le site a été réalisé par l’équipe de développement Novoya."
+  "madeByValue": "Équipe de développement DÉTOUR, au nom du projet DÉTOUR",
+  "intellectualProperty": "Le nom, le logo et les textes de l’agence appartiennent à {{name}}. Le site a été réalisé par l’équipe de développement DÉTOUR."
 }

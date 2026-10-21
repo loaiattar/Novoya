@@ -6,7 +6,7 @@ import { resolveLocale } from '../domain/i18n/locale'
 import { readStoredLocale } from './storedLocale'
 
 // One file per language and screen: locales/<language>/<screen>.json (see docs/I18N.md).
-// They are all bundled, so a page never shows before its texts. A new file is picked up here
+// They are all bundled, so a page never shows before its texts. A new file is picked up
 // without any change; declare its namespace in i18next.d.ts for the types.
 const files = import.meta.glob<Record<string, unknown>>('./locales/*/*.json', {
   eager: true,
