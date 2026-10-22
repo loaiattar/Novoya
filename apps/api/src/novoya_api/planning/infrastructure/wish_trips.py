@@ -26,6 +26,7 @@ class WishTrips:
                 persons=brief.persons,
                 start_date=brief.start_date,
                 end_date=brief.end_date,
+                tags=brief.tags,
             )
             for wish_id, brief in found.items()
         }

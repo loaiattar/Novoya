@@ -4,29 +4,60 @@
   it to the caller's session; the caller commits. It ends the session's read transaction
   before the model runs, so call it before writing anything in that session. Raises
   NoOfferFits (422) when no listed offer fits the travellers and dates.
+- quote_plan(plan_id, agent_id) -> PricedPlan: the assigned agent sends the quote. The plan
+  becomes quoted in the caller's session (the caller commits, with its quote) and its priced
+  items come back, never with a partner name. Raises PlanNotFound (404), PermissionDenied
+  (403, another agent), InvalidTransition (409, not negotiating) or PlanNotReady (422).
+- delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
+  go with them. Erase the user's quotes first (quoting.public.delete_for_user) and the wishes
+  after (wishes.public.delete_for_user): neither has a cascade. The caller commits.
 
 Planned:
-- get_priced_plan(plan_id) -> PricedPlanView (items with negotiated prices, for the quote)
-- mark_quoted(plan_id), mark_accepted(plan_id), mark_rejected(plan_id) (called by quoting)
-- delete_for_user(user_id)
+- mark_accepted(plan_id), mark_rejected(plan_id) (called by quoting)
 """
+
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.planning.application.dto import PlanItemView, PlanRequest, PlanView
+from novoya_api.planning.application.dto import (
+    PlanItemView,
+    PlanRequest,
+    PlanView,
+    PricedExtra,
+    PricedItem,
+    PricedPlan,
+)
 from novoya_api.planning.application.ports.plan_writer import PlanWriter
 from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan
-from novoya_api.planning.domain.errors import NoOfferFits
+from novoya_api.planning.application.use_cases.quote_plan import QuotePlan
+from novoya_api.planning.domain.errors import NoOfferFits, PlanNotFound, PlanNotReady
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
 from novoya_api.planning.infrastructure.llm.plan_writer import LlmPlanWriter, NoModelPlanWriter
 from novoya_api.planning.infrastructure.llm.tools import travel_tools
+from novoya_api.planning.infrastructure.wish_owners import WishOwners
+from novoya_api.planning.infrastructure.wish_trips import WishTrips
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from novoya_api.shared.infrastructure.llm.client import get_orchestrator
 from novoya_api.shared.infrastructure.llm.errors import LLMError
 from novoya_api.shared.infrastructure.system_clock import SystemClock
+from novoya_api.wishes.public import ids_for_user as wish_ids_for_user
 
-__all__ = ["NoOfferFits", "PlanItemView", "PlanRequest", "PlanView", "generate_plan"]
+__all__ = [
+    "NoOfferFits",
+    "PlanItemView",
+    "PlanNotFound",
+    "PlanNotReady",
+    "PlanRequest",
+    "PlanView",
+    "PricedExtra",
+    "PricedItem",
+    "PricedPlan",
+    "delete_for_user",
+    "generate_plan",
+    "quote_plan",
+]
 
 # The client waits for the plan; the fallback covers a slow model.
 DEADLINE_SECONDS = 60
@@ -44,6 +75,18 @@ async def generate_plan(request: PlanRequest, *, session: AsyncSession) -> PlanV
     return await use_case(request)
 
 
+async def quote_plan(plan_id: UUID, agent_id: UUID, *, session: AsyncSession) -> PricedPlan:
+    """The plan marked quoted in `session`, with its prices. The caller commits."""
+    use_case = QuotePlan(
+        plans=SqlPlanRepository(session),
+        catalog=PartnerOffers(session),
+        trips=WishTrips(session),
+        wishes=WishOwners(session),
+        clock=SystemClock(),
+    )
+    return await use_case(plan_id, agent_id)
+
+
 def _writer() -> PlanWriter:
     try:
         orchestrator = get_orchestrator(deadline_seconds=DEADLINE_SECONDS)
@@ -52,3 +95,9 @@ def _writer() -> PlanWriter:
     # No session: each tool call reads in a short session of its own, so no connection is held
     # while the model thinks between calls.
     return LlmPlanWriter(orchestrator, travel_tools(), DEADLINE_SECONDS)
+
+
+async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:
+    """Erase the plans of this user's wishes, after their quotes. The caller commits."""
+    wish_ids = await wish_ids_for_user(user_id, session=session)
+    await SqlPlanRepository(session).delete_for_wishes(wish_ids)

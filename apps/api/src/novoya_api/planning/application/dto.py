@@ -100,6 +100,7 @@ class TripBrief:
     persons: int | None
     start_date: date | None
     end_date: date | None
+    tags: tuple[str, ...] = ()  # "section:tag", what the client clicked on the panel
 
 
 @dataclass(frozen=True)
@@ -183,3 +184,49 @@ class AgentPlanView:
     persons: int | None
     start_date: date | None
     end_date: date | None
+
+
+@dataclass(frozen=True)
+class PricedItem:
+    """A kept item as the quote shows it: what, which day, how many, its price. No partner."""
+
+    day: int
+    kind: str | None
+    title: str | None
+    description: str | None
+    quantity: int
+    price: Decimal
+
+
+@dataclass(frozen=True)
+class PricedExtra:
+    """An extra on the quote. price is None for an included extra."""
+
+    label: str
+    unit: str
+    pricing: str
+    price: Decimal | None
+
+
+@dataclass(frozen=True)
+class PricedPlan:
+    """A quoted plan with everything the quote needs: the priced items and extras, the
+    total, the trip and who it is for. Never a partner name."""
+
+    plan_id: UUID
+    wish_id: UUID
+    client_id: UUID
+    agent_id: UUID
+    summary: str
+    items: tuple[PricedItem, ...]
+    extras: tuple[PricedExtra, ...]
+    total: Decimal
+    wish_text: str
+    country: str | None
+    city: str | None
+    persons: int | None
+    start_date: date | None
+    end_date: date | None
+    budget_max: Decimal | None
+    currency: str | None
+    tags: tuple[str, ...]

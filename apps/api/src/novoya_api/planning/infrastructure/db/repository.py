@@ -1,7 +1,7 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from uuid import UUID
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.planning.application.ports.plan_repository import QUEUE_PAGE, ItemWrite
@@ -55,6 +55,17 @@ class SqlPlanRepository:
             for item in plan.items
         )
         self._read_status[plan.id] = plan.status.value
+
+    async def delete_for_wishes(self, wish_ids: Sequence[UUID]) -> None:
+        """Erase the plans of these wishes; their items and extras go with them (cascade).
+        The caller commits."""
+        if not wish_ids:
+            return
+        await self._session.execute(
+            delete(PlanModel)
+            .where(PlanModel.wish_id.in_(wish_ids))
+            .execution_options(synchronize_session=False)
+        )
 
     async def get(self, plan_id: UUID) -> Plan | None:
         row = await self._session.get(PlanModel, plan_id, populate_existing=True)

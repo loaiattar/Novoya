@@ -13,5 +13,12 @@ class NoOfferFits(InvalidInput):  # 422
     code = "no_offer_fits"
 
 
+class PlanNotReady(InvalidInput):  # 422
+    """A kept item or an on_quote extra has no price, or a supplement is not confirmed: the
+    quote cannot be sent yet."""
+
+    code = "plan_not_ready"
+
+
 class PlanNotFound(NotFound):  # 404
     """No plan with this id, or it is not the caller's. Same code so the id stays hidden."""

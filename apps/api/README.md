@@ -54,6 +54,10 @@ It opens the file read-only and writes everything in one transaction: an invalid
 
 Each developer has their own database (the `db-data` Docker volume on their computer); nothing is shared until the demo is deployed. The migrations give everyone the same tables, but the client's data is not in git: the export holds partner contacts and reviews, so it is personal data.
 
+**If you run the app with `docker compose up`**, follow [Load the client's catalog](../../README.md#load-the-clients-catalog-détour) in the root README instead: the API container always uses the `novoya` database, so the steps below would not reach it.
+
+Without Docker (the API runs with `uv` on your machine):
+
 1. Ask a teammate for the DÉTOUR export (`DETOUR.zip`). Get it privately, never through git, an issue or a public channel, and keep it outside the repository.
 2. Import it into a new, empty database, so the made-up seed partners don't mix with the client's:
 

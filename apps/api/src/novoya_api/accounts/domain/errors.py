@@ -40,6 +40,13 @@ class NotAllowed(PermissionDenied):
     code = "forbidden"
 
 
+class StaffAccountDeletion(PermissionDenied):
+    """Only a client deletes their own account: plans and quotes keep pointing to the agent
+    or admin who handled them."""
+
+    code = "staff_account"
+
+
 class EmailNotVerified(PermissionDenied):
     code = "email_not_verified"
 

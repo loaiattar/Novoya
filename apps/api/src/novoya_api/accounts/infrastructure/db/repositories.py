@@ -92,6 +92,10 @@ class SqlUserRepository:
             raise EmailAlreadyUsed("this email address already has an account") from exc
         self._read[user.id] = columns
 
+    async def delete(self, user_id: UserId) -> None:
+        await self._session.execute(delete(UserModel).where(UserModel.id == user_id.value))
+        self._read.pop(user_id, None)
+
     async def save(self, user: User) -> None:
         columns = user_columns(user)
         read = self._read.get(user.id)

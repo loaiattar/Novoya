@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from novoya_api.planning.domain.errors import InvalidPlan, PlanNotFound
+from novoya_api.planning.domain.errors import InvalidPlan, PlanNotFound, PlanNotReady
 from novoya_api.shared.domain.errors import InvalidTransition, PermissionDenied
 
 
@@ -257,6 +257,15 @@ class Plan:
             replace(entry, price_eur=price, confirmed=True) if entry.extra_id == extra_id else entry
             for entry in self.extras
         )
+        self.updated_at = now
+
+    def mark_quoted(self, by: UUID, now: datetime) -> None:
+        """The assigned agent sends the quote. Only while negotiating, and only once every
+        price is in (ready_to_quote): the total is then final."""
+        self._must_be_assigned(by)
+        if not self.ready_to_quote():
+            raise PlanNotReady("every kept item and extra needs its price before the quote")
+        self.status = PlanStatus.QUOTED
         self.updated_at = now
 
     def priced_total(self) -> Decimal:

@@ -23,6 +23,10 @@ class UserRepository(Protocol):
 
     async def save(self, user: User) -> None: ...
 
+    async def delete(self, user_id: UserId) -> None:
+        """Erases the user. Sessions, sign-in methods and tokens go with it (cascade)."""
+        ...
+
     async def count_active_with_role(self, role: Role) -> int: ...
 
     async def search(
