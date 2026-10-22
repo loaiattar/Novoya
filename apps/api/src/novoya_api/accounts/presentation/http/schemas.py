@@ -9,7 +9,7 @@ from novoya_api.accounts.application.dto import AccountView
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.user import User
 
-RoleName = Literal["client", "agent", "admin"]
+RoleName = Literal["client", "agent", "admin", "super_admin"]
 
 
 def _visible_person_name(value: str) -> str:

@@ -107,6 +107,7 @@ function AdminPage() {
         <UsersTable
           users={users.data}
           meId={me.id}
+          meRole={me.role}
           savingIds={savingIds}
           onChangeRole={(userId, next) => {
             const user = users.data.find((row) => row.id === userId)
@@ -147,6 +148,7 @@ function AdminPage() {
 function roleErrorKey(error: unknown) {
   const code = error instanceof ApiError ? error.code : undefined
   if (code === 'cannot_change_admin_role') return 'changeRefused.adminRole'
+  if (code === 'super_admin_server_only') return 'changeRefused.superAdmin'
   if (code === 'cannot_promote_disabled') return 'changeRefused.disabledAccount'
   return 'changeFailed'
 }
@@ -154,5 +156,6 @@ function roleErrorKey(error: unknown) {
 function statusErrorKey(error: unknown) {
   const code = error instanceof ApiError ? error.code : undefined
   if (code === 'cannot_change_admin_status') return 'changeRefused.adminStatus'
+  if (code === 'super_admin_server_only') return 'changeRefused.superAdmin'
   return 'statusChangeFailed'
 }

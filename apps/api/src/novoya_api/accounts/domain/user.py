@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
+from novoya_api.accounts.domain.actor import AdminActor, RoleActor
 from novoya_api.accounts.domain.errors import (
     AccountDisabled,
     CannotChangeAdminRole,
@@ -11,8 +12,10 @@ from novoya_api.accounts.domain.errors import (
     CannotChangeOwnStatus,
     CannotPromoteDisabled,
     EmailNotVerified,
+    NotAllowed,
+    SuperAdminServerOnly,
 )
-from novoya_api.accounts.domain.role import Role
+from novoya_api.accounts.domain.role import ADMIN_ROLES, Role
 from novoya_api.accounts.domain.role_change import RoleChange
 from novoya_api.accounts.domain.value_objects import Email, UserId
 from novoya_api.shared.domain.value_objects import Locale
@@ -142,21 +145,19 @@ class User:
         if require_verified_email and not self.is_email_verified:
             raise EmailNotVerified("verify your email address before signing in")
 
-    def change_role(
-        self, new_role: Role, *, changed_by: "UserId | None", now: datetime
-    ) -> RoleChange | None:
+    def change_role(self, new_role: Role, *, by: RoleActor, now: datetime) -> RoleChange | None:
         """Change the role and return the log line, or None if the role is the same.
 
-        changed_by: the admin making the change, or None for the grant-role command.
-        Whether the caller may change roles is checked before (require_admin, or server access).
-        An admin never takes the role of another admin: otherwise demoting them would open
-        their account to change_status. Only the grant-role command does it, until a super
-        admin exists.
+        by: the signed-in admin, or the grant-role command. The route checks the caller too
+        (require_admin), but the rules hold here whatever it let through:
+        - an admin never changes their own role;
+        - the super admin role is managed on the server only: only the command gives it or
+          takes it, so that one admin session can never hand it out or lock the others out;
+        - only a super admin gives or takes the admin role: a plain admin manages clients
+          and agents.
         """
-        if changed_by == self.id:
-            raise CannotChangeOwnRole("an admin cannot change their own role")
-        if changed_by is not None and self.role is Role.ADMIN and new_role is not Role.ADMIN:
-            raise CannotChangeAdminRole("an admin cannot change another admin's role")
+        if isinstance(by, AdminActor):
+            self._check_admin_may_change_role(new_role, by)
         if new_role is not Role.CLIENT and not self.is_active:
             # Nobody could enable a disabled admin again, nor demote them.
             raise CannotPromoteDisabled("a disabled account cannot get the agent or admin role")
@@ -164,24 +165,39 @@ class User:
             raise EmailNotVerified("only a verified email address can get the agent or admin role")
         if new_role is self.role:
             return None
-        change = RoleChange.record(self.id, self.role, new_role, changed_by, now)
+        change = RoleChange.record(self.id, self.role, new_role, by, now)
         self.role = new_role
         return change
 
-    def change_status(self, new_status: UserStatus, *, changed_by: UserId, now: datetime) -> bool:
+    def _check_admin_may_change_role(self, new_role: Role, by: AdminActor) -> None:
+        if by.role not in ADMIN_ROLES:
+            raise NotAllowed("only an admin changes roles")
+        if by.user_id == self.id:
+            raise CannotChangeOwnRole("an admin cannot change their own role")
+        if Role.SUPER_ADMIN in (self.role, new_role):
+            raise SuperAdminServerOnly("the super admin role is managed with grant-role only")
+        if by.role is not Role.SUPER_ADMIN and Role.ADMIN in (self.role, new_role):
+            raise CannotChangeAdminRole("only a super admin can give or take the admin role")
+
+    def change_status(self, new_status: UserStatus, *, by: AdminActor, now: datetime) -> bool:
         """Disable or enable the account and remember who did it and when. False if the
         status is the same. A disabled account cannot sign in and its sessions stop working.
 
-        Whether the caller is an admin is checked before (require_admin). An admin never
-        changes their own status nor another admin's.
+        The route checks that the caller is an admin (require_admin), and so does this.
+        Nobody changes their own status, only a super admin changes an admin's, and a super
+        admin's account is managed on the server only, like their role.
         """
-        if changed_by == self.id:
+        if by.role not in ADMIN_ROLES:
+            raise NotAllowed("only an admin disables or enables an account")
+        if by.user_id == self.id:
             raise CannotChangeOwnStatus("an admin cannot disable or enable their own account")
-        if self.role is Role.ADMIN:
-            raise CannotChangeAdminStatus("an admin cannot disable or enable another admin")
+        if self.role is Role.SUPER_ADMIN:
+            raise SuperAdminServerOnly("a super admin's account is managed on the server only")
+        if self.role is Role.ADMIN and by.role is not Role.SUPER_ADMIN:
+            raise CannotChangeAdminStatus("only a super admin can disable or enable an admin")
         if new_status is self.status:
             return False
         self.status = new_status
-        self.status_changed_by = changed_by
+        self.status_changed_by = by.user_id
         self.status_changed_at = now
         return True

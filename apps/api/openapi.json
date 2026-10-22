@@ -525,7 +525,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -1040,7 +1041,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -2783,7 +2785,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -2916,7 +2919,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -3797,7 +3801,8 @@
                   "enum": [
                     "client",
                     "agent",
-                    "admin"
+                    "admin",
+                    "super_admin"
                   ],
                   "type": "string"
                 },
@@ -4010,7 +4015,7 @@
     },
     "/admin/users/{user_id}/role": {
       "patch": {
-        "description": "Give a user another role. Admin only, never on their own account. The change is logged.",
+        "description": "Give a user another role. Admin only, never on their own account (409). Only a super\nadmin gives or takes the admin role (403). The super admin role is never given nor taken\nhere: only the grant-role command does (403). The change is logged.",
         "operationId": "changeUserRole",
         "parameters": [
           {
@@ -4114,7 +4119,7 @@
     },
     "/admin/users/{user_id}/status": {
       "patch": {
-        "description": "Disable or enable a user's account. Admin only, never on their own account (409) nor\non another admin's (403). Disabling ends the user's sessions; who and when are kept.",
+        "description": "Disable or enable a user's account. Admin only, never on their own account (409), only\na super admin on an admin's (403), and never on a super admin's: that is done on the server\n(403). Disabling ends the user's sessions; who and when are kept.",
         "operationId": "changeUserStatus",
         "parameters": [
           {

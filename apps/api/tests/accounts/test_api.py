@@ -13,6 +13,7 @@ from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
     ChangeUserRoleCommand,
 )
+from novoya_api.accounts.domain.actor import GRANT_ROLE_COMMAND
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.value_objects import Email, PasswordHash
 from novoya_api.accounts.presentation.http.dependencies import (
@@ -117,7 +118,7 @@ async def sign_in(client: AsyncClient, email: str) -> None:
 async def grant_role(store: InMemoryStore, email: str, role: Role) -> None:
     """What the grant-role command does, on the fake store."""
     use_case = ChangeUserRole(store.users, store.role_changes, store.uow, FrozenClock())
-    await use_case(ChangeUserRoleCommand(Email(email), role, changed_by=None))
+    await use_case(ChangeUserRoleCommand(Email(email), role, by=GRANT_ROLE_COMMAND))
 
 
 async def test_register_verify_sign_in_and_me(client, mailer):
@@ -550,11 +551,90 @@ async def test_admin_cannot_demote_then_disable_another_admin(app, store, mailer
         assert (await other.get("/me")).json()["role"] == "admin"
 
 
-async def test_a_disabled_account_cannot_get_a_staff_role(app, store, mailer):
+async def test_a_plain_admin_cannot_give_an_admin_role(app, store, mailer):
     async with new_client(app) as admin, new_client(app) as client:
         await sign_up(admin, mailer, "admin@x.io")
         await sign_up(client, mailer, "client@x.io")
         await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(client, "client@x.io")
+        client_id = (await client.get("/me")).json()["id"]
+        for role, code in (
+            ("admin", "cannot_change_admin_role"),
+            ("super_admin", "super_admin_server_only"),
+        ):
+            response = await admin.patch(f"/admin/users/{client_id}/role", json={"role": role})
+            assert response.status_code == 403
+            assert response.json()["code"] == code
+        assert (await client.get("/me")).json()["role"] == "client"
+
+
+async def test_a_super_admin_manages_admins_but_not_their_own_account(app, store, mailer):
+    async with new_client(app) as boss, new_client(app) as admin, new_client(app) as client:
+        for c, email in ((boss, "boss@x.io"), (admin, "admin@x.io"), (client, "client@x.io")):
+            await sign_up(c, mailer, email)
+        await grant_role(store, "boss@x.io", Role.SUPER_ADMIN)
+        for c, email in ((boss, "boss@x.io"), (admin, "admin@x.io"), (client, "client@x.io")):
+            await sign_in(c, email)
+        boss_id = (await boss.get("/me")).json()["id"]
+        admin_id = (await admin.get("/me")).json()["id"]
+        client_id = (await client.get("/me")).json()["id"]
+
+        # The super admin passes every guard.
+        for path in ("/probe/client", "/probe/agent", "/probe/admin"):
+            assert (await boss.get(path)).status_code == 200, path
+
+        response = await boss.patch(f"/admin/users/{admin_id}/role", json={"role": "admin"})
+        assert response.json()["role"] == "admin"
+        # Only the grant-role command names a super admin, a super admin cannot either.
+        response = await boss.patch(f"/admin/users/{client_id}/role", json={"role": "super_admin"})
+        assert response.status_code == 403
+        assert response.json()["code"] == "super_admin_server_only"
+        response = await boss.patch(f"/admin/users/{admin_id}/status", json={"status": "disabled"})
+        assert response.json()["status"] == "disabled"
+        assert (await admin.get("/me")).status_code == 401
+        response = await boss.patch(f"/admin/users/{client_id}/status", json={"status": "disabled"})
+        assert response.json()["status"] == "disabled"
+
+        response = await boss.patch(f"/admin/users/{boss_id}/role", json={"role": "admin"})
+        assert response.status_code == 409
+        assert response.json()["code"] == "cannot_change_own_role"
+        response = await boss.patch(f"/admin/users/{boss_id}/status", json={"status": "disabled"})
+        assert response.status_code == 409
+        assert response.json()["code"] == "cannot_change_own_status"
+
+        super_admins = (await boss.get("/admin/users", params={"role": "super_admin"})).json()
+        assert [u["email"] for u in super_admins] == ["boss@x.io"]
+        changes = [(c.new_role, c.source) for c in store.role_changes.rows]
+        assert (Role.SUPER_ADMIN, "admin_api") not in changes
+
+
+@pytest.mark.parametrize("caller_role", [Role.ADMIN, Role.SUPER_ADMIN])
+async def test_nobody_acts_on_a_super_admin_through_the_api(app, store, mailer, caller_role):
+    """The super admin role and account are managed on the server only (grant-role)."""
+    async with new_client(app) as caller, new_client(app) as boss:
+        await sign_up(caller, mailer, "caller@x.io")
+        await sign_up(boss, mailer, "boss@x.io")
+        await grant_role(store, "caller@x.io", caller_role)
+        await grant_role(store, "boss@x.io", Role.SUPER_ADMIN)
+        await sign_in(caller, "caller@x.io")
+        await sign_in(boss, "boss@x.io")
+        boss_id = (await boss.get("/me")).json()["id"]
+
+        response = await caller.patch(f"/admin/users/{boss_id}/role", json={"role": "client"})
+        assert response.status_code == 403
+        assert response.json()["code"] == "super_admin_server_only"
+        response = await caller.patch(f"/admin/users/{boss_id}/status", json={"status": "disabled"})
+        assert response.status_code == 403
+        assert response.json()["code"] == "super_admin_server_only"
+        assert (await boss.get("/me")).json()["role"] == "super_admin"
+
+
+async def test_a_disabled_account_cannot_get_a_staff_role(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as client:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "admin@x.io", Role.SUPER_ADMIN)
         await sign_in(admin, "admin@x.io")
         await sign_in(client, "client@x.io")
         client_id = (await client.get("/me")).json()["id"]

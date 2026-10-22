@@ -1,12 +1,13 @@
 """Server commands of the accounts module.
 
-grant-role gives a role to an existing account, for example the first admin, who cannot be
-named through the API since nobody is admin yet. It needs access to the server:
+grant-role gives a role to an existing account, for example a super admin: the API never gives
+that role. It needs access to the server:
 
     uv run python -m novoya_api.accounts.presentation.cli grant-role --email a@b.c --role admin
     docker compose exec api python -m novoya_api.accounts.presentation.cli grant-role ...
 
-The role change is logged with source "cmd_grant_role".
+Only this command gives or takes the super admin role. The role change is logged with source
+"cmd_grant_role".
 """
 
 import argparse
@@ -14,6 +15,7 @@ import asyncio
 import sys
 
 from novoya_api.accounts.application.use_cases.change_user_role import ChangeUserRoleCommand
+from novoya_api.accounts.domain.actor import GRANT_ROLE_COMMAND
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.value_objects import Email
 from novoya_api.accounts.presentation.http.dependencies import (
@@ -28,7 +30,7 @@ async def grant_role(email: str, role: Role) -> None:
     try:
         async with open_db_session() as session:
             change_user_role = build_change_user_role(session)
-            command = ChangeUserRoleCommand(Email(email), role, changed_by=None)
+            command = ChangeUserRoleCommand(Email(email), role, by=GRANT_ROLE_COMMAND)
             user = await change_user_role(command)
     finally:
         await close_db()

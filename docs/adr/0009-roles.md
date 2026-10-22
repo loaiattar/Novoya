@@ -1,6 +1,6 @@
 # 0009. Three roles stored on the user: client, agent, admin
 
-- **Status:** Accepted
+- **Status:** Replaced by [0015](0015-super-admin-role.md)
 - **Date:** 2026-10-18
 - **Issue / PR:** auth plan §4.3 and §15, built in #49 (#63)
 

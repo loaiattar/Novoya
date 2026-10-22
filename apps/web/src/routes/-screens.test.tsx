@@ -166,7 +166,7 @@ describe('back-office and plan screens', () => {
 
     const select = await screen.findByRole('combobox', { name: 'Role of Léa Morel' })
     // What the arrow keys do on a closed <select> in Windows: one change per key press.
-    fireEvent.change(select, { target: { value: 'admin' } })
+    fireEvent.change(select, { target: { value: 'agent' } })
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
@@ -231,9 +231,24 @@ describe('back-office and plan screens', () => {
     statusRefusal = 'cannot_change_admin_status'
     fireEvent.click(within(dialog).getByRole('button', { name: 'Disable account' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('you cannot disable or enable their account')
+    expect(await screen.findByRole('alert')).toHaveTextContent('only a super admin can disable or enable their account')
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Role of Léa Morel' })).toHaveDisplayValue('Admin'))
     expect(screen.queryByRole('button', { name: "Disable Léa Morel's account" })).not.toBeInTheDocument()
+  })
+
+  it('explains that a super admin is managed on the server', async () => {
+    renderAt('/admin')
+
+    fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
+    const dialog = await screen.findByRole('alertdialog')
+    // Meanwhile, the grant-role command made Léa a super admin.
+    users = [ADMIN_ROW, { ...LEA, role: 'super_admin' }]
+    statusRefusal = 'super_admin_server_only'
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Disable account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('managed on the server only')
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Role of Léa Morel' })).toHaveDisplayValue('Super admin'))
+    expect(screen.getByRole('combobox', { name: 'Role of Léa Morel' })).toBeDisabled()
   })
 
   it("locks another admin's role, and keeps a disabled account a client", async () => {
@@ -246,6 +261,62 @@ describe('back-office and plan screens', () => {
     expect(lea).toBeEnabled()
     expect(within(lea).getByRole('option', { name: 'Agent' })).toBeDisabled()
     expect(within(lea).getByRole('option', { name: 'Admin' })).toBeDisabled()
+  })
+
+  it('keeps the admin roles and the admin rows for a super admin', async () => {
+    const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
+    const BOSS: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000004', name: 'Paul Girard', role: 'super_admin' }
+    users = [ADMIN_ROW, LEA, OTHER_ADMIN, BOSS]
+    renderAt('/admin')
+
+    // A plain admin: the admin and super admin rows are locked, and so are those roles.
+    expect(await screen.findByRole('combobox', { name: 'Role of Paul Girard' })).toBeDisabled()
+    expect(screen.getByRole('combobox', { name: 'Role of Paul Girard' })).toHaveDisplayValue('Super admin')
+    expect(screen.queryByRole('button', { name: "Disable Paul Girard's account" })).not.toBeInTheDocument()
+    const lea = screen.getByRole('combobox', { name: 'Role of Léa Morel' })
+    expect(within(lea).getByRole('option', { name: 'Agent' })).toBeEnabled()
+    expect(within(lea).getByRole('option', { name: 'Admin' })).toBeDisabled()
+    expect(within(lea).queryByRole('option', { name: 'Super admin' })).not.toBeInTheDocument()
+  })
+
+  it('lets a super admin act on admins, but on no super admin', async () => {
+    me = { ...ADMIN, role: 'super_admin' }
+    const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
+    const OTHER_BOSS: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000004', name: 'Paul Girard', role: 'super_admin' }
+    users = [{ ...ADMIN_ROW, role: 'super_admin' }, LEA, OTHER_ADMIN, OTHER_BOSS]
+    renderAt('/admin')
+
+    expect(await screen.findByRole('combobox', { name: 'Role of Inès Faure' })).toBeEnabled()
+    // Super admins, themselves included, are managed on the server only.
+    expect(screen.getByRole('combobox', { name: 'Role of Paul Girard' })).toBeDisabled()
+    expect(screen.getByRole('combobox', { name: 'Role of Arthur Roche' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: "Disable Inès Faure's account" })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: "Disable Paul Girard's account" })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: "Disable Arthur Roche's account" })).not.toBeInTheDocument()
+    // Only the server command names a super admin: the page never offers the role.
+    const lea = screen.getByRole('combobox', { name: 'Role of Léa Morel' })
+    expect(within(lea).getByRole('option', { name: 'Admin' })).toBeEnabled()
+    expect(within(lea).queryByRole('option', { name: 'Super admin' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Role of Paul Girard' })).toHaveDisplayValue('Super admin')
+
+    fireEvent.change(lea, { target: { value: 'admin' } })
+    const dialog = await screen.findByRole('alertdialog', { name: "Change Léa Morel's role?" })
+    expect(dialog).toHaveTextContent('Léa Morel will go from Client to Admin.')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Change role' }))
+    await waitFor(() =>
+      expect(requests).toContainEqual(
+        expect.objectContaining({ method: 'PATCH', path: `/admin/users/${LEA.id}/role`, body: { role: 'admin' } }),
+      ),
+    )
+  })
+
+  it('opens the admin pages for a super admin', async () => {
+    me = { ...ADMIN, role: 'super_admin' }
+    const { router } = renderAt('/agent')
+
+    expect(await screen.findByRole('heading', { name: 'Quote requests' })).toBeInTheDocument()
+    await router.navigate({ to: '/admin' })
+    expect(await screen.findByRole('table', { name: 'Users and roles' })).toBeInTheDocument()
   })
 
   it('filters the users by role', async () => {

@@ -5,7 +5,7 @@ import { formatShortDate } from '@/lib/format'
 
 import { Button } from '../atoms/Button'
 
-import { ROLES, type Role } from './roles'
+import { GIVEN_ROLES, isAdminRole, type Role } from './roles'
 
 export type UserRow = {
   id: string
@@ -25,6 +25,8 @@ type Props = {
   users: UserRow[]
   /** The signed-in admin: they cannot change their own role. */
   meId: string
+  /** Their role: only a super admin acts on admins. Nobody acts on a super admin here. */
+  meRole: Role
   /** The users whose role or status is being saved. */
   savingIds?: ReadonlySet<string>
   onChangeRole: (userId: string, role: Role) => void
@@ -32,9 +34,17 @@ type Props = {
 }
 
 /** The users with their role and account status, which an admin can change. */
-export function UsersTable({ users, meId, savingIds = new Set(), onChangeRole, onChangeStatus }: Props) {
+export function UsersTable({
+  users,
+  meId,
+  meRole,
+  savingIds = new Set(),
+  onChangeRole,
+  onChangeStatus,
+}: Props) {
   const id = useId()
   const { t, i18n } = useTranslation('admin')
+  const superAdmin = meRole === 'super_admin'
   return (
     <table className="w-full border-collapse border-t border-line text-sm">
       <caption className="sr-only">{t('table.caption')}</caption>
@@ -60,11 +70,12 @@ export function UsersTable({ users, meId, savingIds = new Set(), onChangeRole, o
       <tbody>
         {users.map((user) => {
           const isMe = user.id === meId
-          // Nobody changes their own role or account, and only a super admin will act on
-          // admins. Agent and admin need a verified email (the API enforces all of it too).
-          const otherAdmin = !isMe && user.role === 'admin'
-          const locked = isMe || otherAdmin || !user.email_verified
-          const statusLocked = isMe || otherAdmin
+          // Nobody changes their own role or account, only a super admin acts on admins, and a
+          // super admin's role and account are managed on the server only. Agent and admin
+          // need a verified email (the API enforces all of it too).
+          const adminOutOfReach = user.role === 'super_admin' || (!superAdmin && isAdminRole(user.role))
+          const locked = isMe || adminOutOfReach || !user.email_verified
+          const statusLocked = isMe || adminOutOfReach
           const disabled = user.status === 'disabled'
           const saving = savingIds.has(user.id)
           const name = user.name ?? user.email
@@ -87,9 +98,16 @@ export function UsersTable({ users, meId, savingIds = new Set(), onChangeRole, o
                   onChange={(event) => onChangeRole(user.id, event.target.value as Role)}
                   className="min-h-11 border border-line bg-white px-2.5 disabled:text-muted"
                 >
-                  {ROLES.map((role) => (
-                    // A disabled account stays a client until it is enabled again.
-                    <option key={role} value={role} disabled={disabled && role !== 'client'}>
+                  {/* The super admin role is never offered: only the server command gives it. It is
+                      listed only to show the current role of a super admin. */}
+                  {(user.role === 'super_admin' ? [...GIVEN_ROLES, user.role] : GIVEN_ROLES).map((role) => (
+                    // A disabled account stays a client until it is enabled again, and only a
+                    // super admin gives the admin role.
+                    <option
+                      key={role}
+                      value={role}
+                      disabled={role === 'super_admin' || (disabled && role !== 'client') || (!superAdmin && isAdminRole(role))}
+                    >
                       {t(`roles.${role}`)}
                     </option>
                   ))}

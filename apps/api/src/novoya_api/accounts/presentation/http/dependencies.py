@@ -435,10 +435,11 @@ def require_role(*roles: Role) -> Callable[..., Awaitable[CurrentUserView]]:
     return dependency
 
 
-# The only place that lists which roles each dependency lets through. The admin is in each.
-require_client = require_role(Role.CLIENT, Role.ADMIN)  # the client journey
-require_agent = require_role(Role.AGENT, Role.ADMIN)  # quote queue, partners and offers
-require_admin = require_role(Role.ADMIN)  # users and roles
+# The only place that lists which roles each dependency lets through. The admin and the super
+# admin are in each.
+require_client = require_role(Role.CLIENT, Role.ADMIN, Role.SUPER_ADMIN)  # the client journey
+require_agent = require_role(Role.AGENT, Role.ADMIN, Role.SUPER_ADMIN)  # quotes, partners, offers
+require_admin = require_role(Role.ADMIN, Role.SUPER_ADMIN)  # users and roles
 
 
 # For the grant-role command, which runs outside of a request

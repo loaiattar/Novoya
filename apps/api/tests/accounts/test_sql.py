@@ -25,13 +25,14 @@ from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
     ChangeUserRoleCommand,
 )
+from novoya_api.accounts.domain.actor import GRANT_ROLE_COMMAND, AdminActor
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.credentials import PasswordCredential
 from novoya_api.accounts.domain.errors import (
     EmailAlreadyUsed,
     IdentityAlreadyLinked,
     InvalidOrExpiredToken,
-    LastAdminRequired,
+    LastSuperAdminRequired,
 )
 from novoya_api.accounts.domain.oauth_identity import OAuthIdentity
 from novoya_api.accounts.domain.one_time_token import OneTimeToken, TokenPurpose
@@ -244,6 +245,36 @@ def test_first_and_last_name_migration_backfills_and_downgrades(database_url):
     asyncio.run(run(f"TRUNCATE {TABLES} CASCADE"))
 
 
+def test_super_admin_migration_downgrades_only_without_a_super_admin(database_url):
+    config = Config(str(API_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(API_DIR / "alembic"))
+
+    async def run(sql: str, params: dict | None = None):
+        engine = create_async_engine(database_url, poolclass=NullPool)
+        try:
+            async with engine.begin() as connection:
+                await connection.execute(text(sql), params or {})
+        finally:
+            await engine.dispose()
+
+    insert = """
+        INSERT INTO users (id, email, name, role, locale, status, created_at)
+        VALUES (:id, 'boss@x.io', 'Boss', :role, 'en', 'active', :now)
+    """
+    asyncio.run(run(f"TRUNCATE {TABLES} CASCADE"))
+    asyncio.run(run(insert, {"id": uuid4(), "role": "super_admin", "now": NOW}))
+    with pytest.raises(RuntimeError, match="super_admin"):
+        command.downgrade(config, "0b6e3d9a5c71")
+
+    asyncio.run(run("UPDATE users SET role = 'admin'"))
+    command.downgrade(config, "0b6e3d9a5c71")
+    with pytest.raises(Exception, match="ck_users_role"):
+        asyncio.run(run("UPDATE users SET role = 'super_admin'"))
+
+    command.upgrade(config, "head")
+    asyncio.run(run(f"TRUNCATE {TABLES} CASCADE"))
+
+
 async def test_users_are_stored_and_found_by_email(session):
     users = SqlUserRepository(session)
     alice = make_user("alice@example.com")
@@ -282,7 +313,7 @@ async def test_users_are_saved_counted_and_searched(session):
     agent = make_user("agent@x.io", now=NOW + timedelta(minutes=1))
     await users.add(admin)
     await users.add(agent)
-    agent.change_role(Role.AGENT, changed_by=admin.id, now=NOW)
+    agent.change_role(Role.AGENT, by=AdminActor(admin.id, Role.ADMIN), now=NOW)
     await users.save(agent)
     await session.commit()
 
@@ -299,7 +330,7 @@ async def test_role_changes_are_logged_with_their_source(session):
     users, changes = SqlUserRepository(session), SqlRoleChangeRepository(session)
     user = make_user()
     await users.add(user)
-    await changes.add(user.change_role(Role.ADMIN, changed_by=None, now=NOW))
+    await changes.add(user.change_role(Role.ADMIN, by=GRANT_ROLE_COMMAND, now=NOW))
     await session.commit()
 
     row = (await session.execute(text("SELECT source, changed_by FROM role_changes"))).one()
@@ -312,7 +343,7 @@ async def test_status_change_is_kept_and_survives_the_admin(session):
     client = make_user("client@x.io", now=NOW)
     await users.add(admin)
     await users.add(client)
-    client.change_status(UserStatus.DISABLED, changed_by=admin.id, now=NOW)
+    client.change_status(UserStatus.DISABLED, by=AdminActor(admin.id, Role.ADMIN), now=NOW)
     await users.save(client)
     await session.commit()
 
@@ -388,6 +419,28 @@ def test_grant_role_command(database_url, capsys):
     assert "boss@x.io is now admin" in capsys.readouterr().out
     assert cli.main(["grant-role", "--email", "nobody@x.io", "--role", "admin"]) == 1
     assert "user_not_found" in capsys.readouterr().err
+    assert cli.main(["grant-role", "--email", "boss@x.io", "--role", "super_admin"]) == 0
+    assert "boss@x.io is now super_admin" in capsys.readouterr().out
+
+
+async def test_the_database_refuses_an_unknown_role(session):
+    from sqlalchemy.exc import IntegrityError
+
+    await SqlUserRepository(session).add(make_user("boss@x.io", role=Role.SUPER_ADMIN))
+    await session.commit()
+    with pytest.raises(IntegrityError, match="ck_users_role"):
+        await session.execute(text("UPDATE users SET role = 'owner'"))
+    await session.rollback()
+    with pytest.raises(IntegrityError, match="ck_role_changes_new_role"):
+        await session.execute(
+            text(
+                """
+                INSERT INTO role_changes (id, user_id, old_role, new_role, source, changed_at)
+                SELECT :id, id, 'client', 'owner', 'cmd_grant_role', :now FROM users
+                """
+            ),
+            {"id": uuid4(), "now": NOW},
+        )
 
 
 async def test_password_credentials_are_deleted(session):
@@ -503,9 +556,9 @@ async def blocked(task: asyncio.Task) -> bool:
     return not task.done()
 
 
-async def test_two_demotions_at_once_keep_one_admin(sessions):
-    a = make_user("a@x.io", role=Role.ADMIN)
-    b = make_user("b@x.io", role=Role.ADMIN)
+async def test_two_demotions_at_once_keep_one_super_admin(sessions):
+    a = make_user("a@x.io", role=Role.SUPER_ADMIN)
+    b = make_user("b@x.io", role=Role.SUPER_ADMIN)
     async with sessions() as setup:
         store = build_store(setup)
         await store.users.add(a)
@@ -514,20 +567,20 @@ async def test_two_demotions_at_once_keep_one_admin(sessions):
 
     async with sessions() as first, sessions() as second:
         users = SqlUserRepository(first)
-        assert await users.count_active_with_role(Role.ADMIN) == 2  # A's request, admins locked
+        assert await users.count_active_with_role(Role.SUPER_ADMIN) == 2  # A's request, rows locked
         store = build_store(second)
         demote_a = ChangeUserRole(store.users, store.role_changes, store.uow, FrozenClock())
         b_demotes_a = asyncio.create_task(
-            demote_a(ChangeUserRoleCommand(a.id, Role.CLIENT, changed_by=None))
+            demote_a(ChangeUserRoleCommand(a.id, Role.CLIENT, by=GRANT_ROLE_COMMAND))
         )
         assert await blocked(b_demotes_a)
 
         target = await users.get(b.id)
-        target.change_role(Role.CLIENT, changed_by=None, now=NOW)
+        target.change_role(Role.CLIENT, by=GRANT_ROLE_COMMAND, now=NOW)
         await users.save(target)
         await first.commit()
 
-        with pytest.raises(LastAdminRequired):
+        with pytest.raises(LastSuperAdminRequired):
             await b_demotes_a
 
 

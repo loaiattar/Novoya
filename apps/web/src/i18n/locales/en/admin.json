@@ -13,7 +13,8 @@
   "roles": {
     "client": "Client",
     "agent": "Agent",
-    "admin": "Admin"
+    "admin": "Admin",
+    "super_admin": "Super admin"
   },
   "status": {
     "active": "Active",
@@ -26,14 +27,15 @@
   "changeFailed": "The role could not be changed. Please try again.",
   "statusChangeFailed": "The account could not be changed. Please try again.",
   "changeRefused": {
-    "adminRole": "This person is an admin: you cannot change their role.",
-    "adminStatus": "This person is an admin: you cannot disable or enable their account.",
+    "adminRole": "Only a super admin can give or take the Admin role.",
+    "adminStatus": "This person is an admin: only a super admin can disable or enable their account.",
+    "superAdmin": "This person is a super admin: their role and account are managed on the server only.",
     "disabledAccount": "This account is disabled: enable it before giving it the Agent or Admin role."
   },
   "loading": "Loading users…",
   "loadFailed": "The users could not be loaded.",
   "empty": "No user matches this search.",
-  "note": "The Agent and Admin roles are only available for verified emails. A disabled account stays a Client. You cannot change your own role or account, nor another admin's role or account.",
+  "note": "The Agent, Admin and Super admin roles are only available for verified emails. A disabled account stays a Client. You cannot change your own role or account. Only a super admin gives the Admin role and changes an admin's role or account. Super admins are managed on the server only.",
   "table": {
     "caption": "Users and roles",
     "user": "User",

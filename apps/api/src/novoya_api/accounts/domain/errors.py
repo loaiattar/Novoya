@@ -98,15 +98,22 @@ class CannotChangeOwnStatus(Conflict):
 
 
 class CannotChangeAdminStatus(PermissionDenied):
-    """Only a super admin will act on admins (its own issue): until then, nobody does."""
+    """Only a super admin disables or enables an admin or a super admin."""
 
     code = "cannot_change_admin_status"
 
 
 class CannotChangeAdminRole(PermissionDenied):
-    """Same rule for the role: only the grant-role command demotes an admin for now."""
+    """Only a super admin gives, takes or changes the admin and super admin roles."""
 
     code = "cannot_change_admin_role"
+
+
+class SuperAdminServerOnly(PermissionDenied):
+    """The super admin role is managed on the server only (grant-role): the API never gives
+    or takes it, and never disables or enables a super admin's account."""
+
+    code = "super_admin_server_only"
 
 
 class CannotPromoteDisabled(Conflict):
@@ -115,10 +122,10 @@ class CannotPromoteDisabled(Conflict):
     code = "cannot_promote_disabled"
 
 
-class LastAdminRequired(Conflict):
-    """The last admin cannot lose the admin role: nobody could manage roles any more."""
+class LastSuperAdminRequired(Conflict):
+    """The last active super admin cannot lose the role: nobody could act on admins any more."""
 
-    code = "last_admin_required"
+    code = "last_super_admin_required"
 
 
 class InvalidEmail(InvalidInput):

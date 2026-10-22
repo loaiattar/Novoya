@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { canOpen, type Role } from '../../domain/auth/roles'
 import { Avatar } from '../atoms/Avatar'
 import { HomeLink } from '../molecules/HomeLink'
 import {
@@ -11,8 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { LanguageChoice } from './LanguageChoice'
-
-export type Role = 'client' | 'agent' | 'admin'
 
 type Props = {
   /** The signed-in user's name. Without it, the header shows only the brand. */
@@ -43,12 +42,12 @@ export function AppHeader({ userName, role = 'client', onSignOut, signingOut = f
               <Link to="/trips" className={navLink}>
                 {t('myTrips')}
               </Link>
-              {role !== 'client' && (
+              {canOpen(role, 'agent') && (
                 <Link to="/agent" className={navLink}>
                   {t('agencySpace')}
                 </Link>
               )}
-              {role === 'admin' && (
+              {canOpen(role, 'admin') && (
                 <Link to="/admin" className={navLink}>
                   {t('administration')}
                 </Link>
@@ -72,12 +71,12 @@ export function AppHeader({ userName, role = 'client', onSignOut, signingOut = f
                     <DropdownMenuItem asChild>
                       <Link to="/trips">{t('myTrips')}</Link>
                     </DropdownMenuItem>
-                    {role !== 'client' && (
+                    {canOpen(role, 'agent') && (
                       <DropdownMenuItem asChild>
                         <Link to="/agent">{t('agencySpace')}</Link>
                       </DropdownMenuItem>
                     )}
-                    {role === 'admin' && (
+                    {canOpen(role, 'admin') && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin">{t('administration')}</Link>
                       </DropdownMenuItem>

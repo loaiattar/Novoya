@@ -13,7 +13,8 @@
   "roles": {
     "client": "Client",
     "agent": "Agent",
-    "admin": "Admin"
+    "admin": "Admin",
+    "super_admin": "Super admin"
   },
   "status": {
     "active": "Actif",
@@ -26,14 +27,15 @@
   "changeFailed": "Le rôle n’a pas pu être changé. Veuillez réessayer.",
   "statusChangeFailed": "Le compte n’a pas pu être modifié. Veuillez réessayer.",
   "changeRefused": {
-    "adminRole": "Cette personne est admin : vous ne pouvez pas changer son rôle.",
-    "adminStatus": "Cette personne est admin : vous ne pouvez pas désactiver ni réactiver son compte.",
+    "adminRole": "Seul un super admin peut donner ou retirer le rôle Admin.",
+    "adminStatus": "Cette personne est admin : seul un super admin peut désactiver ou réactiver son compte.",
+    "superAdmin": "Cette personne est super admin : son rôle et son compte se gèrent uniquement sur le serveur.",
     "disabledAccount": "Ce compte est désactivé : réactivez-le avant de lui donner le rôle Agent ou Admin."
   },
   "loading": "Chargement des utilisateurs…",
   "loadFailed": "Impossible de charger les utilisateurs.",
   "empty": "Aucun utilisateur ne correspond à cette recherche.",
-  "note": "Les rôles Agent et Admin sont disponibles uniquement pour les e-mails vérifiés. Un compte désactivé reste Client. Vous ne pouvez modifier ni votre propre rôle ou compte, ni le rôle ou le compte d’un autre admin.",
+  "note": "Les rôles Agent, Admin et Super admin sont disponibles uniquement pour les e-mails vérifiés. Un compte désactivé reste Client. Vous ne pouvez pas modifier votre propre rôle ou compte. Seul un super admin donne le rôle Admin et modifie le rôle ou le compte d’un admin. Les super admins se gèrent uniquement sur le serveur.",
   "table": {
     "caption": "Utilisateurs et rôles",
     "user": "Utilisateur",

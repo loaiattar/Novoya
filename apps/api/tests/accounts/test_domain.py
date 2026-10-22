@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from novoya_api.accounts.domain.actor import GRANT_ROLE_COMMAND, AdminActor
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.errors import (
     CannotChangeAdminRole,
@@ -14,6 +15,8 @@ from novoya_api.accounts.domain.errors import (
     EmailNotVerified,
     InvalidEmail,
     InvalidOrExpiredToken,
+    NotAllowed,
+    SuperAdminServerOnly,
     WeakPassword,
 )
 from novoya_api.accounts.domain.one_time_token import OneTimeToken, TokenPurpose
@@ -134,7 +137,7 @@ def test_fill_in_from_provider_keeps_a_single_given_or_family_name():
 def test_role_change_is_logged_with_the_admin():
     user = make_user()
     admin_id = UserId.new()
-    change = user.change_role(Role.AGENT, changed_by=admin_id, now=NOW)
+    change = user.change_role(Role.AGENT, by=AdminActor(admin_id, Role.ADMIN), now=NOW)
     assert user.role is Role.AGENT
     assert (change.old_role, change.new_role) == (Role.CLIENT, Role.AGENT)
     assert change.source == "admin_api"
@@ -142,42 +145,94 @@ def test_role_change_is_logged_with_the_admin():
 
 
 def test_role_change_by_the_command_has_no_author():
-    change = make_user().change_role(Role.ADMIN, changed_by=None, now=NOW)
+    change = make_user().change_role(Role.ADMIN, by=GRANT_ROLE_COMMAND, now=NOW)
     assert change.source == "cmd_grant_role"
     assert change.changed_by is None
 
 
 def test_nobody_changes_their_own_role():
-    admin = make_user(role=Role.ADMIN)
+    admin = make_user(role=Role.SUPER_ADMIN)
     with pytest.raises(CannotChangeOwnRole):
-        admin.change_role(Role.CLIENT, changed_by=admin.id, now=NOW)
+        admin.change_role(Role.CLIENT, by=AdminActor(admin.id, Role.SUPER_ADMIN), now=NOW)
 
 
-def test_an_admin_does_not_change_another_admins_role():
-    other_admin = make_user(role=Role.ADMIN)
+@pytest.mark.parametrize(
+    ("current", "new"),
+    [
+        (Role.ADMIN, Role.CLIENT),
+        (Role.CLIENT, Role.ADMIN),
+        (Role.AGENT, Role.ADMIN),
+    ],
+)
+def test_only_a_super_admin_gives_or_takes_the_admin_role(current, new):
+    user = make_user(role=current)
     with pytest.raises(CannotChangeAdminRole):
-        other_admin.change_role(Role.CLIENT, changed_by=UserId.new(), now=NOW)
-    assert other_admin.role is Role.ADMIN
-    # The grant-role command still can (the last-admin check is the use case's).
-    assert other_admin.change_role(Role.CLIENT, changed_by=None, now=NOW) is not None
+        user.change_role(new, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)
+    assert user.role is current
+    assert user.change_role(new, by=AdminActor(UserId.new(), Role.SUPER_ADMIN), now=NOW)
+    assert user.role is new
+
+
+@pytest.mark.parametrize("by_role", [Role.ADMIN, Role.SUPER_ADMIN])
+@pytest.mark.parametrize("current", [Role.CLIENT, Role.AGENT, Role.ADMIN])
+def test_only_the_command_gives_the_super_admin_role(by_role, current):
+    user = make_user(role=current)
+    with pytest.raises(SuperAdminServerOnly):
+        user.change_role(Role.SUPER_ADMIN, by=AdminActor(UserId.new(), by_role), now=NOW)
+    assert user.role is current
+    assert user.change_role(Role.SUPER_ADMIN, by=GRANT_ROLE_COMMAND, now=NOW) is not None
+    assert user.role is Role.SUPER_ADMIN
+
+
+@pytest.mark.parametrize("by_role", [Role.ADMIN, Role.SUPER_ADMIN])
+@pytest.mark.parametrize("new", [Role.CLIENT, Role.AGENT, Role.ADMIN])
+def test_only_the_command_takes_the_super_admin_role(by_role, new):
+    super_admin = make_user(role=Role.SUPER_ADMIN)
+    with pytest.raises(SuperAdminServerOnly):
+        super_admin.change_role(new, by=AdminActor(UserId.new(), by_role), now=NOW)
+    assert super_admin.role is Role.SUPER_ADMIN
+    assert super_admin.change_role(new, by=GRANT_ROLE_COMMAND, now=NOW) is not None
+
+
+@pytest.mark.parametrize("by_role", [Role.CLIENT, Role.AGENT])
+def test_a_caller_who_is_not_an_admin_changes_nothing(by_role):
+    """The route lets only admins through; the entity does not count on it."""
+    user = make_user()
+    with pytest.raises(NotAllowed):
+        user.change_role(Role.AGENT, by=AdminActor(UserId.new(), by_role), now=NOW)
+    with pytest.raises(NotAllowed):
+        user.change_status(UserStatus.DISABLED, by=AdminActor(UserId.new(), by_role), now=NOW)
+    assert user.role is Role.CLIENT and user.is_active
+
+
+def test_a_plain_admin_manages_clients_and_agents():
+    user = make_user()
+    assert user.change_role(Role.AGENT, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)
+    assert user.change_role(Role.CLIENT, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)
+
+
+def test_the_command_changes_any_role():
+    """The last super admin check is the use case's."""
+    user = make_user(role=Role.SUPER_ADMIN)
+    assert user.change_role(Role.CLIENT, by=GRANT_ROLE_COMMAND, now=NOW) is not None
 
 
 def test_a_disabled_account_stays_a_client():
     user = make_user(status=UserStatus.DISABLED)
-    for role in (Role.AGENT, Role.ADMIN):
+    for role in (Role.AGENT, Role.ADMIN, Role.SUPER_ADMIN):
         with pytest.raises(CannotPromoteDisabled):
-            user.change_role(role, changed_by=None, now=NOW)
-    assert user.change_role(Role.CLIENT, changed_by=None, now=NOW) is None
+            user.change_role(role, by=GRANT_ROLE_COMMAND, now=NOW)
+    assert user.change_role(Role.CLIENT, by=GRANT_ROLE_COMMAND, now=NOW) is None
 
 
 def test_agent_and_admin_need_a_verified_email():
     user = make_user(verified=False)
     with pytest.raises(EmailNotVerified):
-        user.change_role(Role.AGENT, changed_by=None, now=NOW)
+        user.change_role(Role.AGENT, by=GRANT_ROLE_COMMAND, now=NOW)
 
 
 def test_same_role_changes_nothing():
-    assert make_user().change_role(Role.CLIENT, changed_by=None, now=NOW) is None
+    assert make_user().change_role(Role.CLIENT, by=GRANT_ROLE_COMMAND, now=NOW) is None
 
 
 def open_session() -> AuthSession:
@@ -221,25 +276,51 @@ def test_one_time_token_works_once_and_expires():
 def test_status_change_remembers_the_admin_and_the_time():
     user = make_user()
     admin_id = UserId.new()
-    assert user.change_status(UserStatus.DISABLED, changed_by=admin_id, now=NOW) is True
+    assert (
+        user.change_status(UserStatus.DISABLED, by=AdminActor(admin_id, Role.ADMIN), now=NOW)
+        is True
+    )
     assert not user.is_active
     assert (user.status_changed_by, user.status_changed_at) == (admin_id, NOW)
 
 
 def test_same_status_changes_nothing():
     user = make_user()
-    assert user.change_status(UserStatus.ACTIVE, changed_by=UserId.new(), now=NOW) is False
+    assert (
+        user.change_status(UserStatus.ACTIVE, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)
+        is False
+    )
     assert (user.status_changed_by, user.status_changed_at) == (None, None)
 
 
 def test_nobody_changes_their_own_status():
-    admin = make_user(role=Role.ADMIN)
+    admin = make_user(role=Role.SUPER_ADMIN)
     with pytest.raises(CannotChangeOwnStatus):
-        admin.change_status(UserStatus.DISABLED, changed_by=admin.id, now=NOW)
+        admin.change_status(UserStatus.DISABLED, by=AdminActor(admin.id, Role.SUPER_ADMIN), now=NOW)
 
 
-def test_an_admin_does_not_change_another_admins_status():
-    other_admin = make_user(role=Role.ADMIN)
+@pytest.mark.parametrize("by_role", [Role.ADMIN, Role.SUPER_ADMIN])
+def test_no_admin_changes_a_super_admins_status(by_role):
+    super_admin = make_user(role=Role.SUPER_ADMIN)
+    with pytest.raises(SuperAdminServerOnly):
+        super_admin.change_status(
+            UserStatus.DISABLED, by=AdminActor(UserId.new(), by_role), now=NOW
+        )
+    assert super_admin.is_active
+
+
+def test_only_a_super_admin_changes_an_admins_status():
+    other = make_user(role=Role.ADMIN)
     with pytest.raises(CannotChangeAdminStatus):
-        other_admin.change_status(UserStatus.DISABLED, changed_by=UserId.new(), now=NOW)
-    assert other_admin.is_active
+        other.change_status(UserStatus.DISABLED, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)
+    assert other.is_active
+    assert other.change_status(
+        UserStatus.DISABLED, by=AdminActor(UserId.new(), Role.SUPER_ADMIN), now=NOW
+    )
+    assert not other.is_active
+
+
+@pytest.mark.parametrize("role", [Role.CLIENT, Role.AGENT])
+def test_a_plain_admin_changes_a_client_or_agent_status(role):
+    user = make_user(role=role)
+    assert user.change_status(UserStatus.DISABLED, by=AdminActor(UserId.new(), Role.ADMIN), now=NOW)

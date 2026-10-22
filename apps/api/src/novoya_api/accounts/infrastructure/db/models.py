@@ -24,7 +24,9 @@ Timestamp = DateTime(timezone=True)
 class UserModel(Base):
     __tablename__ = "users"
     __table_args__ = (
-        CheckConstraint("role IN ('client', 'agent', 'admin')", name="ck_users_role"),
+        CheckConstraint(
+            "role IN ('client', 'agent', 'admin', 'super_admin')", name="ck_users_role"
+        ),
         CheckConstraint("locale IN ('en', 'fr')", name="ck_users_locale"),
         CheckConstraint("status IN ('active', 'disabled')", name="ck_users_status"),
     )
@@ -102,6 +104,14 @@ class RoleChangeModel(Base):
     __tablename__ = "role_changes"
     __table_args__ = (
         CheckConstraint("source IN ('admin_api', 'cmd_grant_role')", name="ck_role_changes_source"),
+        CheckConstraint(
+            "old_role IN ('client', 'agent', 'admin', 'super_admin')",
+            name="ck_role_changes_old_role",
+        ),
+        CheckConstraint(
+            "new_role IN ('client', 'agent', 'admin', 'super_admin')",
+            name="ck_role_changes_new_role",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)

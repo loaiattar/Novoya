@@ -22,12 +22,12 @@ from novoya_api.shared.infrastructure.db.session import get_session
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from novoya_api.shared.infrastructure.system_clock import SystemClock
 
-STAFF = frozenset({Role.AGENT, Role.ADMIN})
+STAFF = frozenset({Role.AGENT, Role.ADMIN, Role.SUPER_ADMIN})
 
 
 class Reader(NamedTuple):
     user_id: UUID
-    staff: bool  # an agent or an admin reads every quote
+    staff: bool  # an agent, an admin or a super admin reads every quote
 
 
 def get_current_agent_id(user: Annotated[CurrentUserView, Depends(require_agent)]) -> UUID:
