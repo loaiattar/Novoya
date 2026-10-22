@@ -5,7 +5,9 @@ from enum import StrEnum
 
 from novoya_api.accounts.domain.errors import (
     AccountDisabled,
+    CannotChangeAdminStatus,
     CannotChangeOwnRole,
+    CannotChangeOwnStatus,
     EmailNotVerified,
 )
 from novoya_api.accounts.domain.role import Role
@@ -59,6 +61,9 @@ class User:
     status: UserStatus
     email_verified_at: datetime | None
     created_at: datetime
+    # The last status change: the admin who made it (None once that admin is deleted) and when.
+    status_changed_by: UserId | None = None
+    status_changed_at: datetime | None = None
 
     @classmethod
     def register(
@@ -152,3 +157,21 @@ class User:
         change = RoleChange.record(self.id, self.role, new_role, changed_by, now)
         self.role = new_role
         return change
+
+    def change_status(self, new_status: UserStatus, *, changed_by: UserId, now: datetime) -> bool:
+        """Disable or enable the account and remember who did it and when. False if the
+        status is the same. A disabled account cannot sign in and its sessions stop working.
+
+        Whether the caller is an admin is checked before (require_admin). An admin never
+        changes their own status nor another admin's.
+        """
+        if changed_by == self.id:
+            raise CannotChangeOwnStatus("an admin cannot disable or enable their own account")
+        if self.role is Role.ADMIN:
+            raise CannotChangeAdminStatus("an admin cannot disable or enable another admin")
+        if new_status is self.status:
+            return False
+        self.status = new_status
+        self.status_changed_by = changed_by
+        self.status_changed_at = now
+        return True

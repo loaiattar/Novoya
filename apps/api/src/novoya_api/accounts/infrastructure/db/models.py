@@ -37,6 +37,11 @@ class UserModel(Base):
     role: Mapped[str] = mapped_column(String(20), index=True, server_default="client")
     locale: Mapped[str] = mapped_column(String(2), server_default="en")
     status: Mapped[str] = mapped_column(String(20), server_default="active")
+    # The last status change (#128): the admin who made it, kept as NULL once they are deleted.
+    status_changed_by: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    status_changed_at: Mapped[datetime | None] = mapped_column(Timestamp)
     email_verified_at: Mapped[datetime | None] = mapped_column(Timestamp)
     created_at: Mapped[datetime] = mapped_column(Timestamp)
     updated_at: Mapped[datetime] = mapped_column(

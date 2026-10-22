@@ -6,7 +6,9 @@ import pytest
 
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.errors import (
+    CannotChangeAdminStatus,
     CannotChangeOwnRole,
+    CannotChangeOwnStatus,
     EmailNotVerified,
     InvalidEmail,
     InvalidOrExpiredToken,
@@ -15,7 +17,7 @@ from novoya_api.accounts.domain.errors import (
 from novoya_api.accounts.domain.one_time_token import OneTimeToken, TokenPurpose
 from novoya_api.accounts.domain.policies import PasswordPolicy
 from novoya_api.accounts.domain.role import Role
-from novoya_api.accounts.domain.user import User
+from novoya_api.accounts.domain.user import User, UserStatus
 from novoya_api.accounts.domain.value_objects import Email, PlainPassword, UserId
 from novoya_api.shared.domain.value_objects import Locale
 from tests.accounts.fakes import FrozenClock, make_user
@@ -195,3 +197,30 @@ def test_one_time_token_works_once_and_expires():
     late = OneTimeToken.issue(UserId.new(), TokenPurpose.PASSWORD_RESET, "hash", NOW)
     with pytest.raises(InvalidOrExpiredToken):
         late.consume(NOW + timedelta(minutes=31))
+
+
+def test_status_change_remembers_the_admin_and_the_time():
+    user = make_user()
+    admin_id = UserId.new()
+    assert user.change_status(UserStatus.DISABLED, changed_by=admin_id, now=NOW) is True
+    assert not user.is_active
+    assert (user.status_changed_by, user.status_changed_at) == (admin_id, NOW)
+
+
+def test_same_status_changes_nothing():
+    user = make_user()
+    assert user.change_status(UserStatus.ACTIVE, changed_by=UserId.new(), now=NOW) is False
+    assert (user.status_changed_by, user.status_changed_at) == (None, None)
+
+
+def test_nobody_changes_their_own_status():
+    admin = make_user(role=Role.ADMIN)
+    with pytest.raises(CannotChangeOwnStatus):
+        admin.change_status(UserStatus.DISABLED, changed_by=admin.id, now=NOW)
+
+
+def test_an_admin_does_not_change_another_admins_status():
+    other_admin = make_user(role=Role.ADMIN)
+    with pytest.raises(CannotChangeAdminStatus):
+        other_admin.change_status(UserStatus.DISABLED, changed_by=UserId.new(), now=NOW)
+    assert other_admin.is_active

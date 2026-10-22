@@ -13,6 +13,10 @@ from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
     ChangeUserRoleCommand,
 )
+from novoya_api.accounts.application.use_cases.change_user_status import (
+    ChangeUserStatus,
+    ChangeUserStatusCommand,
+)
 from novoya_api.accounts.application.use_cases.password_reset import (
     RequestPasswordReset,
     ResetPassword,
@@ -27,6 +31,7 @@ from novoya_api.accounts.application.use_cases.sign_in_with_password import (
 )
 from novoya_api.accounts.application.use_cases.verify_email import VerifyEmail
 from novoya_api.accounts.domain.errors import (
+    AccountDisabled,
     EmailAlreadyUsed,
     EmailNotVerified,
     InvalidCredentials,
@@ -39,7 +44,8 @@ from novoya_api.accounts.domain.errors import (
 )
 from novoya_api.accounts.domain.policies import PasswordPolicy
 from novoya_api.accounts.domain.role import Role
-from novoya_api.accounts.domain.value_objects import Email, PasswordHash
+from novoya_api.accounts.domain.user import UserStatus
+from novoya_api.accounts.domain.value_objects import Email, PasswordHash, UserId
 from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.shared.infrastructure.in_memory_rate_limiter import InMemoryRateLimiter
 from tests.accounts.fakes import (
@@ -102,6 +108,7 @@ class Accounts:
             s.sessions, self.tokens, s.uow, self.clock, SessionPolicy()
         )
         self.change_role = ChangeUserRole(s.users, s.role_changes, s.uow, self.clock)
+        self.change_status = ChangeUserStatus(s.users, s.sessions, s.uow, self.clock)
         self.change_locale = ChangeLocale(s.users, s.credentials, s.identities, s.uow)
         self.forgot = RequestPasswordReset(
             s.users, s.tokens, self.tokens, self.mailer, self.limiter, s.uow, self.clock
@@ -382,3 +389,44 @@ async def test_resending_the_verification_email_does_not_block_a_password_reset(
     await accounts.forgot("alice@example.com")
 
     assert accounts.mailer.last_token("alice@example.com", "password_reset")
+
+
+async def test_disabling_ends_the_sessions_and_enabling_does_not_bring_them_back(accounts):
+    admin = make_user("admin@example.com", role=Role.ADMIN)
+    await accounts.store.users.add(admin)
+    user = await accounts.signed_up()
+    token = await accounts.signed_in()
+
+    disabled = await accounts.change_status(
+        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, changed_by=admin.id)
+    )
+    assert disabled.status_changed_by == admin.id
+    assert disabled.status_changed_at == accounts.clock.now()
+    with pytest.raises(SessionInvalid):
+        await accounts.authenticate(token)
+    with pytest.raises(AccountDisabled):
+        await accounts.signed_in()
+
+    await accounts.change_status(
+        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, changed_by=admin.id)
+    )
+    with pytest.raises(SessionInvalid):
+        await accounts.authenticate(token)  # the old session stays closed
+    new_token = await accounts.signed_in()
+    assert (await accounts.authenticate(new_token)).email == Email("alice@example.com")
+
+
+async def test_same_status_writes_nothing(accounts):
+    user = await accounts.signed_up()
+    commits = accounts.store.uow.commits
+    await accounts.change_status(
+        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, changed_by=UserId.new())
+    )
+    assert accounts.store.uow.commits == commits
+
+
+async def test_status_of_an_unknown_user_fails(accounts):
+    with pytest.raises(UserNotFound):
+        await accounts.change_status(
+            ChangeUserStatusCommand(UserId.new(), UserStatus.DISABLED, changed_by=UserId.new())
+        )

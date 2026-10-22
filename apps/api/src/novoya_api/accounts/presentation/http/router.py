@@ -13,6 +13,10 @@ from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
     ChangeUserRoleCommand,
 )
+from novoya_api.accounts.application.use_cases.change_user_status import (
+    ChangeUserStatus,
+    ChangeUserStatusCommand,
+)
 from novoya_api.accounts.application.use_cases.get_account import GetAccount
 from novoya_api.accounts.application.use_cases.list_users import ListUsers
 from novoya_api.accounts.application.use_cases.password_reset import (
@@ -34,6 +38,7 @@ from novoya_api.accounts.application.use_cases.start_sign_in import (
     StartSignInCommand,
 )
 from novoya_api.accounts.application.use_cases.verify_email import VerifyEmail
+from novoya_api.accounts.domain.user import UserStatus
 from novoya_api.accounts.domain.value_objects import UserId
 from novoya_api.accounts.presentation.http.cookies import (
     clear_session_cookie,
@@ -51,6 +56,7 @@ from novoya_api.accounts.presentation.http.dependencies import (
     get_change_locale,
     get_change_password,
     get_change_user_role,
+    get_change_user_status,
     get_get_account,
     get_list_users,
     get_register,
@@ -68,6 +74,7 @@ from novoya_api.accounts.presentation.http.dependencies import (
 from novoya_api.accounts.presentation.http.schemas import (
     ChangePasswordRequest,
     ChangeRoleRequest,
+    ChangeStatusRequest,
     EmailRequest,
     MeResponse,
     RegisterRequest,
@@ -394,6 +401,21 @@ async def change_user_role(
     """Give a user another role. Admin only, never on their own account. The change is logged."""
     user = await use_case(
         ChangeUserRoleCommand(UserId(user_id), role_of(body.role), changed_by=admin.user_id)
+    )
+    return UserResponse.of(user)
+
+
+@admin_users_router.patch("/{user_id}/status", operation_id="changeUserStatus")
+async def change_user_status(
+    user_id: UUID,
+    body: ChangeStatusRequest,
+    admin: Annotated[CurrentUserView, Depends(require_admin)],
+    use_case: Annotated[ChangeUserStatus, Depends(get_change_user_status)],
+) -> UserResponse:
+    """Disable or enable a user's account. Admin only, never on their own account (409) nor
+    on another admin's (403). Disabling ends the user's sessions; who and when are kept."""
+    user = await use_case(
+        ChangeUserStatusCommand(UserId(user_id), UserStatus(body.status), changed_by=admin.user_id)
     )
     return UserResponse.of(user)
 

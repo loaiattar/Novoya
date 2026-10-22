@@ -45,6 +45,8 @@ def user_to_entity(row: UserModel) -> User:
         status=UserStatus(row.status),
         email_verified_at=row.email_verified_at,
         created_at=row.created_at,
+        status_changed_by=UserId(row.status_changed_by) if row.status_changed_by else None,
+        status_changed_at=row.status_changed_at,
     )
 
 
@@ -58,6 +60,8 @@ def user_columns(user: User) -> dict[str, object]:
         "locale": user.locale.value,
         "status": user.status.value,
         "email_verified_at": user.email_verified_at,
+        "status_changed_by": user.status_changed_by.value if user.status_changed_by else None,
+        "status_changed_at": user.status_changed_at,
     }
 
 

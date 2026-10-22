@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import {
   changeUserRoleMutation,
+  changeUserStatusMutation,
   listUsersOptions,
   listUsersQueryKey,
 } from '../../../api/generated/@tanstack/react-query.gen'
@@ -13,6 +14,7 @@ import { Input } from '../../../components/atoms/Input'
 import { ErrorNote } from '../../../components/molecules/ErrorNote'
 import { RoleChangeDialog, type RoleChange } from '../../../components/organisms/RoleChangeDialog'
 import { type Role, ROLES } from '../../../components/organisms/roles'
+import { StatusChangeDialog, type StatusChange } from '../../../components/organisms/StatusChangeDialog'
 import { UsersTable } from '../../../components/organisms/UsersTable'
 
 // The guard is in route.tsx: admins only.
@@ -28,6 +30,7 @@ function AdminPage() {
   const [role, setRole] = useState<Role | ''>('')
   // A role change waits here until the admin confirms it.
   const [pendingChange, setPendingChange] = useState<RoleChange | null>(null)
+  const [pendingStatus, setPendingStatus] = useState<StatusChange | null>(null)
   const q = useDeferredValue(search.trim())
 
   const query = { q: q || undefined, role: role || undefined, limit: 50 }
@@ -36,6 +39,15 @@ function AdminPage() {
     ...changeUserRoleMutation(),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
   })
+  const changeStatus = useMutation({
+    ...changeUserStatusMutation(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
+  })
+  const savingId = changeRole.isPending
+    ? changeRole.variables?.path.user_id
+    : changeStatus.isPending
+      ? changeStatus.variables?.path.user_id
+      : undefined
 
   return (
     <>
@@ -77,6 +89,11 @@ function AdminPage() {
           {t('changeFailed')}
         </p>
       )}
+      {changeStatus.isError && (
+        <p role="alert" className="mb-4 text-danger">
+          {t('statusChangeFailed')}
+        </p>
+      )}
 
       {users.isPending ? (
         <p className="py-6 text-muted">{t('loading')}</p>
@@ -88,11 +105,16 @@ function AdminPage() {
         <UsersTable
           users={users.data}
           meId={me.id}
-          savingId={changeRole.isPending ? changeRole.variables?.path.user_id : undefined}
+          savingId={savingId}
           onChangeRole={(userId, next) => {
             const user = users.data.find((row) => row.id === userId)
             if (!user || user.role === next) return
             setPendingChange({ userId, name: user.name ?? user.email, from: user.role, to: next })
+          }}
+          onChangeStatus={(userId, next) => {
+            const user = users.data.find((row) => row.id === userId)
+            if (!user || user.status === next) return
+            setPendingStatus({ userId, name: user.name ?? user.email, to: next })
           }}
         />
       )}
@@ -105,6 +127,14 @@ function AdminPage() {
         onConfirm={(change) => {
           setPendingChange(null)
           changeRole.mutate({ path: { user_id: change.userId }, body: { role: change.to } })
+        }}
+      />
+      <StatusChangeDialog
+        change={pendingStatus}
+        onCancel={() => setPendingStatus(null)}
+        onConfirm={(change) => {
+          setPendingStatus(null)
+          changeStatus.mutate({ path: { user_id: change.userId }, body: { status: change.to } })
         }}
       />
     </>

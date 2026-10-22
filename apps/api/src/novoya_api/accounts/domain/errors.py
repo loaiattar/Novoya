@@ -86,6 +86,16 @@ class CannotChangeOwnRole(Conflict):
     code = "cannot_change_own_role"
 
 
+class CannotChangeOwnStatus(Conflict):
+    code = "cannot_change_own_status"
+
+
+class CannotChangeAdminStatus(PermissionDenied):
+    """Only a super admin will act on admins (its own issue): until then, nobody does."""
+
+    code = "cannot_change_admin_status"
+
+
 class LastAdminRequired(Conflict):
     """The last admin cannot lose the admin role: nobody could manage roles any more."""
 

@@ -17,6 +17,8 @@ const ADMIN: MeResponse = {
   role: 'admin',
   locale: 'en',
   status: 'active',
+  status_changed_by: null,
+  status_changed_at: null,
   email_verified: true,
   created_at: '2026-08-18T10:00:00Z',
   sign_in_methods: ['password'],

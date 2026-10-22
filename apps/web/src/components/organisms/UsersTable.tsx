@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 
 import { formatShortDate } from '@/lib/format'
 
+import { Button } from '../atoms/Button'
+
 import { ROLES, type Role } from './roles'
 
 export type UserRow = {
@@ -10,21 +12,27 @@ export type UserRow = {
   name: string | null
   email: string
   role: Role
+  status: UserStatus
+  /** When the account was last disabled or enabled, or null if it never was. */
+  status_changed_at: string | null
   email_verified: boolean
   created_at: string
 }
+
+export type UserStatus = 'active' | 'disabled'
 
 type Props = {
   users: UserRow[]
   /** The signed-in admin: they cannot change their own role. */
   meId: string
-  /** The user whose role is being saved. */
+  /** The user whose role or status is being saved. */
   savingId?: string
   onChangeRole: (userId: string, role: Role) => void
+  onChangeStatus: (userId: string, status: UserStatus) => void
 }
 
-/** The users with their role, which an admin can change. */
-export function UsersTable({ users, meId, savingId, onChangeRole }: Props) {
+/** The users with their role and account status, which an admin can change. */
+export function UsersTable({ users, meId, savingId, onChangeRole, onChangeStatus }: Props) {
   const id = useId()
   const { t, i18n } = useTranslation('admin')
   return (
@@ -32,14 +40,17 @@ export function UsersTable({ users, meId, savingId, onChangeRole }: Props) {
       <caption className="sr-only">{t('table.caption')}</caption>
       <thead>
         <tr className="text-left text-xs tracking-widest text-muted uppercase">
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="px-2 py-4 font-normal md:p-4">
             {t('table.user')}
           </th>
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="px-2 py-4 font-normal md:p-4">
             {t('table.role')}
           </th>
+          <th scope="col" className="px-2 py-4 font-normal md:p-4">
+            {t('table.account')}
+          </th>
           <th scope="col" className="hidden p-4 font-normal md:table-cell">
-            {t('table.status')}
+            {t('table.email')}
           </th>
           <th scope="col" className="hidden p-4 font-normal md:table-cell">
             {t('table.joined')}
@@ -51,17 +62,21 @@ export function UsersTable({ users, meId, savingId, onChangeRole }: Props) {
           const isMe = user.id === meId
           // Agent and admin need a verified email (enforced by the API too).
           const locked = isMe || !user.email_verified
+          // Nobody disables their own account, and only a super admin will act on admins.
+          const statusLocked = isMe || user.role === 'admin'
+          const disabled = user.status === 'disabled'
+          const name = user.name ?? user.email
           return (
             <tr key={user.id} className="border-t border-line">
-              <th scope="row" className="p-4 text-left font-normal">
+              <th scope="row" className="px-2 py-4 text-left font-normal md:p-4">
                 <span className="grid">
                   <b className="font-semibold">{user.name ?? user.email}</b>
-                  <small className="mt-1 text-xs text-muted">{user.email}</small>
+                  <small className="mt-1 text-xs break-all text-muted">{user.email}</small>
                 </span>
               </th>
-              <td className="p-4">
+              <td className="px-2 py-4 md:p-4">
                 <label htmlFor={`${id}-${user.id}`} className="sr-only">
-                  {t('table.roleOf', { name: user.name ?? user.email })}
+                  {t('table.roleOf', { name })}
                 </label>
                 <select
                   id={`${id}-${user.id}`}
@@ -76,6 +91,34 @@ export function UsersTable({ users, meId, savingId, onChangeRole }: Props) {
                     </option>
                   ))}
                 </select>
+              </td>
+              <td className="px-2 py-4 md:p-4">
+                <span className="grid justify-items-start">
+                  <span className="whitespace-nowrap">
+                    <span
+                      aria-hidden="true"
+                      className={`mr-1.5 inline-block size-1.5 rounded-full ${disabled ? 'bg-danger' : 'bg-ok'}`}
+                    />
+                    {t(`status.${user.status}`)}
+                  </span>
+                  {disabled && user.status_changed_at && (
+                    <small className="mt-1 text-xs text-muted">
+                      {t('table.disabledOn', { date: formatShortDate(i18n.language, user.status_changed_at) })}
+                    </small>
+                  )}
+                  {!statusLocked && (
+                    <Button
+                      variant="link"
+                      size="inline"
+                      disabled={savingId === user.id}
+                      aria-label={t(disabled ? 'table.enableOf' : 'table.disableOf', { name })}
+                      onClick={() => onChangeStatus(user.id, disabled ? 'active' : 'disabled')}
+                      className="min-h-11 text-xs"
+                    >
+                      {t(disabled ? 'statusAction.enable' : 'statusAction.disable')}
+                    </Button>
+                  )}
+                </span>
               </td>
               <td className="hidden p-4 md:table-cell">
                 <span

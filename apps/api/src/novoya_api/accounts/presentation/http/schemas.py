@@ -62,6 +62,10 @@ class ChangeRoleRequest(BaseModel):
     role: RoleName
 
 
+class ChangeStatusRequest(BaseModel):
+    status: Literal["active", "disabled"]
+
+
 class UpdateMeRequest(BaseModel):
     locale: Literal["en", "fr"]
 
@@ -75,6 +79,9 @@ class UserResponse(BaseModel):
     role: RoleName
     locale: Literal["en", "fr"]
     status: Literal["active", "disabled"]
+    # The last status change: the admin who made it and when. None if it never changed.
+    status_changed_by: UUID | None
+    status_changed_at: datetime | None
     email_verified: bool
     created_at: datetime
 
@@ -89,6 +96,8 @@ class UserResponse(BaseModel):
             role=user.role.value,
             locale=user.locale.value,
             status=user.status.value,
+            status_changed_by=user.status_changed_by.value if user.status_changed_by else None,
+            status_changed_at=user.status_changed_at,
             email_verified=user.is_email_verified,
             created_at=user.created_at,
         )

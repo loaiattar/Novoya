@@ -442,3 +442,91 @@ async def test_requests_from_the_api_docs_page_pass(client):
     """Swagger (/docs) is served by the API itself: same origin."""
     response = await client.post("/auth/logout", headers={"Origin": "http://test"})
     assert response.status_code == 204
+
+
+async def test_admin_disables_and_enables_an_account(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as client:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(client, "client@x.io")
+        admin_id = (await admin.get("/me")).json()["id"]
+        client_id = (await client.get("/me")).json()["id"]
+
+        response = await admin.patch(
+            f"/admin/users/{client_id}/status", json={"status": "disabled"}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "disabled"
+        assert body["status_changed_by"] == admin_id
+        assert body["status_changed_at"] is not None
+
+        # The open session ends at the next request, and signing in again is refused.
+        assert (await client.get("/me")).status_code == 401
+        response = await client.post(
+            "/auth/login", json={"email": "client@x.io", "password": PASSWORD}
+        )
+        assert response.status_code == 403
+        assert response.json()["code"] == "account_disabled"
+
+        response = await admin.patch(f"/admin/users/{client_id}/status", json={"status": "active"})
+        assert response.json()["status"] == "active"
+        await sign_in(client, "client@x.io")
+        assert (await client.get("/me")).status_code == 200
+
+
+async def test_only_an_admin_changes_a_status(app, store, mailer):
+    async with new_client(app) as agent, new_client(app) as client:
+        await sign_up(agent, mailer, "agent@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "agent@x.io", Role.AGENT)
+        await sign_in(agent, "agent@x.io")
+        await sign_in(client, "client@x.io")
+        client_id = (await client.get("/me")).json()["id"]
+        for c in (agent, client):
+            response = await c.patch(
+                f"/admin/users/{client_id}/status", json={"status": "disabled"}
+            )
+            assert response.status_code == 403
+    async with new_client(app) as anonymous:
+        response = await anonymous.patch(
+            f"/admin/users/{client_id}/status", json={"status": "disabled"}
+        )
+        assert response.status_code == 401
+
+
+async def test_admin_cannot_change_own_or_another_admins_status(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as other:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(other, mailer, "other@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await grant_role(store, "other@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(other, "other@x.io")
+        me = (await admin.get("/me")).json()["id"]
+        other_id = (await other.get("/me")).json()["id"]
+
+        response = await admin.patch(f"/admin/users/{me}/status", json={"status": "disabled"})
+        assert response.status_code == 409
+        assert response.json()["code"] == "cannot_change_own_status"
+
+        response = await admin.patch(f"/admin/users/{other_id}/status", json={"status": "disabled"})
+        assert response.status_code == 403
+        assert response.json()["code"] == "cannot_change_admin_status"
+        assert (await other.get("/me")).status_code == 200
+
+
+async def test_status_change_refuses_unknown_values_and_users(app, store, mailer):
+    async with new_client(app) as admin:
+        await sign_up(admin, mailer, "admin@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        unknown = "/admin/users/00000000-0000-0000-0000-000000000000/status"
+        response = await admin.patch(unknown, json={"status": "disabled"})
+        assert response.status_code == 404
+        assert response.json()["code"] == "user_not_found"
+        me = (await admin.get("/me")).json()["id"]
+        response = await admin.patch(f"/admin/users/{me}/status", json={"status": "banned"})
+        assert response.status_code == 422

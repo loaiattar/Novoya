@@ -15,27 +15,52 @@
     "agent": "Agent",
     "admin": "Admin"
   },
+  "status": {
+    "active": "Active",
+    "disabled": "Disabled"
+  },
+  "statusAction": {
+    "disable": "Disable",
+    "enable": "Enable"
+  },
   "changeFailed": "The role could not be changed. Please try again.",
+  "statusChangeFailed": "The account could not be changed. Please try again.",
   "loading": "Loading users…",
   "loadFailed": "The users could not be loaded.",
   "empty": "No user matches this search.",
-  "note": "The Agent and Admin roles are only available for verified emails. You cannot change your own role.",
+  "note": "The Agent and Admin roles are only available for verified emails. You cannot change your own role or account, nor another admin's account.",
   "table": {
     "caption": "Users and roles",
     "user": "User",
     "role": "Role",
-    "status": "Status",
+    "account": "Account",
+    "email": "Email",
     "joined": "Joined",
     "roleOf": "Role of {{name}}",
     "you": "You",
     "verified": "Verified",
-    "pending": "Pending"
+    "pending": "Pending",
+    "disabledOn": "Disabled on {{date}}",
+    "disableOf": "Disable {{name}}'s account",
+    "enableOf": "Enable {{name}}'s account"
   },
   "confirm": {
     "title": "Change {{name}}'s role?",
     "body": "{{name}} will go from {{from}} to {{to}}. This changes what they can open in {{agency}}.",
     "action": "Change role",
     "cancel": "Cancel"
+  },
+  "statusConfirm": {
+    "disable": {
+      "title": "Disable {{name}}'s account?",
+      "body": "{{name}} will be signed out at once and will no longer be able to sign in to {{agency}}, with a password or with Google. You can enable the account again later.",
+      "action": "Disable account"
+    },
+    "enable": {
+      "title": "Enable {{name}}'s account?",
+      "body": "{{name}} will be able to sign in to {{agency}} again.",
+      "action": "Enable account"
+    }
   },
   "place": "{{city}}, {{country}}",
   "saving": "Saving…",
