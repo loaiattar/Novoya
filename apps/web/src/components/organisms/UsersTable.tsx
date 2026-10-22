@@ -25,14 +25,14 @@ type Props = {
   users: UserRow[]
   /** The signed-in admin: they cannot change their own role. */
   meId: string
-  /** The user whose role or status is being saved. */
-  savingId?: string
+  /** The users whose role or status is being saved. */
+  savingIds?: ReadonlySet<string>
   onChangeRole: (userId: string, role: Role) => void
   onChangeStatus: (userId: string, status: UserStatus) => void
 }
 
 /** The users with their role and account status, which an admin can change. */
-export function UsersTable({ users, meId, savingId, onChangeRole, onChangeStatus }: Props) {
+export function UsersTable({ users, meId, savingIds = new Set(), onChangeRole, onChangeStatus }: Props) {
   const id = useId()
   const { t, i18n } = useTranslation('admin')
   return (
@@ -60,11 +60,13 @@ export function UsersTable({ users, meId, savingId, onChangeRole, onChangeStatus
       <tbody>
         {users.map((user) => {
           const isMe = user.id === meId
-          // Agent and admin need a verified email (enforced by the API too).
-          const locked = isMe || !user.email_verified
-          // Nobody disables their own account, and only a super admin will act on admins.
-          const statusLocked = isMe || user.role === 'admin'
+          // Nobody changes their own role or account, and only a super admin will act on
+          // admins. Agent and admin need a verified email (the API enforces all of it too).
+          const otherAdmin = !isMe && user.role === 'admin'
+          const locked = isMe || otherAdmin || !user.email_verified
+          const statusLocked = isMe || otherAdmin
           const disabled = user.status === 'disabled'
+          const saving = savingIds.has(user.id)
           const name = user.name ?? user.email
           return (
             <tr key={user.id} className="border-t border-line">
@@ -81,12 +83,13 @@ export function UsersTable({ users, meId, savingId, onChangeRole, onChangeStatus
                 <select
                   id={`${id}-${user.id}`}
                   value={user.role}
-                  disabled={locked || savingId === user.id}
+                  disabled={locked || saving}
                   onChange={(event) => onChangeRole(user.id, event.target.value as Role)}
                   className="min-h-11 border border-line bg-white px-2.5 disabled:text-muted"
                 >
                   {ROLES.map((role) => (
-                    <option key={role} value={role}>
+                    // A disabled account stays a client until it is enabled again.
+                    <option key={role} value={role} disabled={disabled && role !== 'client'}>
                       {t(`roles.${role}`)}
                     </option>
                   ))}
@@ -110,7 +113,7 @@ export function UsersTable({ users, meId, savingId, onChangeRole, onChangeStatus
                     <Button
                       variant="link"
                       size="inline"
-                      disabled={savingId === user.id}
+                      disabled={saving}
                       aria-label={t(disabled ? 'table.enableOf' : 'table.disableOf', { name })}
                       onClick={() => onChangeStatus(user.id, disabled ? 'active' : 'disabled')}
                       className="min-h-11 text-xs"

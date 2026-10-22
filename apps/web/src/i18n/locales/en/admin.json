@@ -25,10 +25,15 @@
   },
   "changeFailed": "The role could not be changed. Please try again.",
   "statusChangeFailed": "The account could not be changed. Please try again.",
+  "changeRefused": {
+    "adminRole": "This person is an admin: you cannot change their role.",
+    "adminStatus": "This person is an admin: you cannot disable or enable their account.",
+    "disabledAccount": "This account is disabled: enable it before giving it the Agent or Admin role."
+  },
   "loading": "Loading users…",
   "loadFailed": "The users could not be loaded.",
   "empty": "No user matches this search.",
-  "note": "The Agent and Admin roles are only available for verified emails. You cannot change your own role or account, nor another admin's account.",
+  "note": "The Agent and Admin roles are only available for verified emails. A disabled account stays a Client. You cannot change your own role or account, nor another admin's role or account.",
   "table": {
     "caption": "Users and roles",
     "user": "User",

@@ -96,6 +96,18 @@ class CannotChangeAdminStatus(PermissionDenied):
     code = "cannot_change_admin_status"
 
 
+class CannotChangeAdminRole(PermissionDenied):
+    """Same rule for the role: only the grant-role command demotes an admin for now."""
+
+    code = "cannot_change_admin_role"
+
+
+class CannotPromoteDisabled(Conflict):
+    """A disabled account stays a client: enable it before giving it the agent or admin role."""
+
+    code = "cannot_promote_disabled"
+
+
 class LastAdminRequired(Conflict):
     """The last admin cannot lose the admin role: nobody could manage roles any more."""
 

@@ -46,11 +46,12 @@ class ChangeUserRole:
         if target is None:
             raise UserNotFound("no user found")
 
-        was_admin = target.role is Role.ADMIN
+        # A disabled admin cannot manage roles: it does not count as the last one.
+        was_active_admin = target.role is Role.ADMIN and target.is_active
         # The entity's rules first (not your own role, verified email); nothing is saved yet.
         change = target.change_role(cmd.new_role, changed_by=cmd.changed_by, now=self._clock.now())
         if (
-            was_admin
+            was_active_admin
             and cmd.new_role is not Role.ADMIN
             and await self._users.count_active_with_role(Role.ADMIN) <= 1
         ):

@@ -530,3 +530,72 @@ async def test_status_change_refuses_unknown_values_and_users(app, store, mailer
         me = (await admin.get("/me")).json()["id"]
         response = await admin.patch(f"/admin/users/{me}/status", json={"status": "banned"})
         assert response.status_code == 422
+
+
+async def test_admin_cannot_demote_then_disable_another_admin(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as other:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(other, mailer, "other@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await grant_role(store, "other@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(other, "other@x.io")
+        other_id = (await other.get("/me")).json()["id"]
+
+        response = await admin.patch(f"/admin/users/{other_id}/role", json={"role": "client"})
+        assert response.status_code == 403
+        assert response.json()["code"] == "cannot_change_admin_role"
+        response = await admin.patch(f"/admin/users/{other_id}/status", json={"status": "disabled"})
+        assert response.status_code == 403
+        assert (await other.get("/me")).json()["role"] == "admin"
+
+
+async def test_a_disabled_account_cannot_get_a_staff_role(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as client:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(client, "client@x.io")
+        client_id = (await client.get("/me")).json()["id"]
+        await admin.patch(f"/admin/users/{client_id}/status", json={"status": "disabled"})
+
+        response = await admin.patch(f"/admin/users/{client_id}/role", json={"role": "admin"})
+        assert response.status_code == 409
+        assert response.json()["code"] == "cannot_promote_disabled"
+        assert (await admin.get(f"/admin/users/{client_id}")).json()["role"] == "client"
+
+
+async def test_disabling_twice_keeps_the_first_change(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as client:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(client, "client@x.io")
+        client_id = (await client.get("/me")).json()["id"]
+        url = f"/admin/users/{client_id}/status"
+
+        first = (await admin.patch(url, json={"status": "disabled"})).json()
+        response = await admin.patch(url, json={"status": "disabled"})
+        assert response.status_code == 200
+        assert response.json()["status_changed_at"] == first["status_changed_at"]
+
+
+async def test_me_does_not_say_which_admin_changed_the_status(app, store, mailer):
+    async with new_client(app) as admin, new_client(app) as client:
+        await sign_up(admin, mailer, "admin@x.io")
+        await sign_up(client, mailer, "client@x.io")
+        await grant_role(store, "admin@x.io", Role.ADMIN)
+        await sign_in(admin, "admin@x.io")
+        await sign_in(client, "client@x.io")
+        client_id = (await client.get("/me")).json()["id"]
+        url = f"/admin/users/{client_id}/status"
+        await admin.patch(url, json={"status": "disabled"})
+        await admin.patch(url, json={"status": "active"})
+        await sign_in(client, "client@x.io")
+
+        me = (await client.get("/me")).json()
+        assert "status_changed_by" not in me and "status_changed_at" not in me
+        detail = (await admin.get(f"/admin/users/{client_id}")).json()
+        assert detail["status_changed_by"] == (await admin.get("/me")).json()["id"]

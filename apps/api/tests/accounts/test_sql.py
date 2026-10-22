@@ -503,7 +503,7 @@ async def blocked(task: asyncio.Task) -> bool:
     return not task.done()
 
 
-async def test_two_admins_demoting_each_other_at_once_keep_one_admin(sessions):
+async def test_two_demotions_at_once_keep_one_admin(sessions):
     a = make_user("a@x.io", role=Role.ADMIN)
     b = make_user("b@x.io", role=Role.ADMIN)
     async with sessions() as setup:
@@ -518,12 +518,12 @@ async def test_two_admins_demoting_each_other_at_once_keep_one_admin(sessions):
         store = build_store(second)
         demote_a = ChangeUserRole(store.users, store.role_changes, store.uow, FrozenClock())
         b_demotes_a = asyncio.create_task(
-            demote_a(ChangeUserRoleCommand(a.id, Role.CLIENT, changed_by=b.id))
+            demote_a(ChangeUserRoleCommand(a.id, Role.CLIENT, changed_by=None))
         )
         assert await blocked(b_demotes_a)
 
         target = await users.get(b.id)
-        target.change_role(Role.CLIENT, changed_by=a.id, now=NOW)
+        target.change_role(Role.CLIENT, changed_by=None, now=NOW)
         await users.save(target)
         await first.commit()
 

@@ -83,6 +83,7 @@ from novoya_api.accounts.presentation.http.schemas import (
     SignInRequest,
     TokenRequest,
     UpdateMeRequest,
+    UserDetailResponse,
     UserResponse,
     role_of,
 )
@@ -386,9 +387,9 @@ async def list_users(
 @admin_users_router.get("/{user_id}", operation_id="getUser")
 async def get_user(
     user_id: UUID, use_case: Annotated[GetAccount, Depends(get_get_account)]
-) -> MeResponse:
+) -> UserDetailResponse:
     """One user. Admin only."""
-    return MeResponse.of_account(await use_case(UserId(user_id)))
+    return UserDetailResponse.of_account(await use_case(UserId(user_id)))
 
 
 @admin_users_router.patch("/{user_id}/role", operation_id="changeUserRole")

@@ -89,7 +89,8 @@ class ResetPassword:
             self._token_generator.hash(token), TokenPurpose.PASSWORD_RESET
         )
         user = await self._users.get(stored.user_id) if stored else None
-        if user is None:
+        # A link sent before the account was disabled must not set a password.
+        if user is None or not user.is_active:
             raise InvalidOrExpiredToken("this link is invalid or has expired")
         password = PlainPassword(new_password)
         self._policy.validate(password, user.email)  # before using the token: a typo keeps it

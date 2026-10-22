@@ -6,9 +6,11 @@ import pytest
 
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.errors import (
+    CannotChangeAdminRole,
     CannotChangeAdminStatus,
     CannotChangeOwnRole,
     CannotChangeOwnStatus,
+    CannotPromoteDisabled,
     EmailNotVerified,
     InvalidEmail,
     InvalidOrExpiredToken,
@@ -149,6 +151,23 @@ def test_nobody_changes_their_own_role():
     admin = make_user(role=Role.ADMIN)
     with pytest.raises(CannotChangeOwnRole):
         admin.change_role(Role.CLIENT, changed_by=admin.id, now=NOW)
+
+
+def test_an_admin_does_not_change_another_admins_role():
+    other_admin = make_user(role=Role.ADMIN)
+    with pytest.raises(CannotChangeAdminRole):
+        other_admin.change_role(Role.CLIENT, changed_by=UserId.new(), now=NOW)
+    assert other_admin.role is Role.ADMIN
+    # The grant-role command still can (the last-admin check is the use case's).
+    assert other_admin.change_role(Role.CLIENT, changed_by=None, now=NOW) is not None
+
+
+def test_a_disabled_account_stays_a_client():
+    user = make_user(status=UserStatus.DISABLED)
+    for role in (Role.AGENT, Role.ADMIN):
+        with pytest.raises(CannotPromoteDisabled):
+            user.change_role(role, changed_by=None, now=NOW)
+    assert user.change_role(Role.CLIENT, changed_by=None, now=NOW) is None
 
 
 def test_agent_and_admin_need_a_verified_email():

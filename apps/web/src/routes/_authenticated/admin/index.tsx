@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useDeferredValue, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ApiError } from '../../../api/errors'
 import {
   changeUserRoleMutation,
   changeUserStatusMutation,
@@ -35,19 +36,20 @@ function AdminPage() {
 
   const query = { q: q || undefined, role: role || undefined, limit: 50 }
   const users = useQuery({ ...listUsersOptions({ query }), placeholderData: keepPreviousData })
+  // Refetch after a failure too: the row may have changed in another tab.
   const changeRole = useMutation({
     ...changeUserRoleMutation(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
   })
   const changeStatus = useMutation({
     ...changeUserStatusMutation(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
   })
-  const savingId = changeRole.isPending
-    ? changeRole.variables?.path.user_id
-    : changeStatus.isPending
-      ? changeStatus.variables?.path.user_id
-      : undefined
+  const savingIds = new Set(
+    [changeRole, changeStatus].flatMap((mutation) =>
+      mutation.isPending && mutation.variables ? [mutation.variables.path.user_id] : [],
+    ),
+  )
 
   return (
     <>
@@ -86,12 +88,12 @@ function AdminPage() {
 
       {changeRole.isError && (
         <p role="alert" className="mb-4 text-danger">
-          {t('changeFailed')}
+          {t(roleErrorKey(changeRole.error))}
         </p>
       )}
       {changeStatus.isError && (
         <p role="alert" className="mb-4 text-danger">
-          {t('statusChangeFailed')}
+          {t(statusErrorKey(changeStatus.error))}
         </p>
       )}
 
@@ -105,7 +107,7 @@ function AdminPage() {
         <UsersTable
           users={users.data}
           meId={me.id}
-          savingId={savingId}
+          savingIds={savingIds}
           onChangeRole={(userId, next) => {
             const user = users.data.find((row) => row.id === userId)
             if (!user || user.role === next) return
@@ -139,4 +141,18 @@ function AdminPage() {
       />
     </>
   )
+}
+
+// Texts in admin.json. A refusal that a retry cannot fix gets its own message.
+function roleErrorKey(error: unknown) {
+  const code = error instanceof ApiError ? error.code : undefined
+  if (code === 'cannot_change_admin_role') return 'changeRefused.adminRole'
+  if (code === 'cannot_promote_disabled') return 'changeRefused.disabledAccount'
+  return 'changeFailed'
+}
+
+function statusErrorKey(error: unknown) {
+  const code = error instanceof ApiError ? error.code : undefined
+  if (code === 'cannot_change_admin_status') return 'changeRefused.adminStatus'
+  return 'statusChangeFailed'
 }

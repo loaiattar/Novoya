@@ -19,8 +19,9 @@ class ChangeUserStatus:
     """Disable or enable a user's account, and remember who did it and when.
 
     It does not check that the caller is an admin: the route does (require_admin).
-    Disabling also closes every session of the user: the session check already refuses a
+    Both changes close every session of the user: the session check already refuses a
     disabled account, but without this an enabled account again would find its old sessions.
+    Closing them again on enable also catches a sign-in that raced the disable.
     """
 
     def __init__(
@@ -43,7 +44,6 @@ class ChangeUserStatus:
         now = self._clock.now()
         if target.change_status(cmd.new_status, changed_by=cmd.changed_by, now=now):
             await self._users.save(target)
-            if cmd.new_status is UserStatus.DISABLED:
-                await self._sessions.revoke_all_for_user(target.id, now)
+            await self._sessions.revoke_all_for_user(target.id, now)
             await self._uow.commit()
         return target

@@ -17,12 +17,13 @@ const ADMIN: MeResponse = {
   role: 'admin',
   locale: 'en',
   status: 'active',
-  status_changed_by: null,
-  status_changed_at: null,
   email_verified: true,
   created_at: '2026-08-18T10:00:00Z',
   sign_in_methods: ['password'],
 }
+
+// The admin as the users list shows them.
+const ADMIN_ROW: UserResponse = { ...ADMIN, status_changed_by: null, status_changed_at: null }
 
 const LEA: UserResponse = {
   id: '00000000-0000-4000-8000-000000000002',
@@ -68,6 +69,8 @@ let me: MeResponse
 let signedIn: boolean
 let planAnswer: (path: string) => Response | Promise<Response>
 let users: UserResponse[]
+// The code the API answers PATCH /admin/users/{id}/status with, or null to accept it.
+let statusRefusal: string | null
 let requests: { method: string; path: string; search: string; body?: unknown }[]
 
 function mockApi() {
@@ -89,6 +92,7 @@ function mockApi() {
     }
     const status = url.pathname.match(/^\/admin\/users\/([^/]+)\/status$/)
     if (status && request.method === 'PATCH') {
+      if (statusRefusal) return Response.json({ code: statusRefusal, detail: 'refused' }, { status: 403 })
       const next = (body as { status: UserResponse['status'] }).status
       const changed = { status: next, status_changed_by: ADMIN.id, status_changed_at: '2026-10-22T09:00:00Z' }
       users = users.map((user) => (user.id === status[1] ? { ...user, ...changed } : user))
@@ -116,7 +120,8 @@ describe('back-office and plan screens', () => {
     client.setConfig({ baseUrl: 'http://api.test' })
     me = ADMIN
     signedIn = true
-    users = [ADMIN, LEA]
+    users = [ADMIN_ROW, LEA]
+    statusRefusal = null
     planAnswer = (path) =>
       path === `/plans/${PLAN_ID}`
         ? Response.json(PLAN)
@@ -208,12 +213,39 @@ describe('back-office and plan screens', () => {
 
   it('offers no disable action on their own account nor on another admin', async () => {
     const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
-    users = [ADMIN, LEA, OTHER_ADMIN]
+    users = [ADMIN_ROW, LEA, OTHER_ADMIN]
     renderAt('/admin')
 
     expect(await screen.findByRole('button', { name: "Disable Léa Morel's account" })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: "Disable Arthur Roche's account" })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: "Disable Inès Faure's account" })).not.toBeInTheDocument()
+  })
+
+  it('explains a refused status change and refreshes the list', async () => {
+    renderAt('/admin')
+
+    fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
+    const dialog = await screen.findByRole('alertdialog')
+    // Meanwhile, another tab made Léa an admin.
+    users = [ADMIN_ROW, { ...LEA, role: 'admin' }]
+    statusRefusal = 'cannot_change_admin_status'
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Disable account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('you cannot disable or enable their account')
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Role of Léa Morel' })).toHaveDisplayValue('Admin'))
+    expect(screen.queryByRole('button', { name: "Disable Léa Morel's account" })).not.toBeInTheDocument()
+  })
+
+  it("locks another admin's role, and keeps a disabled account a client", async () => {
+    const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
+    users = [ADMIN_ROW, { ...LEA, status: 'disabled' }, OTHER_ADMIN]
+    renderAt('/admin')
+
+    expect(await screen.findByRole('combobox', { name: 'Role of Inès Faure' })).toBeDisabled()
+    const lea = screen.getByRole('combobox', { name: 'Role of Léa Morel' })
+    expect(lea).toBeEnabled()
+    expect(within(lea).getByRole('option', { name: 'Agent' })).toBeDisabled()
+    expect(within(lea).getByRole('option', { name: 'Admin' })).toBeDisabled()
   })
 
   it('filters the users by role', async () => {

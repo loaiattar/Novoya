@@ -25,10 +25,15 @@
   },
   "changeFailed": "Le rôle n’a pas pu être changé. Veuillez réessayer.",
   "statusChangeFailed": "Le compte n’a pas pu être modifié. Veuillez réessayer.",
+  "changeRefused": {
+    "adminRole": "Cette personne est admin : vous ne pouvez pas changer son rôle.",
+    "adminStatus": "Cette personne est admin : vous ne pouvez pas désactiver ni réactiver son compte.",
+    "disabledAccount": "Ce compte est désactivé : réactivez-le avant de lui donner le rôle Agent ou Admin."
+  },
   "loading": "Chargement des utilisateurs…",
   "loadFailed": "Impossible de charger les utilisateurs.",
   "empty": "Aucun utilisateur ne correspond à cette recherche.",
-  "note": "Les rôles Agent et Admin sont disponibles uniquement pour les e-mails vérifiés. Vous ne pouvez modifier ni votre propre rôle ou compte, ni le compte d’un autre admin.",
+  "note": "Les rôles Agent et Admin sont disponibles uniquement pour les e-mails vérifiés. Un compte désactivé reste Client. Vous ne pouvez modifier ni votre propre rôle ou compte, ni le rôle ou le compte d’un autre admin.",
   "table": {
     "caption": "Utilisateurs et rôles",
     "user": "Utilisateur",

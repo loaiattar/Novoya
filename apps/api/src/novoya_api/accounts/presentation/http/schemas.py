@@ -70,7 +70,9 @@ class UpdateMeRequest(BaseModel):
     locale: Literal["en", "fr"]
 
 
-class UserResponse(BaseModel):
+class AccountResponse(BaseModel):
+    """What every account shows, its owner included."""
+
     id: UUID
     email: str
     name: str | None
@@ -79,41 +81,78 @@ class UserResponse(BaseModel):
     role: RoleName
     locale: Literal["en", "fr"]
     status: Literal["active", "disabled"]
-    # The last status change: the admin who made it and when. None if it never changed.
-    status_changed_by: UUID | None
-    status_changed_at: datetime | None
     email_verified: bool
     created_at: datetime
 
+    @staticmethod
+    def fields_of(user: User) -> dict[str, object]:
+        return {
+            "id": user.id.value,
+            "email": user.email.value,
+            "name": user.name,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role.value,
+            "locale": user.locale.value,
+            "status": user.status.value,
+            "email_verified": user.is_email_verified,
+            "created_at": user.created_at,
+        }
+
+
+class UserResponse(AccountResponse):
+    """A user as an admin sees them."""
+
+    # The last status change: the admin who made it and when. None if it never changed.
+    # Kept out of MeResponse: a user does not learn which admin disabled them.
+    status_changed_by: UUID | None
+    status_changed_at: datetime | None
+
     @classmethod
     def of(cls, user: User) -> "UserResponse":
-        return cls(
-            id=user.id.value,
-            email=user.email.value,
-            name=user.name,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            role=user.role.value,
-            locale=user.locale.value,
-            status=user.status.value,
-            status_changed_by=user.status_changed_by.value if user.status_changed_by else None,
-            status_changed_at=user.status_changed_at,
-            email_verified=user.is_email_verified,
-            created_at=user.created_at,
+        return cls.model_validate(
+            {
+                **cls.fields_of(user),
+                "status_changed_by": user.status_changed_by.value
+                if user.status_changed_by
+                else None,
+                "status_changed_at": user.status_changed_at,
+            }
         )
 
 
-class MeResponse(UserResponse):
+def _sign_in_methods(account: AccountView) -> list[Literal["password", "google"]]:
+    methods: list[Literal["password", "google"]] = []
+    if account.has_password:
+        methods.append("password")
+    if account.has_google:
+        methods.append("google")
+    return methods
+
+
+class MeResponse(AccountResponse):
     sign_in_methods: list[Literal["password", "google"]]
 
     @classmethod
     def of_account(cls, account: AccountView) -> "MeResponse":
-        methods: list[Literal["password", "google"]] = []
-        if account.has_password:
-            methods.append("password")
-        if account.has_google:
-            methods.append("google")
-        return cls(**UserResponse.of(account.user).model_dump(), sign_in_methods=methods)
+        return cls.model_validate(
+            {**cls.fields_of(account.user), "sign_in_methods": _sign_in_methods(account)}
+        )
+
+
+class UserDetailResponse(UserResponse):
+    """One user for an admin: with their sign-in methods."""
+
+    sign_in_methods: list[Literal["password", "google"]]
+
+    @classmethod
+    def of_account(cls, account: AccountView) -> "UserDetailResponse":
+        return cls.model_validate(
+            {
+                **UserResponse.of(account.user).model_dump(),
+                "sign_in_methods": _sign_in_methods(account),
+            }
+        )
 
 
 def role_of(name: RoleName | None) -> Role | None:

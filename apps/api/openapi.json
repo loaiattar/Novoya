@@ -1063,30 +1063,6 @@
             ],
             "title": "Status",
             "type": "string"
-          },
-          "status_changed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status Changed At"
-          },
-          "status_changed_by": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status Changed By"
           }
         },
         "required": [
@@ -1098,8 +1074,6 @@
           "role",
           "locale",
           "status",
-          "status_changed_by",
-          "status_changed_at",
           "email_verified",
           "created_at",
           "sign_in_methods"
@@ -2743,7 +2717,141 @@
         "title": "UpdatePartnerRequest",
         "type": "object"
       },
+      "UserDetailResponse": {
+        "description": "One user for an admin: with their sign-in methods.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "role": {
+            "enum": [
+              "client",
+              "agent",
+              "admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "sign_in_methods": {
+            "items": {
+              "enum": [
+                "password",
+                "google"
+              ],
+              "type": "string"
+            },
+            "title": "Sign In Methods",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "status_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Changed At"
+          },
+          "status_changed_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Changed By"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "first_name",
+          "last_name",
+          "role",
+          "locale",
+          "status",
+          "email_verified",
+          "created_at",
+          "status_changed_by",
+          "status_changed_at",
+          "sign_in_methods"
+        ],
+        "title": "UserDetailResponse",
+        "type": "object"
+      },
       "UserResponse": {
+        "description": "A user as an admin sees them.",
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -2855,10 +2963,10 @@
           "role",
           "locale",
           "status",
-          "status_changed_by",
-          "status_changed_at",
           "email_verified",
-          "created_at"
+          "created_at",
+          "status_changed_by",
+          "status_changed_at"
         ],
         "title": "UserResponse",
         "type": "object"
@@ -3827,7 +3935,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MeResponse"
+                  "$ref": "#/components/schemas/UserDetailResponse"
                 }
               }
             },
