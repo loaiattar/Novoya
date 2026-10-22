@@ -16,7 +16,7 @@ function AuthLayout() {
     <AuthTemplate
       media={
         <AuthMedia
-          image="/images/aegean-boat"
+          image="/images/lyon-traboules"
           imageAlt={t('imageAlt')}
           logo={<HomeLink light />}
           quote={t('quote')}

@@ -11,7 +11,7 @@ How `src/` is organised:
 
 ## Styling
 
-Tailwind CSS 4, with the design tokens from the Figma Make mockup in `src/index.css` (`@theme`): colours (`ink`, `ivory`, `paper`, `sand`, `coral`, `sage`, `muted`, `line`), the fonts (DM Sans for text, Gloock for headings) and shadows. Use the tokens (`bg-ink`, `text-muted`, `font-serif`), not raw hex values.
+Tailwind CSS 4, with the design tokens from the marketing team's Figma Make site (https://spiral-lift-96881120.figma.site/) in `src/index.css` (`@theme`). The colour names come from the first mockup and keep it: `ink` is the navy, `ivory` and `paper` the chalk, `coral` the yellow, `sage` and `sky` the sky blue, plus `sand`, `muted` and `line`. The fonts are Bricolage Grotesque for headings (`font-serif`, lower case), Instrument Sans for text and IBM Plex Mono for eyebrows (`font-mono`). Use the tokens (`bg-ink`, `text-muted`, `font-serif`), not raw hex values.
 
 shadcn/ui components live in `src/components/ui/` (`components.json` is set up). Add one with `pnpm dlx shadcn@latest add <name>`, then check its imports use `@/lib/utils`. They are for interactive parts that need keyboard and screen-reader support (menus, tabs); our own atoms, molecules and organisms are built on top.
 

@@ -1,40 +1,48 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import '@fontsource/dm-sans/400.css';
-@import '@fontsource/dm-sans/500.css';
-@import '@fontsource/dm-sans/600.css';
-@import '@fontsource/gloock/400.css';
+@import '@fontsource/instrument-sans/400.css';
+@import '@fontsource/instrument-sans/600.css';
+@import '@fontsource/instrument-sans/700.css';
+@import '@fontsource/bricolage-grotesque/600.css';
+@import '@fontsource/bricolage-grotesque/800.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
 
 /*
- * Novoya's design tokens, from the Figma Make mockup "UI/UX Design for Novoya".
- * The mockup is light only, so the app is too (color-scheme: light).
+ * Novoya's design tokens, from the marketing team's Figma Make site (2026-10-22,
+ * https://spiral-lift-96881120.figma.site/). The names stay from the first mockup so every
+ * screen takes the new look: ink is the navy, ivory and paper the chalk, coral the yellow,
+ * sage the sky blue. The site is light only, so the app is too (color-scheme: light).
  */
 @theme {
-  --color-ink: #18332f;
-  --color-ink-2: #24443f;
-  --color-ivory: #f5f1e8;
-  --color-paper: #fbfaf6;
-  --color-sand: #dfd6c7;
-  --color-coral: #ef765e;
-  --color-coral-light: #f58a72;
-  /* Coral dark enough for small text on paper and ivory (4.5:1). */
-  --color-coral-text: #b04a33;
-  --color-sage: #b7c1ad;
-  --color-muted: #646e6a;
-  --color-line: rgb(24 51 47 / 0.16);
+  --color-ink: #16233f;
+  --color-ink-2: #22325a;
+  --color-ivory: #f6f1e7;
+  --color-paper: #f6f1e7;
+  --color-sand: #e6dccb;
+  --color-coral: #f2b705;
+  --color-coral-light: #f7c935;
+  /* The site's brick (#c4553a), darkened for small text on chalk (4.5:1). */
+  --color-coral-text: #a8432b;
+  --color-sage: #bcd3ea;
+  --color-sky: #bcd3ea;
+  /* The site's ballast (#6b7385) is 4.2:1 on chalk: one step darker passes 4.5:1. */
+  --color-muted: #5c6476;
+  --color-line: rgb(22 35 63 / 0.16);
   --color-ok: #65a77a;
   --color-pending: #dba652;
   --color-danger: #b42318;
 
-  --font-sans: 'DM Sans', Arial, sans-serif;
-  --font-serif: 'Gloock', Georgia, serif;
+  --font-sans: 'Instrument Sans', Arial, sans-serif;
+  --font-serif: 'Bricolage Grotesque', 'Instrument Sans', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  --tracking-display: -0.04em;
-  --tracking-eyebrow: 0.19em;
+  --tracking-display: -0.025em;
+  --tracking-eyebrow: 0.16em;
 
-  --shadow-card: 0 22px 70px rgb(24 51 47 / 0.09);
-  --shadow-float: 0 18px 70px rgb(24 51 47 / 0.2);
-  --shadow-menu: 0 15px 50px rgb(24 51 47 / 0.15);
+  --shadow-card: 0 22px 70px rgb(22 35 63 / 0.09);
+  --shadow-float: 0 18px 70px rgb(22 35 63 / 0.2);
+  --shadow-menu: 0 15px 50px rgb(22 35 63 / 0.15);
 
   --animate-zoom: zoom 16s ease-out both;
   --animate-reveal: reveal 0.9s 0.2s both;
@@ -98,12 +106,14 @@
   h1,
   h2 {
     font-family: var(--font-serif);
-    font-weight: 400;
+    font-weight: 800;
     letter-spacing: var(--tracking-display);
+    /* The new design sets every display heading in lower case. */
+    text-transform: lowercase;
   }
 
   em {
-    font-weight: 400;
+    font-style: normal;
   }
 
   button:not(:disabled),

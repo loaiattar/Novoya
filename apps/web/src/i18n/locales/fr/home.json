@@ -1,26 +1,22 @@
 {
-  "titleStart": "Votre envie,",
-  "titleEnd": "notre itinéraire.",
-  "describeTrip": "Décrire mon voyage",
-  "heroImageAlt": "Côte rocheuse de Crète baignée par une eau turquoise",
-  "heroEyebrow": "Agence humaine · Assistant IA",
-  "heroIntro": "Des voyages sur-mesure, imaginés avec vous et composés uniquement auprès de partenaires que nous connaissons.",
+  "titleStart": "Le meilleur du voyage,",
+  "titleEnd": "c’est le détour.",
+  "describeTrip": "Composer mon week-end",
+  "heroImageAlt": "Voyageuse lisant dans un train",
+  "heroEyebrow": "Voyages composés par des humains, éclairés par l’IA",
+  "heroIntro": "Une envie suffit. Nous lui donnons une forme, puis un conseiller DÉTOUR la rend possible avec les bonnes adresses.",
   "continueWithGoogle": "Continuer avec Google",
-  "heroFoot": "Prendre le large",
+  "heroFoot": "Prenez le pas de côté.",
   "manifesto": {
-    "eyebrow": "La promesse {{agency}}",
-    "titleStart": "Moins chercher.",
-    "titleEnd": "Mieux partir.",
-    "lead": "Vous racontez une envie. Notre IA lui donne une première forme. Puis un agent {{agency}} la rend possible, avec attention et discernement.",
-    "honestyTitle": "Notre parti pris : l’honnêteté.",
-    "honestyText": "Nous ne proposons que des destinations où nos partenaires sont actifs. Si nous ne pouvons pas vous y emmener, nous vous le dirons."
+    "eyebrow": "Notre façon de faire",
+    "titleStart": "moins de bruit.",
+    "titleEnd": "plus de justesse.",
+    "lead": "Vous racontez. L’IA dessine un aperçu sans prix. Un conseiller vérifie, chiffre et vous adresse l’offre de l’agence."
   },
   "popular": {
-    "eyebrow": "Carnet d’inspirations",
-    "title": "Les plus désirés",
-    "intro": "Trois échappées souvent imaginées par nos voyageurs, à réinterpréter selon vos envies.",
-    "badgePopular": "Populaire",
-    "badgeSelection": "Sélection"
+    "eyebrow": "À contre-courant",
+    "title": "trois idées pour bifurquer.",
+    "all": "Toutes les destinations"
   },
   "trips": {
     "elounda": {
@@ -39,61 +35,34 @@
       "copy": "Une maison à cour confidentielle, séjour de 2 nuits minimum."
     }
   },
-  "tags": {
-    "sea": "mer",
-    "calm": "calme",
-    "beach": "plage",
-    "sport": "sport",
-    "culture": "culture",
-    "riad": "riad"
-  },
   "method": {
-    "eyebrow": "Une méthode simple",
-    "titleStart": "De l’envie",
-    "titleEnd": "au départ.",
-    "intro": "La technologie pour clarifier vos envies. L’humain pour négocier, vérifier et prendre soin du reste.",
+    "eyebrow": "Le bon détour, en trois temps",
+    "titleStart": "simple,",
+    "titleEnd": "pas pressé.",
     "steps": {
-      "describe": {
-        "title": "Je décris",
-        "copy": "Une phrase suffit. Vos mots restent chez {{agency}}."
+      "wish": {
+        "title": "Une envie",
+        "copy": "Quelques mots, vos dates, votre rythme. Rien n’est importé d’ailleurs."
       },
-      "refine": {
-        "title": "Je précise",
-        "copy": "Quelques préférences, seulement si vous le souhaitez."
+      "preview": {
+        "title": "Un aperçu",
+        "copy": "Un itinéraire jour par jour, sans prix et sans fausse promesse."
       },
-      "discover": {
-        "title": "Je découvre",
-        "copy": "Un aperçu jour par jour, toujours modifiable."
-      },
-      "exchange": {
-        "title": "J’échange",
-        "copy": "Un conseiller prend le relais et envoie un devis."
-      }
-    }
-  },
-  "trust": {
-    "eyebrow": "Un voyage vrai, dès le premier mot",
-    "titleStart": "Rien d’inventé.",
-    "titleEnd": "Rien d’intrusif.",
-    "promises": {
-      "realOffers": {
-        "title": "Des offres réelles",
-        "copy": "Chaque proposition correspond à une offre active chez l’un de nos partenaires."
-      },
-      "noPrice": {
-        "title": "Un aperçu sans prix",
-        "copy": "L’IA compose et ajuste le voyage avec vous, sans jamais inventer de montant."
-      },
-      "yourWords": {
-        "title": "Vos mots, seulement",
-        "copy": "Jamais d’import d’e-mails ou de réseaux sociaux. Vous gardez le contrôle."
+      "offer": {
+        "title": "Une offre humaine",
+        "copy": "Votre conseiller négocie, vérifie et chiffre avant de vous l’envoyer."
       }
     }
   },
   "closing": {
-    "eyebrow": "Votre prochain voyage commence ici",
-    "titleStart": "Où avez-vous",
-    "titleEnd": "envie d’être ?",
-    "start": "Commencer"
+    "eyebrow": "L’envie est un excellent début",
+    "titleStart": "où voulez-vous faire",
+    "titleEnd": "un pas de côté ?",
+    "start": "Composer mon week-end"
+  },
+  "reviews": {
+    "eyebrow": "Paroles de voyageurs",
+    "title": "ils ont pris le temps de nous écrire.",
+    "rating": "Note : {{rating}} sur 5"
   }
 }

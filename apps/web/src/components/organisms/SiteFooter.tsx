@@ -15,27 +15,27 @@ export function SiteFooter({ className }: { className?: string }) {
   const { t } = useTranslation()
   const agency = useAgency()
   return (
-    <footer className={cn('bg-paper px-5 pt-12 pb-4 md:px-[5vw] md:pt-14', className)}>
+    <footer className={cn('bg-ink text-ivory px-5 pt-12 pb-4 md:px-[5vw] md:pt-14', className)}>
       <div className="grid gap-10 md:grid-cols-[1fr_auto] md:items-start">
         <div className="grid gap-3">
-          <HomeLink />
+          <HomeLink light />
           {agency.tagline && <p className="m-0 max-w-[22rem] font-serif text-base">{agency.tagline}</p>}
           {agency.foundedYear && (
-            <p className="m-0 text-xs text-muted">{t('footer.since', { year: agency.foundedYear })}</p>
+            <p className="m-0 text-xs text-ivory/70">{t('footer.since', { year: agency.foundedYear })}</p>
           )}
         </div>
-        <address className="m-0 grid content-start text-sm not-italic text-ink">
-          <Eyebrow className="mb-1 text-muted">{t('footer.contact')}</Eyebrow>
+        <address className="m-0 grid content-start text-sm not-italic text-ivory">
+          <Eyebrow light className="mb-1">{t('footer.contact')}</Eyebrow>
           {agency.address && <p className="m-0">{agency.address}</p>}
           {agency.phone && (
-            <a href={agency.phone.href} className="min-h-11 w-fit content-center text-ink underline-offset-4 hover:underline">
+            <a href={agency.phone.href} className="min-h-11 w-fit content-center text-ivory underline-offset-4 hover:underline">
               {agency.phone.display}
             </a>
           )}
           {agency.email && (
             <a
               href={`mailto:${agency.email}`}
-              className="min-h-11 w-fit content-center break-all text-ink underline-offset-4 hover:underline"
+              className="min-h-11 w-fit content-center break-all text-ivory underline-offset-4 hover:underline"
             >
               {agency.email}
             </a>
@@ -47,7 +47,7 @@ export function SiteFooter({ className }: { className?: string }) {
                   <a
                     href={link.href}
                     rel="noreferrer"
-                    className="min-h-11 content-center capitalize text-ink underline-offset-4 hover:underline"
+                    className="min-h-11 content-center capitalize text-ivory underline-offset-4 hover:underline"
                   >
                     {link.network}
                   </a>
@@ -58,19 +58,19 @@ export function SiteFooter({ className }: { className?: string }) {
         </address>
       </div>
       {/* One line on a wide screen: the links, then the language and the copyright at the end. */}
-      <div className="mt-10 flex flex-wrap items-center gap-x-8 border-t border-line pt-3 text-sm md:mt-12">
+      <div className="mt-10 flex flex-wrap items-center gap-x-8 border-t border-ivory/20 pt-3 text-sm md:mt-12">
         <nav aria-label={t('footer.nav')} className="flex flex-wrap items-center gap-x-6">
-          <Link to="/destinations" className="min-h-11 content-center text-ink underline-offset-4 hover:underline">
+          <Link to="/destinations" className="min-h-11 content-center text-ivory underline-offset-4 hover:underline">
             {t('footer.destinations')}
           </Link>
-          <Link to="/legal" className="min-h-11 content-center text-ink underline-offset-4 hover:underline">
+          <Link to="/legal" className="min-h-11 content-center text-ivory underline-offset-4 hover:underline">
             {t('footer.legalNotices')}
           </Link>
         </nav>
         <div className="flex flex-wrap items-center gap-x-6 md:ms-auto">
           {/* Pulled back by the buttons' own padding: "EN" starts on the line's edge on a phone. */}
-          <LanguageChoice className="-ms-3 md:ms-0" />
-          <span className="text-xs text-muted">{t('footer.copyright', { year: YEAR, name: agency.displayName })}</span>
+          <LanguageChoice light className="-ms-3 md:ms-0" />
+          <span className="text-xs text-ivory/70">{t('footer.copyright', { year: YEAR, name: agency.displayName })}</span>
         </div>
       </div>
     </footer>

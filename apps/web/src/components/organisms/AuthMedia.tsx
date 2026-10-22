@@ -17,10 +17,10 @@ export function AuthMedia({ image, imageAlt, logo, quote, caption }: Props) {
       <Photo src={image} alt={imageAlt} sizes="(min-width: 768px) 52vw, 100vw" fetchPriority="high" className="absolute inset-0 size-full object-cover" />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgb(15_40_35/0.55),transparent_120px),linear-gradient(0deg,rgb(15_40_35/0.65),rgb(15_40_35/0.05))]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgb(22_35_63/0.85),transparent_200px),linear-gradient(0deg,rgb(22_35_63/0.65),rgb(22_35_63/0.05))]"
       />
       <div className="absolute top-5 left-5 md:top-10 md:left-[4vw]">{logo}</div>
-      <blockquote className="relative mb-[25px] hidden max-w-[570px] font-serif text-[35px] leading-[1.3] md:block">
+      <blockquote className="relative mb-[25px] hidden max-w-[570px] font-serif text-[35px] leading-[1.2] font-extrabold tracking-[-0.025em] md:block">
         {quote}
       </blockquote>
       <p className="relative hidden text-xs tracking-[0.15em] uppercase md:block">{caption}</p>
