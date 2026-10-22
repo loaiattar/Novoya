@@ -283,6 +283,7 @@ Atomic Design ne parle pas des animations. On les **nomme** pour ne pas les reco
 - appels HTTP → `src/api/` (`client.ts` + `generated/` via `pnpm gen:api`)
 - arbre de routes généré → `src/routeTree.gen.ts` (ne pas éditer)
 - Gmail, Instagram, Docs, voyages importés
+- chat concierge (hors scope : souhait → panneau → plan → devis)
 
 ---
 

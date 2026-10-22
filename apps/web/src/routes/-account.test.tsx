@@ -53,6 +53,11 @@ function mockApi() {
     const path = new URL(request.url).pathname
     const text = request.method === 'POST' ? await request.text() : ''
     calls.push({ method: request.method, path, body: text ? JSON.parse(text) : undefined })
+    if (path === '/me' && request.method === 'DELETE') {
+      const answer = answers['DELETE /me']?.() ?? new Response(null, { status: 204 })
+      if (answer.status === 204) signedIn = null
+      return answer
+    }
     if (path === '/me') {
       return signedIn
         ? Response.json(signedIn)
@@ -394,5 +399,71 @@ describe('changing the password in the account settings', () => {
 
     expect(await screen.findByText(/You sign in with Google/)).toBeInTheDocument()
     expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument()
+  })
+})
+
+describe('deleting the account', () => {
+  const deletes = () => calls.filter((call) => call.method === 'DELETE' && call.path === '/me')
+
+  it('says what Novoya stores', async () => {
+    signedIn = CAMILLE
+    renderAt('/settings')
+
+    const stored = await screen.findByRole('region', { name: 'What DÉTOUR stores about you' })
+    for (const item of [/account/i, /wishes/i, /plans/i, /quotes/i]) {
+      expect(stored).toHaveTextContent(item)
+    }
+  })
+
+  it('asks before deleting, and deletes nothing when cancelled', async () => {
+    signedIn = CAMILLE
+    renderAt('/settings')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('This cannot be undone')
+    fireEvent.click(screen.getByRole('button', { name: 'Keep my account' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(deletes()).toEqual([])
+    // Back where the user was, for keyboard and screen reader users.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Delete my account' })).toHaveFocus())
+  })
+
+  it('deletes the account once confirmed, then leaves the signed-in space', async () => {
+    signedIn = CAMILLE
+    const { router } = renderAt('/settings')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes, delete everything' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+    expect(deletes()).toHaveLength(1)
+  })
+
+  it('explains it when the API refuses a staff account', async () => {
+    signedIn = CAMILLE
+    answers['DELETE /me'] = error(403, 'staff_account')
+    const { router } = renderAt('/settings')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes, delete everything' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Agency staff accounts cannot be deleted here')
+    expect(router.state.location.pathname).toBe('/settings')
+  })
+
+  it('shows no delete button to agency staff', async () => {
+    signedIn = { ...CAMILLE, role: 'agent' }
+    renderAt('/settings')
+
+    expect(await screen.findByText(/Agency staff accounts cannot be deleted here/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete my account' })).not.toBeInTheDocument()
+  })
+
+  it('is in French for a French account', async () => {
+    signedIn = { ...CAMILLE, locale: 'fr' }
+    renderAt('/settings')
+
+    expect(await screen.findByRole('button', { name: 'Supprimer mon compte' })).toBeInTheDocument()
   })
 })

@@ -17,6 +17,7 @@ from novoya_api.accounts.application.use_cases.change_user_status import (
     ChangeUserStatus,
     ChangeUserStatusCommand,
 )
+from novoya_api.accounts.application.use_cases.delete_account import DeleteAccount
 from novoya_api.accounts.application.use_cases.get_account import GetAccount
 from novoya_api.accounts.application.use_cases.list_users import ListUsers
 from novoya_api.accounts.application.use_cases.password_reset import (
@@ -57,6 +58,7 @@ from novoya_api.accounts.presentation.http.dependencies import (
     get_change_password,
     get_change_user_role,
     get_change_user_status,
+    get_delete_account,
     get_get_account,
     get_list_users,
     get_register,
@@ -369,6 +371,24 @@ async def update_me(
 ) -> MeResponse:
     """Change the signed-in user's language (en or fr). Answers like GET /me."""
     return MeResponse.of_account(await use_case(user.user_id, Locale(body.locale)))
+
+
+@me_router.delete(
+    "",
+    operation_id="deleteMe",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_me(
+    user: CurrentUser,
+    response: Response,
+    settings: SettingsDep,
+    use_case: Annotated[DeleteAccount, Depends(get_delete_account)],
+) -> None:
+    """Delete my account and everything Novoya stored about me: wishes, plans and quotes with
+    their PDF (GDPR). Signs me out. Clients only: 403 staff_account for an agent or an admin,
+    whose plans and quotes must keep pointing to them."""
+    await use_case(user.user_id)
+    clear_session_cookie(response, settings)
 
 
 @admin_users_router.get("", operation_id="listUsers")

@@ -18,8 +18,7 @@ export type ThreadSummary = {
   title: string
   /** The current preview's version, or null for a draft. */
   version: number | null
-  messageCount: number
-  /** ISO date and time of the last message. */
+  /** ISO date and time of the last change. */
   updatedAt: string
 }
 
@@ -29,7 +28,7 @@ type Props = {
   onSelect: (id: string) => void
 }
 
-/** The client's trips, one card each. Choosing one shows its conversation. */
+/** The client's trips, one card each. Choosing one shows its details. */
 export function ThreadList({ threads, selectedId, onSelect }: Props) {
   const { t, i18n } = useTranslation('trips')
   const locale = i18n.language
@@ -64,9 +63,7 @@ export function ThreadList({ threads, selectedId, onSelect }: Props) {
                 </small>
                 <b className="my-1 font-serif text-[17px] font-normal">{thread.title}</b>
                 <span className="text-xs text-muted">
-                  {thread.version === null
-                    ? t('draftSummary', { count: thread.messageCount })
-                    : t('previewSummary', { version: thread.version, count: thread.messageCount })}
+                  {thread.version === null ? t('draftSummary') : t('previewSummary', { version: thread.version })}
                 </span>
               </span>
               <time dateTime={thread.updatedAt} className="hidden self-start text-xs text-muted sm:block">

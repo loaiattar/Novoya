@@ -2,6 +2,7 @@
 
 - owner_id(wish_id) -> the user who sent the wish, or None when there is none
 - trips(wish_ids) -> text, destination, dates, travellers, budget and tags for those wishes
+- ids_for_user(user_id) -> the ids of this user's wishes
 - delete_for_user(user_id) -> erases every wish of this user. Erase their plans first
   (plans.wish_id has no cascade).
 
@@ -66,6 +67,11 @@ async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID
             ),
         )
     return found
+
+
+async def ids_for_user(user_id: UUID, *, session: AsyncSession) -> list[UUID]:
+    """The ids of this user's wishes, for example to erase their plans first."""
+    return await SqlWishRepository(session).ids_for_user(user_id)
 
 
 async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:

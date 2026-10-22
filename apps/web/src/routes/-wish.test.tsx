@@ -492,17 +492,31 @@ describe('the landing page', () => {
     expect(document.querySelector('img[src="/icon-192.png"]')).not.toBeNull()
   })
 
+  it('credits the Novoya team in French on the legal notices', async () => {
+    signedIn = null
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['fr-FR'])
+    renderAt('/legal')
+
+    const notices = within((await screen.findByRole('main')).querySelector('dl') as HTMLElement)
+    expect(await notices.findByText('L’équipe Novoya, pour DÉTOUR')).toBeInTheDocument()
+    expect(screen.queryByText(/équipe de développement DÉTOUR/)).not.toBeInTheDocument()
+  })
+
   it('opens the legal notices with confirmed facts only', async () => {
     signedIn = null
     renderAt('/legal')
 
     expect(await screen.findByRole('heading', { name: 'Legal notices' })).toBeInTheDocument()
     expect(screen.getByText(/This website is the website of DÉTOUR Voyages/)).toBeInTheDocument()
-    const notices = within(document.querySelector('dl') as HTMLElement)
+    const notices = within(document.querySelector('main dl') as HTMLElement)
     expect(notices.getByText('DÉTOUR Voyages')).toBeInTheDocument()
     expect(notices.getByText('contact@detour-voyages.fr')).toBeInTheDocument()
-    expect(notices.getByText('Novoya development team, on behalf of the Novoya project')).toBeInTheDocument()
-    // No publication director until the agency names one: it is a legal role, not a credit.
+    // The site was made by the Novoya team for the agency: the agency has no development team.
+    expect(notices.getByText('The Novoya team, for DÉTOUR')).toBeInTheDocument()
+    expect(screen.queryByText(/DÉTOUR development team/)).not.toBeInTheDocument()
+    expect(screen.getByText(/This website is the website of DÉTOUR Voyages/).textContent).toBe(
+      'This website is the website of DÉTOUR Voyages. It was designed and developed by the Novoya team.',
+    )
     expect(notices.queryByText('Publication director')).not.toBeInTheDocument()
     expect(screen.queryByText(/IM044120000/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Écluses/)).not.toBeInTheDocument()

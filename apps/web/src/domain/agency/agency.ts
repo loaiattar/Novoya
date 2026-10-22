@@ -60,7 +60,7 @@ export type AgencyView = {
   phone?: { href: string; display: string }
   address?: string
   social: { network: string; href: string }[]
-  logo: { src: string; alt: string }
+  logo: { src: string; alt: string; width: number; height: number }
   legalLines: LegalLine[]
 }
 
@@ -89,7 +89,7 @@ function photoSrc(path: string): string {
   return `/${path.replace(/\.[a-z]+$/i, '')}`
 }
 
-const data = raw as {
+type AgencyFile = {
   identity: {
     trade_name: Sourced<string>
     display_name?: Sourced<string>
@@ -119,9 +119,11 @@ const data = raw as {
   }
   social?: Record<string, Sourced<string>>
   images: {
-    logo: { value: string; alt?: Localized; status: Status }
+    logo: { value: string; alt?: Localized; status: Status; width: number; height: number }
   }
 }
+
+const data = raw as AgencyFile
 
 /** Confirmed agency facts for one language. `to_check` values are omitted. */
 export function agencyView(locale: Locale): AgencyView {
@@ -177,6 +179,8 @@ export function agencyView(locale: Locale): AgencyView {
     logo: {
       src: photoSrc(data.images.logo.value),
       alt: (logoAlt && (logoAlt[locale] || logoAlt.fr)) || tradeName,
+      width: data.images.logo.width,
+      height: data.images.logo.height,
     },
     legalLines,
   }

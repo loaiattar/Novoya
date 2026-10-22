@@ -8,10 +8,12 @@
   becomes quoted in the caller's session (the caller commits, with its quote) and its priced
   items come back, never with a partner name. Raises PlanNotFound (404), PermissionDenied
   (403, another agent), InvalidTransition (409, not negotiating) or PlanNotReady (422).
+- delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
+  go with them. Erase the user's quotes first (quoting.public.delete_for_user) and the wishes
+  after (wishes.public.delete_for_user): neither has a cascade. The caller commits.
 
 Planned:
 - mark_accepted(plan_id), mark_rejected(plan_id) (called by quoting)
-- delete_for_user(user_id)
 """
 
 from uuid import UUID
@@ -40,6 +42,7 @@ from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWor
 from novoya_api.shared.infrastructure.llm.client import get_orchestrator
 from novoya_api.shared.infrastructure.llm.errors import LLMError
 from novoya_api.shared.infrastructure.system_clock import SystemClock
+from novoya_api.wishes.public import ids_for_user as wish_ids_for_user
 
 __all__ = [
     "NoOfferFits",
@@ -51,6 +54,7 @@ __all__ = [
     "PricedExtra",
     "PricedItem",
     "PricedPlan",
+    "delete_for_user",
     "generate_plan",
     "quote_plan",
 ]
@@ -91,3 +95,9 @@ def _writer() -> PlanWriter:
     # No session: each tool call reads in a short session of its own, so no connection is held
     # while the model thinks between calls.
     return LlmPlanWriter(orchestrator, travel_tools(), DEADLINE_SECONDS)
+
+
+async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:
+    """Erase the plans of this user's wishes, after their quotes. The caller commits."""
+    wish_ids = await wish_ids_for_user(user_id, session=session)
+    await SqlPlanRepository(session).delete_for_wishes(wish_ids)

@@ -31,7 +31,7 @@ function TripsPage() {
           <h1 className="mb-3 text-[55px] leading-none md:text-[75px]">{t('title')}</h1>
           <p className="text-muted">{t('intro')}</p>
           <Button asChild className="mt-6 lg:absolute lg:right-[8vw] lg:bottom-15 lg:mt-0">
-            <Link to="/wish">{t('newConversation')}</Link>
+            <Link to="/wish">{t('newWish')}</Link>
           </Button>
         </section>
         <Tabs defaultValue="trips">
@@ -55,9 +55,7 @@ function TripsPage() {
                   key={selected.id}
                   title={selected.title}
                   version={selected.version}
-                  messageCount={selected.messageCount}
                   planId={selected.planId}
-                  messages={selected.messages}
                 />
               </>
             ) : (

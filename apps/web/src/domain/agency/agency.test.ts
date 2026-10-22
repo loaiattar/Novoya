@@ -4,6 +4,19 @@ import raw from '../../../brand/agency.json'
 import schema from '../../../brand/agency.schema.json'
 import { agencyView, shown } from './agency'
 
+describe('agency.json', () => {
+  it('has the fields the schema requires, with a known status on each sourced value', () => {
+    for (const key of schema.required) {
+      expect(raw).toHaveProperty(key)
+    }
+    expect(raw.images.logo.width).toBeGreaterThan(0)
+    expect(raw.images.logo.height).toBeGreaterThan(0)
+    expect(['confirmed', 'to_check']).toContain(raw.identity.trade_name.status)
+    expect(['confirmed', 'to_check']).toContain(raw.contact.email.status)
+    expect(['confirmed', 'to_check']).toContain(raw.images.logo.status)
+  })
+})
+
 describe('shown', () => {
   it('keeps a confirmed value', () => {
     expect(shown({ value: 'ok', status: 'confirmed' })).toBe('ok')
@@ -22,6 +35,8 @@ describe('agencyView', () => {
     expect(agency.foundedYear).toBe(2012)
     expect(agency.email).toBe('contact@detour-voyages.fr')
     expect(agency.logo.src).toBe('/images/logo')
+    expect(agency.logo.width).toBe(1536)
+    expect(agency.logo.height).toBe(512)
     expect(agency.tagline).toBe('Voyages insolites et week-ends sur mesure')
   })
 

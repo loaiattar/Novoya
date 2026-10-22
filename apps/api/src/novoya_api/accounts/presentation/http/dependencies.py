@@ -29,12 +29,14 @@ from novoya_api.accounts.application.ports.repositories import (
     UserRepository,
 )
 from novoya_api.accounts.application.ports.security import PasswordHasher, TokenGenerator
+from novoya_api.accounts.application.ports.user_data import UserDataEraser
 from novoya_api.accounts.application.services.session_opener import SessionOpener, SessionPolicy
 from novoya_api.accounts.application.use_cases.authenticate_session import AuthenticateSession
 from novoya_api.accounts.application.use_cases.change_locale import ChangeLocale
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import ChangeUserRole
 from novoya_api.accounts.application.use_cases.change_user_status import ChangeUserStatus
+from novoya_api.accounts.application.use_cases.delete_account import DeleteAccount
 from novoya_api.accounts.application.use_cases.get_account import GetAccount
 from novoya_api.accounts.application.use_cases.list_users import ListUsers
 from novoya_api.accounts.application.use_cases.password_reset import (
@@ -70,6 +72,7 @@ from novoya_api.accounts.infrastructure.security import (
     Argon2PasswordHasher,
     SecureTokenGenerator,
 )
+from novoya_api.accounts.infrastructure.user_data import ModuleDataEraser
 from novoya_api.accounts.presentation.http.cookies import read_session_cookie
 from novoya_api.config import Settings, get_settings
 from novoya_api.shared.application.clock import Clock
@@ -373,6 +376,19 @@ def get_get_account(store: StoreDep) -> GetAccount:
 
 def get_change_locale(store: StoreDep) -> ChangeLocale:
     return ChangeLocale(store.users, store.credentials, store.identities, store.uow)
+
+
+def get_user_data_eraser(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> UserDataEraser:
+    """Same request session as the store: the data and the account go in one commit."""
+    return ModuleDataEraser(session)
+
+
+def get_delete_account(
+    store: StoreDep, eraser: Annotated[UserDataEraser, Depends(get_user_data_eraser)]
+) -> DeleteAccount:
+    return DeleteAccount(store.users, eraser, store.uow)
 
 
 def get_list_users(store: StoreDep) -> ListUsers:

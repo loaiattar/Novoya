@@ -19,10 +19,9 @@ export function Logo({
     <Photo
       src={agency.logo.src}
       alt={decorative ? '' : agency.logo.alt}
+      width={agency.logo.width}
+      height={agency.logo.height}
       sizes="160px"
-      // The logo's size (3:1), so the header keeps its space while the image loads.
-      width={1536}
-      height={512}
       className={cn('h-8 w-auto max-w-[min(100%,11rem)] object-contain md:h-10', light && 'bg-white/95 p-1', className)}
     />
   )
