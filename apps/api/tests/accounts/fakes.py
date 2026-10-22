@@ -65,6 +65,9 @@ class InMemoryUserRepository:
     async def save(self, user: User) -> None:
         self.rows[user.id] = replace(user)
 
+    async def delete(self, user_id: UserId) -> None:
+        self.rows.pop(user_id, None)
+
     async def count_active_with_role(self, role: Role) -> int:
         return sum(1 for u in self.rows.values() if u.role is role and u.is_active)
 
@@ -353,3 +356,13 @@ class FakeIdentityProvider:
         if self.error is not None:
             raise self.error
         return self.identity
+
+
+class RecordingDataEraser:
+    """UserDataEraser that only remembers whose data it was asked to erase."""
+
+    def __init__(self) -> None:
+        self.erased: list[UserId] = []
+
+    async def erase(self, user_id: UserId) -> None:
+        self.erased.append(user_id)

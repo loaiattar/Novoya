@@ -113,6 +113,12 @@ class SqlWishRepository:
             raise InvalidTransition("the wish changed meanwhile, reload it")
         self._read_status[wish.id] = wish.status.value
 
+    async def ids_for_user(self, user_id: UUID) -> list[UUID]:
+        result = await self._session.scalars(
+            select(WishModel.id).where(WishModel.user_id == user_id)
+        )
+        return list(result)
+
     async def delete_for_user(self, user_id: UUID) -> None:
         """Erase every wish of this user. The caller commits."""
         await self._session.execute(

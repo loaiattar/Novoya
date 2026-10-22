@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.quoting.domain.quote import Quote
@@ -49,4 +50,12 @@ class SqlQuoteRepository:
             sent_at=row.sent_at,
             valid_until=row.valid_until,
             pdf=row.pdf,
+        )
+
+    async def delete_for_client(self, client_id: UUID) -> None:
+        """Erase this client's quotes; the PDF is a column, so it goes too. The caller commits."""
+        await self._session.execute(
+            delete(QuoteModel)
+            .where(QuoteModel.client_id == client_id)
+            .execution_options(synchronize_session=False)
         )

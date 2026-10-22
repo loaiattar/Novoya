@@ -272,7 +272,7 @@ Client:
 | POST | `/plans/{id}/request-quote` | Ask the agency for a quote, with optional `extra_ids` |
 | GET | `/quotes/{id}/pdf` | Download the quote PDF |
 | POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment |
-| DELETE | `/me` | Delete the account, its wishes, plans and quotes |
+| DELETE | `/me` | Delete the account, its wishes, plans and quotes (with their PDF), then sign out. Clients only: 403 `staff_account` for an agent or an admin |
 
 Agent (roles `agent` and `admin`):
 
