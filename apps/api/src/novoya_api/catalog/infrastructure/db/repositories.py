@@ -240,6 +240,8 @@ class SqlReviewRepository:
         return [review_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
 
     async def list_all(self) -> list[Review]:
+        """Every review, with no limit on purpose: DÉTOUR publishes a few hundred at most, and
+        the admin needs all of them to find one. Add paging if that grows."""
         stmt = select(ReviewRow).order_by(ReviewRow.reviewed_on.desc(), ReviewRow.id)
         return [review_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
 

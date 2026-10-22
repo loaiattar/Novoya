@@ -9,7 +9,8 @@
     "nav": "Liens du pied de page",
     "destinations": "Destinations et avis",
     "legalNotices": "Mentions légales",
-    "copyright": "© {{year}} {{name}}"
+    "copyright": "© {{year}} {{name}}",
+    "privacy": "Confidentialité"
   },
   "language": {
     "label": "Langue",

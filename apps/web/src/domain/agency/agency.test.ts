@@ -40,14 +40,17 @@ describe('agencyView', () => {
     expect(agency.tagline).toBe('Voyages insolites et week-ends sur mesure')
   })
 
-  it('hides phone, address, Atout France and social links until they are confirmed', () => {
+  it('shows the confirmed phone and address', () => {
     const agency = agencyView('fr')
-    expect(agency.phone).toBeUndefined()
-    expect(agency.address).toBeUndefined()
+    expect(agency.phone).toEqual({ href: 'tel:+33240000000', display: '02 40 00 00 00' })
+    expect(agency.address).toBe('12 rue des Écluses, 44000 Nantes')
+    expect(agency.legalLines.map((line) => line.key)).toEqual(['publisher', 'email', 'address', 'phone'])
+  })
+
+  it('hides Atout France and social links until they are confirmed', () => {
+    const agency = agencyView('fr')
     expect(agency.social).toEqual([])
-    expect(agency.legalLines.map((line) => line.key)).toEqual(['publisher', 'email'])
     expect(agency.legalLines.some((line) => line.value.includes('IM044'))).toBe(false)
-    expect(agency.legalLines.some((line) => line.value.includes('Écluses'))).toBe(false)
   })
 
   it('hides English drafts of agency copy', () => {

@@ -14,7 +14,9 @@ async def issue_token(
     purpose: TokenPurpose,
     now: datetime,
 ) -> str:
-    """Invalidate the user's previous tokens for this purpose, store a new one, return it raw."""
+    """Invalidate the user's previous tokens for this purpose, store a new one, return it raw.
+    Expired tokens of every user are deleted on the way: no worker cleans the table."""
+    await tokens.delete_expired(now)
     await tokens.invalidate_all(user_id, purpose, now)
     raw = generator.generate()
     await tokens.add(OneTimeToken.issue(user_id, purpose, generator.hash(raw), now))

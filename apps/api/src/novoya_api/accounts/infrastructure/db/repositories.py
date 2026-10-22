@@ -359,6 +359,13 @@ class SqlSessionRepository:
             statement = statement.where(SessionModel.id != except_session_id)
         await self._session.execute(statement)
 
+    async def delete_expired(self, now: datetime) -> None:
+        await self._session.execute(
+            delete(SessionModel)
+            .where(SessionModel.absolute_expires_at <= now)
+            .execution_options(synchronize_session=False)
+        )
+
 
 def token_to_entity(row: OneTimeTokenModel) -> OneTimeToken:
     return OneTimeToken(
@@ -415,4 +422,11 @@ class SqlOneTimeTokenRepository:
                 OneTimeTokenModel.used_at.is_(None),
             )
             .values(used_at=now)
+        )
+
+    async def delete_expired(self, now: datetime) -> None:
+        await self._session.execute(
+            delete(OneTimeTokenModel)
+            .where(OneTimeTokenModel.expires_at <= now)
+            .execution_options(synchronize_session=False)
         )

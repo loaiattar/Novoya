@@ -14,6 +14,7 @@ import type legal from './locales/en/legal.json'
 import type offer from './locales/en/offer.json'
 import type plan from './locales/en/plan.json'
 import type preferences from './locales/en/preferences.json'
+import type privacy from './locales/en/privacy.json'
 import type quote from './locales/en/quote.json'
 import type settings from './locales/en/settings.json'
 import type trips from './locales/en/trips.json'
@@ -39,6 +40,7 @@ declare module 'i18next' {
       offer: typeof offer
       plan: typeof plan
       preferences: typeof preferences
+      privacy: typeof privacy
       quote: typeof quote
       settings: typeof settings
       trips: typeof trips

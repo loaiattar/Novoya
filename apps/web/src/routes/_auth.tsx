@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { HomeLink } from '../components/molecules/HomeLink'
@@ -25,6 +25,13 @@ function AuthLayout() {
       }
     >
       <Outlet />
+      {/* On every account page, before anyone signs in or up: what we store and why. */}
+      <p className="mt-8 text-xs text-muted">
+        {t('privacyNote')}{' '}
+        <Link to="/privacy" className="inline-flex min-h-11 items-center underline underline-offset-4">
+          {t('privacyLink')}
+        </Link>
+      </p>
     </AuthTemplate>
   )
 }

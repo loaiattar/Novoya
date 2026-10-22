@@ -5,6 +5,7 @@ from openai import AsyncOpenAI
 from novoya_api.config import get_settings
 from novoya_api.shared.infrastructure.llm.errors import LLMError
 from novoya_api.shared.infrastructure.llm.orchestrator import Orchestrator
+from novoya_api.shared.infrastructure.llm.pause import ModelPause
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -13,15 +14,22 @@ def create_llm_client(api_key: str | None) -> AsyncOpenAI:
     """OpenRouter speaks the OpenAI API, so the official SDK works with another base URL."""
     if not api_key:
         raise LLMError("NOVOYA_OPENROUTER_API_KEY is not set")
-    # Calls happen during a request. The orchestrator falls back to other models, so one
-    # retry per model is enough; it also caps the whole loop (deadline_seconds).
-    return AsyncOpenAI(base_url=OPENROUTER_BASE_URL, api_key=api_key, timeout=30, max_retries=1)
+    # Calls happen during a request. No SDK retry: the orchestrator falls back to the next
+    # model itself, and on a 429 the SDK would sleep for Retry-After (up to a minute) before
+    # the orchestrator could pause the model and fall back at once (#106).
+    return AsyncOpenAI(base_url=OPENROUTER_BASE_URL, api_key=api_key, timeout=30, max_retries=0)
 
 
 @lru_cache
 def get_llm_client() -> AsyncOpenAI:
     key = get_settings().openrouter_api_key
     return create_llm_client(key.get_secret_value() if key else None)
+
+
+@lru_cache
+def get_model_pause() -> ModelPause:
+    """One pause for the whole process: every orchestrator shares the key's quota."""
+    return ModelPause()
 
 
 def get_orchestrator(
@@ -37,4 +45,5 @@ def get_orchestrator(
         [settings.llm_model, *settings.llm_fallback_models],
         deadline_seconds=deadline_seconds,
         model_timeout_seconds=model_timeout_seconds,
+        pause=get_model_pause(),
     )

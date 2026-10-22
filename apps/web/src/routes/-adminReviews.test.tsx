@@ -120,6 +120,9 @@ describe('admin reviews', () => {
     await waitFor(() =>
       expect(sent('PATCH', `/admin/reviews/${NORA.id}`).map((request) => request.body)).toEqual([{ hidden: true }]),
     )
+    // The saved row replaces the old one: the whole list is not loaded again.
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Hidden: Nora N.' })).toBeChecked())
+    expect(sent('GET', '/admin/reviews')).toHaveLength(1)
   })
 
   it('still says a switch failed when another one succeeds meanwhile', async () => {

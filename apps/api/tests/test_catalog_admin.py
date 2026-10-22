@@ -685,14 +685,14 @@ async def client(app) -> AsyncIterator[AsyncClient]:
         yield c
 
 
-def _as_agent(
+def _as_admin(
     app, partners: FakePartners, offers: FakeOffers | None = None, extras: FakeExtras | None = None
 ) -> None:
     offers = offers or FakeOffers()
     extras = extras or FakeExtras()
     offers.partners = partners
     uow = FakeUow()
-    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.AGENT)
+    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.ADMIN)
     app.dependency_overrides[get_list_partners] = lambda: ListPartners(partners)
     app.dependency_overrides[get_create_partner] = lambda: CreatePartner(partners, uow)
     app.dependency_overrides[get_update_partner] = lambda: UpdatePartner(partners, uow)
@@ -703,7 +703,7 @@ def _as_agent(
     app.dependency_overrides[get_update_extra] = lambda: UpdateExtra(extras, uow)
 
 
-def _as_admin(app, reviews: FakeReviews | None = None) -> None:
+def _as_review_admin(app, reviews: FakeReviews | None = None) -> None:
     reviews = reviews or FakeReviews()
     uow = FakeUow()
     app.dependency_overrides[current_user] = lambda: signed_in_as(Role.ADMIN)
@@ -717,17 +717,19 @@ async def test_admin_partners_without_a_session_returns_401(client):
     assert (await client.get("/admin/reviews")).status_code == 401
 
 
-async def test_admin_catalog_rejects_a_client(app, client):
-    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.CLIENT)
+@pytest.mark.parametrize("role", [Role.CLIENT, Role.AGENT])
+async def test_admin_catalog_is_for_admins_only(app, client, role):
+    app.dependency_overrides[current_user] = lambda: signed_in_as(role)
 
     assert (await client.get("/admin/partners")).status_code == 403
     assert (await client.get("/admin/offers")).status_code == 403
+    assert (await client.get("/admin/extras")).status_code == 403
     assert (await client.get("/admin/reviews")).status_code == 403
 
 
 async def test_admin_can_create_list_and_deactivate_a_partner(app, client):
     partners = FakePartners()
-    _as_agent(app, partners)
+    _as_admin(app, partners)
 
     created = await client.post(
         "/admin/partners",
@@ -756,7 +758,7 @@ async def test_admin_can_create_list_and_deactivate_a_partner(app, client):
 
 async def test_admin_can_create_a_partner_without_a_phone(app, client):
     partners = FakePartners()
-    _as_agent(app, partners)
+    _as_admin(app, partners)
 
     created = await client.post(
         "/admin/partners",
@@ -791,7 +793,7 @@ async def test_create_partner_without_a_phone_stores_none():
 
 
 async def test_admin_offer_create_needs_a_partner(app, client):
-    _as_agent(app, FakePartners())
+    _as_admin(app, FakePartners())
 
     response = await client.post(
         "/admin/offers",
@@ -815,7 +817,7 @@ async def test_admin_offer_create_needs_a_partner(app, client):
 
 async def test_admin_offer_rejects_inverted_person_limits(app, client):
     partner = _partner()
-    _as_agent(app, FakePartners([partner]))
+    _as_admin(app, FakePartners([partner]))
 
     response = await client.post(
         "/admin/offers",
@@ -839,7 +841,7 @@ async def test_admin_offer_rejects_inverted_person_limits(app, client):
 
 async def test_admin_can_create_and_deactivate_an_offer(app, client):
     partner = _partner()
-    _as_agent(app, FakePartners([partner]))
+    _as_admin(app, FakePartners([partner]))
 
     created = await client.post(
         "/admin/offers",
@@ -869,7 +871,7 @@ async def test_admin_can_create_and_deactivate_an_offer(app, client):
 
 async def test_editing_an_imported_offer_is_a_409_that_names_detour(app, client):
     offers, offer = _imported_offer()
-    _as_agent(app, offers.partners, offers)
+    _as_admin(app, offers.partners, offers)
 
     response = await client.patch(f"/admin/offers/{offer.id}", json={"title": "Renamed"})
 
@@ -880,7 +882,7 @@ async def test_editing_an_imported_offer_is_a_409_that_names_detour(app, client)
 
 async def test_an_imported_offer_is_featured_and_hidden_over_http(app, client):
     offers, offer = _imported_offer()
-    _as_agent(app, offers.partners, offers)
+    _as_admin(app, offers.partners, offers)
 
     response = await client.patch(
         f"/admin/offers/{offer.id}", json={"featured": True, "hidden": True}
@@ -905,7 +907,7 @@ async def test_offer_price_and_delay_stay_within_their_columns(app, client, fiel
     partner = _partner()
     offers = FakeOffers([])
     offers.partners = FakePartners([partner])
-    _as_agent(app, offers.partners, offers)
+    _as_admin(app, offers.partners, offers)
     body = {
         "partner_id": str(partner.id),
         "kind": "hotel",
@@ -935,7 +937,7 @@ async def test_an_offer_patch_beyond_the_columns_is_a_422(app, client, field, va
     partner = _partner()
     offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT)
     offers = FakeOffers([offer])
-    _as_agent(app, FakePartners([partner]), offers)
+    _as_admin(app, FakePartners([partner]), offers)
 
     response = await client.patch(f"/admin/offers/{offer.id}", json={field: value})
 
@@ -945,7 +947,7 @@ async def test_an_offer_patch_beyond_the_columns_is_a_422(app, client, field, va
 
 async def test_editing_an_imported_partner_is_a_409(app, client):
     partner = _partner(imported=True)
-    _as_agent(app, FakePartners([partner]))
+    _as_admin(app, FakePartners([partner]))
 
     response = await client.patch(f"/admin/partners/{partner.id}", json={"name": "Renamed"})
 
@@ -955,7 +957,7 @@ async def test_editing_an_imported_partner_is_a_409(app, client):
 
 async def test_an_imported_partner_is_hidden_over_http(app, client):
     partner = _partner(imported=True)
-    _as_agent(app, FakePartners([partner]))
+    _as_admin(app, FakePartners([partner]))
 
     response = await client.patch(f"/admin/partners/{partner.id}", json={"hidden": True})
 
@@ -967,7 +969,7 @@ async def test_a_null_price_and_unit_clear_the_price(app, client):
     partner = _partner()
     offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, opening_months=(5,))
     offers = FakeOffers([offer])
-    _as_agent(app, FakePartners([partner]), offers)
+    _as_admin(app, FakePartners([partner]), offers)
 
     response = await client.patch(
         f"/admin/offers/{offer.id}",
@@ -982,7 +984,7 @@ async def test_a_null_price_and_unit_clear_the_price(app, client):
 async def test_a_null_price_alone_is_a_422(app, client):
     partner = _partner()
     offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT)
-    _as_agent(app, FakePartners([partner]), FakeOffers([offer]))
+    _as_admin(app, FakePartners([partner]), FakeOffers([offer]))
 
     response = await client.patch(f"/admin/offers/{offer.id}", json={"price_eur": None})
 
@@ -993,7 +995,7 @@ async def test_a_null_price_alone_is_a_422(app, client):
 async def test_an_absent_price_is_unchanged(app, client):
     partner = _partner()
     offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT, opening_months=(5,))
-    _as_agent(app, FakePartners([partner]), FakeOffers([offer]))
+    _as_admin(app, FakePartners([partner]), FakeOffers([offer]))
 
     response = await client.patch(f"/admin/offers/{offer.id}", json={"title": "Renamed"})
 
@@ -1008,7 +1010,7 @@ async def test_an_absent_price_is_unchanged(app, client):
 
 async def test_an_agent_hides_an_extra_over_http(app, client):
     extra = _extra()
-    _as_agent(app, FakePartners(), extras=FakeExtras([extra]))
+    _as_admin(app, FakePartners(), extras=FakeExtras([extra]))
 
     response = await client.patch(f"/admin/extras/{extra.id}", json={"hidden": True})
 
@@ -1022,22 +1024,16 @@ async def test_an_agent_hides_an_extra_over_http(app, client):
 
 async def test_the_content_of_an_extra_cannot_be_patched(app, client):
     extra = _extra()
-    _as_agent(app, FakePartners(), extras=FakeExtras([extra]))
+    _as_admin(app, FakePartners(), extras=FakeExtras([extra]))
 
     response = await client.patch(f"/admin/extras/{extra.id}", json={"label": "Renamed"})
 
     assert response.status_code == 422
 
 
-async def test_admin_extras_need_an_agent(app, client):
-    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.CLIENT)
-
-    assert (await client.get("/admin/extras")).status_code == 403
-
-
 async def test_an_admin_hides_a_review_over_http(app, client):
     review = _review()
-    _as_admin(app, FakeReviews([review]))
+    _as_review_admin(app, FakeReviews([review]))
 
     response = await client.patch(f"/admin/reviews/{review.id}", json={"hidden": True})
 
@@ -1051,7 +1047,7 @@ async def test_an_admin_hides_a_review_over_http(app, client):
 
 async def test_the_content_of_a_review_cannot_be_patched(app, client):
     review = _review()
-    _as_admin(app, FakeReviews([review]))
+    _as_review_admin(app, FakeReviews([review]))
 
     response = await client.patch(f"/admin/reviews/{review.id}", json={"text": "Changed"})
 
@@ -1071,7 +1067,7 @@ async def test_admin_offers_filtered_by_partner_over_http(app, client):
     lodge = _partner(name="Lodge Nord")
     patio = _offer(riad, title="Patio room")
     offers = FakeOffers([patio, _offer(lodge, title="Cabin")])
-    _as_agent(app, FakePartners([riad, lodge]), offers)
+    _as_admin(app, FakePartners([riad, lodge]), offers)
 
     response = await client.get("/admin/offers", params={"partner_id": str(riad.id)})
 
@@ -1081,7 +1077,7 @@ async def test_admin_offers_filtered_by_partner_over_http(app, client):
 
 async def test_admin_offers_of_an_unknown_partner_is_an_empty_list(app, client):
     riad = _partner(name="Riad Lune")
-    _as_agent(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
+    _as_admin(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
 
     response = await client.get("/admin/offers", params={"partner_id": str(uuid4())})
 
@@ -1091,7 +1087,7 @@ async def test_admin_offers_of_an_unknown_partner_is_an_empty_list(app, client):
 
 async def test_admin_offers_with_a_malformed_partner_id_is_a_422(app, client):
     riad = _partner(name="Riad Lune")
-    _as_agent(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
+    _as_admin(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
 
     response = await client.get("/admin/offers", params={"partner_id": "not-a-uuid"})
 

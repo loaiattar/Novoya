@@ -5117,7 +5117,7 @@
     },
     "/admin/reviews": {
       "get": {
-        "description": "All published reviews, hidden ones too. Admins only.",
+        "description": "All published reviews, hidden ones too, newest first. No paging: there are few\nenough. Admins only.",
         "operationId": "listAllReviews",
         "responses": {
           "200": {

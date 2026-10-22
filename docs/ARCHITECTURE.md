@@ -36,7 +36,7 @@ This document is the starting proposal. Change it by pull request, like code.
 5. The agent generates the quote: Novoya computes the total, renders the PDF, makes it visible to the client and emails them.
 6. The agent sees when the client accepts or rejects.
 
-Agents also manage partners and offers in the admin pages.
+Admins manage partners, offers, extras and reviews in the admin pages.
 
 ### Admin
 
@@ -74,7 +74,7 @@ flowchart LR
 
 | Part | Tech | Job |
 |---|---|---|
-| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing, partners and offers) |
+| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing) and admin pages (users, partners and offers, extras, reviews, activity) |
 | `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Modular monolith with Clean Architecture: accounts, catalog, wishes, planning and quoting modules, each with domain, use cases, adapters and REST endpoints |
 | Database | PostgreSQL | Users, partners and offers, wishes, plans, quotes |
 | LLM | OpenRouter, called with the OpenAI Python SDK | Check coverage, build the panel, write the plan |
@@ -134,6 +134,7 @@ client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=settings.o
 - The model is a setting, `NOVOYA_LLM_MODEL`, so we can switch models without changing code. It must support tool calling (OpenRouter lists this as `tools` in the model's supported parameters).
 - The API key is `NOVOYA_OPENROUTER_API_KEY`. It stays on the server and never reaches the browser.
 - Not every model follows a JSON schema reliably, so the backend validates every answer with Pydantic, retries once, then falls back (see section 3).
+- The key is shared by every client. When OpenRouter answers `429`, model calls pause for its `Retry-After` (5 minutes without one, an hour at most), in memory for the whole process. During the pause each step goes straight to its fallback instead of waiting for every model to fail. Other errors still try the next model. The SDK does not retry: the orchestrator falls back itself.
 - Tests use a fake client. CI makes no live LLM calls.
 
 ## 3. The dynamic panel
@@ -163,7 +164,7 @@ The backend validates this JSON. If validation fails, it retries once, then fall
 
 ## 4. Partners, coverage and the no-preference case
 
-Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it. The catalog comes from the client's DÉTOUR export, imported with `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite` ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)): partners, offers, publishable reviews and extras. DÉTOUR owns what it exports: an agent changes it there, and in Novoya only hides a row or features an offer. Countries are stored in English; a wish may name them in English or French.
+Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it. The catalog comes from the client's DÉTOUR export, imported with `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite` ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)): partners, offers, publishable reviews and extras. DÉTOUR owns what it exports: the agency changes it there, and in Novoya an admin only hides a row or features an offer. Countries are stored in English; a wish may name them in English or French.
 
 | Case | What happens |
 |---|---|
@@ -285,8 +286,6 @@ Agent (roles `agent` and `admin`):
 | PATCH | `/agent/plans/{id}/extras/{extra_id}` | Price an `on_quote` extra, or adjust or confirm a supplement |
 | POST | `/agent/plans/{id}/quote` | Compute the total, render the PDF, status `quoted`, email the client |
 | POST | `/agent/quotes/{id}/email` | Send the client's quote email again (the agent who sent the quote, or an admin) |
-| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
-| GET, PATCH | `/admin/extras` | List extras, hide or show one |
 
 Admin (role `admin` only; an admin can also use every agent route):
 
@@ -297,7 +296,9 @@ Admin (role `admin` only; an admin can also use every agent route):
 | GET, PATCH | `/admin/reviews` | List published reviews, hide or show one |
 | GET | `/admin/wishes` | Every client's wishes with their status, searched by client or destination |
 | GET | `/admin/plans`, `/admin/plans/{id}` | Every plan with its client, status and agent; one plan read-only, as its agent sees it |
-| GET | `/admin/quotes` | Every quote with its client, total and status (`sent`, `expired`, `accepted`, `rejected`) |
+| GET | `/admin/quotes` | Every quote with its client, total and status (`open`, `expired`, `accepted`, `rejected`, as `GET /quotes/{id}` gives it) |
+| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
+| GET, PATCH | `/admin/extras` | List extras, hide or show one |
 
 The three lists live in their own module (wishes, planning, quoting). A search by client goes through `accounts.public.search_user_ids`, called from the module's adapters: a `public.py` never imports accounts, because accounts imports them to erase an account's data.
 
@@ -333,8 +334,10 @@ novoya/
 ## 9. Privacy (GDPR)
 
 - We store only the account (email, name, first name, last name, role, language), a hash of the password if the user has one, the sessions (with the browser's user agent, never the IP address, kept 30 days at most), what the client types (wishes, panel answers, budget, travellers, dates), the plans and the quotes. No mailbox, document or social media data, no avatar and no Google token.
-- Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). An admin can hide a review at once (`PATCH /admin/reviews/{id}`); the import never shows it again. The privacy page (#45) must say so.
-- A privacy page says what we store, why, and for how long.
+- Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). An admin can hide a review at once (`PATCH /admin/reviews/{id}`); the import never shows it again. The privacy page says so.
+- The privacy page (`/privacy`, public, English and French) says what we store, why, who else handles it, and for how long. It is linked from every account page (sign-in, sign-up...), from the footer and from the Google consent screen.
+- Sessions and one-time links are deleted once expired: each sign-in deletes the sessions past their absolute expiry (30 days), each new link deletes the expired links (24 hours at most), and the API's startup deletes both, which covers a quiet spell. No worker is needed; `sessions.absolute_expires_at` and `one_time_tokens.expires_at` are indexed for it.
+- The privacy page describes production, where the AI model is Mistral AI, hosted in France. Development and the demo use OpenRouter instead, which can route the wish text to providers outside the EU: never put real client data in them.
 - The client can delete their account and everything linked to it (`DELETE /me`).
 - Agents see client data only for the plans in their queue.
 

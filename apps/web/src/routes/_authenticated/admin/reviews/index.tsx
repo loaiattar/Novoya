@@ -13,6 +13,7 @@ import type { AdminReviewResponse } from '../../../../api/generated/types.gen'
 import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { ErrorNote } from '../../../../components/molecules/ErrorNote'
 import { ReviewsTable } from '../../../../components/organisms/ReviewsTable'
+import { withId, withoutId } from '../../../../lib/idSet'
 
 export const Route = createFileRoute('/_authenticated/admin/reviews/')({
   component: ReviewsPage,
@@ -28,18 +29,19 @@ function ReviewsPage() {
   const toggle = useMutation({
     ...updateReviewMutation(),
     onMutate: ({ path }) => {
+      // A reload of the list already on its way could land after the save and undo it.
+      void queryClient.cancelQueries({ queryKey: listAllReviewsQueryKey() })
       setSavingIds((ids) => withId(ids, path.review_id))
       setFailedIds((ids) => withoutId(ids, path.review_id))
     },
     onError: (_error, { path }) => setFailedIds((ids) => withId(ids, path.review_id)),
+    // The saved row replaces the old one, without loading every review again. The public
+    // reviews (the /destinations page) are loaded again, so they drop or show it at once.
     onSuccess: (saved: AdminReviewResponse) => {
       queryClient.setQueryData(listAllReviewsQueryKey(), (rows: AdminReviewResponse[] | undefined) =>
         rows?.map((row) => (row.id === saved.id ? saved : row)),
       )
-      return Promise.all([
-        queryClient.invalidateQueries({ queryKey: listAllReviewsQueryKey() }),
-        queryClient.invalidateQueries({ queryKey: listReviewsQueryKey() }),
-      ])
+      return queryClient.invalidateQueries({ queryKey: listReviewsQueryKey() })
     },
     onSettled: (_data, _error, { path }) => setSavingIds((ids) => withoutId(ids, path.review_id)),
   })
@@ -70,14 +72,4 @@ function ReviewsPage() {
       )}
     </>
   )
-}
-
-function withId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
-  return new Set(ids).add(id)
-}
-
-function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
-  const next = new Set(ids)
-  next.delete(id)
-  return next
 }

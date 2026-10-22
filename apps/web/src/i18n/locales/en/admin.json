@@ -3,6 +3,7 @@
   "nav": {
     "users": "Users",
     "partners": "Partners",
+    "extras": "Extras",
     "reviews": "Reviews",
     "activity": "Activity",
     "import": "Import"
@@ -213,6 +214,28 @@
     "invalid": "Some fields were refused. Check them and try again.",
     "notFound": "This partner or offer no longer exists.",
     "unknown": "This could not be saved. Please try again."
+  },
+  "extras": {
+    "title": "Extras",
+    "intro": "The options a client can add when asking for a quote. They come from {{agency}}: here you can only hide one, so clients no longer see it.",
+    "loading": "Loading extras…",
+    "loadFailed": "The extras could not be loaded.",
+    "empty": "No extra yet: they come with the {{agency}} import.",
+    "switchFailed": "The change could not be saved. Please try again.",
+    "pricing": {
+      "included": "Included",
+      "supplement": "Supplement",
+      "on_quote": "On quote"
+    },
+    "table": {
+      "caption": "Extras and their pricing",
+      "extra": "Extra",
+      "pricing": "Pricing",
+      "status": "Status",
+      "hidden": "Hidden",
+      "hiddenOf": "Hidden: {{label}}",
+      "supplementOf": "{{price}} {{unit}}"
+    }
   },
   "activity": {
     "title": "Activity",

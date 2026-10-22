@@ -3,6 +3,7 @@
   "nav": {
     "users": "Utilisateurs",
     "partners": "Partenaires",
+    "extras": "Extras",
     "reviews": "Avis",
     "activity": "Activité",
     "import": "Import"
@@ -213,6 +214,28 @@
     "invalid": "Certains champs ont été refusés. Vérifiez-les et réessayez.",
     "notFound": "Ce partenaire ou cette offre n’existe plus.",
     "unknown": "L’enregistrement n’a pas pu aboutir. Veuillez réessayer."
+  },
+  "extras": {
+    "title": "Extras",
+    "intro": "Les options qu’un client peut ajouter en demandant un devis. Elles viennent de {{agency}} : ici, vous pouvez seulement en masquer une pour que les clients ne la voient plus.",
+    "loading": "Chargement des extras…",
+    "loadFailed": "Les extras n’ont pas pu être chargés.",
+    "empty": "Aucun extra pour l’instant : ils arrivent avec l’import {{agency}}.",
+    "switchFailed": "La modification n’a pas pu être enregistrée. Veuillez réessayer.",
+    "pricing": {
+      "included": "Inclus",
+      "supplement": "Supplément",
+      "on_quote": "Sur devis"
+    },
+    "table": {
+      "caption": "Les extras et leur tarif",
+      "extra": "Extra",
+      "pricing": "Tarif",
+      "status": "Statut",
+      "hidden": "Masqué",
+      "hiddenOf": "Masqué : {{label}}",
+      "supplementOf": "{{price}} {{unit}}"
+    }
   },
   "activity": {
     "title": "Activité",

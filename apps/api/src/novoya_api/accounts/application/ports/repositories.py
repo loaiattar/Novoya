@@ -75,6 +75,11 @@ class SessionRepository(Protocol):
         self, user_id: UserId, now: datetime, except_session_id: UUID | None = None
     ) -> None: ...
 
+    async def delete_expired(self, now: datetime) -> None:
+        """Delete every session past its absolute expiry, with its user agent: a session is
+        kept 30 days at most (the privacy page says so)."""
+        ...
+
 
 class OneTimeTokenRepository(Protocol):
     async def get(self, token_hash: str, purpose: TokenPurpose) -> OneTimeToken | None: ...
@@ -85,4 +90,8 @@ class OneTimeTokenRepository(Protocol):
 
     async def invalidate_all(self, user_id: UserId, purpose: TokenPurpose, now: datetime) -> None:
         """Mark the user's unused tokens for this purpose as used."""
+        ...
+
+    async def delete_expired(self, now: datetime) -> None:
+        """Delete every expired token, used or not: a link lives 24 hours at most."""
         ...

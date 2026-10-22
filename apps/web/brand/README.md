@@ -40,7 +40,7 @@ python3 -c "import json,jsonschema as j; s=json.load(open('apps/web/brand/agency
 
 ## Rules for the next ticket
 
-1. **Never publish a `to_check` value.** Until it is confirmed, hide the element or show nothing in its place. Do not show a placeholder that looks like real data. This applies first to the phone number and the Atout France number.
+1. **Never publish a `to_check` value.** Until it is confirmed, hide the element or show nothing in its place. Do not show a placeholder that looks like real data. This applies first to the Atout France number.
 2. **Don't translate facts.** The address, phone, e-mail, hours, legal numbers and company names are the same in FR and EN. Only the presentation (day names, phone formatting) is localised, by the front.
 3. **Optimise images when they are used, not here.** `images/` keeps the originals. The build or the front generates the sizes and formats it needs (WebP/AVIF, responsive `srcset`, favicon sizes). Don't commit resized copies in `brand/`.
 4. **Only images the agency owns.** Every entry in `images` has `rights: "agency"`, and the schema enforces it. Don't add a photo without written proof of rights (see "Excluded images").
@@ -61,8 +61,8 @@ python3 -c "import json,jsonschema as j; s=json.load(open('apps/web/brand/agency
 | `identity.description_short` | confirmed (EN to_check) | Footer « L'agence » column, Open Graph `og:description` |
 | `identity.description_long` | confirmed (EN to_check) | Home intro section, About page |
 | `identity.meta_description` | confirmed (EN to_check) | Home `<meta name="description">` (check the city list against the current offer) |
-| `contact.address` | **to_check** | Footer, contact page, mentions légales (siège), schema.org `address` |
-| `contact.phone` | **to_check** | Header « Appelez-nous », footer, contact page; `tel:` link built from `value` (E.164), text from `display` |
+| `contact.address` | confirmed | Footer, contact page, mentions légales (siège), schema.org `address` |
+| `contact.phone` | confirmed | Header « Appelez-nous », footer, contact page; `tel:` link built from `value` (E.164), text from `display` |
 | `contact.email` | confirmed | Footer, contact page, quote form recipient, mentions légales |
 | `contact.opening_hours` | **to_check** | Header top bar or contact page, schema.org `openingHoursSpecification` |
 | `legal.atout_france_registration` | **to_check** | Footer legal line (« Immatriculation Atout France IM… »), mentions légales, CGV |
@@ -98,8 +98,6 @@ These were looked for in the old repository and **not found**. The old site link
 
 | Value | Why |
 |---|---|
-| `contact.phone` (02 40 00 00 00) | Looks like a placeholder number. |
-| `contact.address` (12 rue des Écluses, 44000 Nantes) | Comes from a 2013 site; the agency may have moved. |
 | `contact.opening_hours` (Tue–Sat, 10:00–19:00) | Comes from a 2013 site. |
 | `legal.atout_france_registration` (IM044120000) | The old site itself says « (fictive) ». |
 | `brand.colors`, `brand.fonts` | To compare with the Figma mockup; Figma wins. |

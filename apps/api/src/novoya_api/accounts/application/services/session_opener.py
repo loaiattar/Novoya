@@ -41,11 +41,14 @@ class SessionOpener:
         user.ensure_can_sign_in(require_verified_email=self._policy.require_verified_email)
         if client.current_token is not None:
             await self.revoke(client.current_token)  # a new token on each sign-in: no fixation
+        now = self._clock.now()
+        # No worker cleans the table: each sign-in deletes the sessions past their 30 days.
+        await self._sessions.delete_expired(now)
         raw = self._tokens.generate()
         session = AuthSession.open(
             user.id,
             self._tokens.hash(raw),
-            self._clock.now(),
+            now,
             self._policy.idle_ttl,
             self._policy.absolute_ttl,
             client.user_agent,

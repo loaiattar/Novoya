@@ -77,7 +77,8 @@ class SessionModel(Base):
     created_at: Mapped[datetime] = mapped_column(Timestamp)
     last_seen_at: Mapped[datetime] = mapped_column(Timestamp)
     idle_expires_at: Mapped[datetime] = mapped_column(Timestamp)
-    absolute_expires_at: Mapped[datetime] = mapped_column(Timestamp)
+    # Indexed: each sign-in deletes the sessions past it (no full scan as the table grows).
+    absolute_expires_at: Mapped[datetime] = mapped_column(Timestamp, index=True)
     revoked_at: Mapped[datetime | None] = mapped_column(Timestamp)
     user_agent: Mapped[str | None] = mapped_column(String(512))
 
@@ -95,7 +96,8 @@ class OneTimeTokenModel(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     purpose: Mapped[str] = mapped_column(String(30))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
-    expires_at: Mapped[datetime] = mapped_column(Timestamp)
+    # Indexed: each new link deletes the expired ones.
+    expires_at: Mapped[datetime] = mapped_column(Timestamp, index=True)
     used_at: Mapped[datetime | None] = mapped_column(Timestamp)
     created_at: Mapped[datetime] = mapped_column(Timestamp)
 

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, status
 
-from novoya_api.accounts.public import current_user, require_admin, require_agent
+from novoya_api.accounts.public import current_user, require_admin
 from novoya_api.catalog.application.use_cases.create_offer import CreateOffer, CreateOfferCommand
 from novoya_api.catalog.application.use_cases.create_partner import (
     CreatePartner,
@@ -78,20 +78,20 @@ partners_router = APIRouter(
     prefix="/admin/partners",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
 )
 offers_router = APIRouter(
     prefix="/admin/offers",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
 )
 
 extras_router = APIRouter(
     prefix="/admin/extras",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
 )
 reviews_router = APIRouter(
     prefix="/admin/reviews",
@@ -304,7 +304,8 @@ async def update_extra(
 async def list_all_reviews(
     use_case: Annotated[ListAllReviews, Depends(get_list_all_reviews)],
 ) -> list[AdminReviewResponse]:
-    """All published reviews, hidden ones too. Admins only."""
+    """All published reviews, hidden ones too, newest first. No paging: there are few
+    enough. Admins only."""
     return [AdminReviewResponse.of(review) for review in await use_case()]
 
 

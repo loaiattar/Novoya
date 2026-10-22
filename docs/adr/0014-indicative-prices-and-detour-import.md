@@ -59,11 +59,12 @@ An admin can run the same import from the back office (#132): see below.
   extra only takes `hidden` (`PATCH /admin/extras/{id}`). A review only takes `hidden`
   (`PATCH /admin/reviews/{id}`). There is no delete. Sending a
   row its own values is not a change. Hand-made partners and offers stay fully editable.
-- An agent hides a partner, offer or extra with `hidden`; it is left out everywhere an
-  inactive one is (search, coverage, tags, `GET /offers/{id}`, `GET /extras`, the extras of
-  a quote request) and stays hidden after every import. An admin hides a review the same
-  way: it leaves `GET /reviews` at once. A phone added in Novoya can no longer be erased by
-  the import, since an imported partner's phone cannot be edited.
+- An admin hides a partner, offer or extra with `hidden` (the catalog routes are admin
+  only, #127); it is left out everywhere an inactive one is (search, coverage, tags,
+  `GET /offers/{id}`, `GET /extras`, the extras of a quote request) and stays hidden after
+  every import. An admin hides a review the same way: it leaves `GET /reviews` at once. A
+  phone added in Novoya can no longer be erased by the import, since an imported partner's
+  phone cannot be edited.
 - The import is idempotent (ids are uuid5 of the DÉTOUR ids), runs in one transaction, opens
   the file read-only, prints counts only, and its errors name DÉTOUR ids, never a name or
   an email. The export itself is never committed (`*.sqlite`, `livraison/` in `.gitignore`).

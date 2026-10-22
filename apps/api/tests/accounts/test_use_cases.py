@@ -282,6 +282,40 @@ async def test_expired_session_is_refused(accounts):
         await accounts.authenticate(token)
 
 
+async def test_a_sign_in_deletes_the_sessions_past_their_30_days(accounts):
+    await accounts.signed_up()
+    await accounts.signed_in()
+    old = set(accounts.store.sessions.rows)
+    accounts.clock.advance(timedelta(days=30))
+
+    await accounts.signed_in()
+
+    assert len(accounts.store.sessions.rows) == 1
+    assert not old & set(accounts.store.sessions.rows)
+
+
+async def test_a_sign_in_keeps_the_sessions_still_within_their_30_days(accounts):
+    await accounts.signed_up()
+    await accounts.signed_in()
+    accounts.clock.advance(timedelta(days=29))
+
+    await accounts.signed_in()
+
+    assert len(accounts.store.sessions.rows) == 2
+
+
+async def test_a_new_link_deletes_the_expired_ones(accounts):
+    await accounts.signed_up(verified=False)
+    accounts.clock.advance(timedelta(hours=24))
+
+    await accounts.resend("alice@example.com")
+
+    assert len(accounts.store.tokens.rows) == 1
+    await accounts.verify_email(
+        accounts.mailer.last_token("alice@example.com", "email_verification")
+    )
+
+
 async def test_grant_role_by_email_is_logged_as_the_command(accounts):
     await accounts.signed_up()
     user = await accounts.change_role(

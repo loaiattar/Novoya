@@ -8,7 +8,7 @@ once, then each test starts from empty tables.
 import asyncio
 import os
 from collections.abc import AsyncIterator, Iterator
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -51,6 +51,7 @@ from novoya_api.accounts.infrastructure.db.repositories import (
 from novoya_api.accounts.infrastructure.security import SecureTokenGenerator
 from novoya_api.accounts.presentation import cli
 from novoya_api.accounts.presentation.http.dependencies import build_store
+from novoya_api.accounts.public import delete_expired_sign_ins
 from novoya_api.config import get_settings
 from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.shared.infrastructure.db.session import get_engine, get_sessionmaker
@@ -402,6 +403,63 @@ async def test_one_time_tokens_are_invalidated(session):
     await tokens.invalidate_all(user.id, TokenPurpose.PASSWORD_RESET, NOW)
     await session.commit()
     assert (await tokens.get("c" * 64, TokenPurpose.PASSWORD_RESET)).used_at == NOW
+
+
+async def test_sessions_past_their_absolute_expiry_are_deleted(session):
+    users, sessions = SqlUserRepository(session), SqlSessionRepository(session)
+    user = make_user()
+    await users.add(user)
+    ttl = timedelta(days=7), timedelta(days=30)
+    old = AuthSession.open(user.id, "d" * 64, NOW - timedelta(days=30), *ttl, user_agent="old")
+    recent = AuthSession.open(user.id, "e" * 64, NOW - timedelta(days=29), *ttl, user_agent=None)
+    await sessions.add(old)
+    await sessions.add(recent)
+    await session.commit()
+
+    await sessions.delete_expired(NOW)
+    await session.commit()
+
+    assert await sessions.get("d" * 64) is None
+    assert await sessions.get("e" * 64) is not None
+
+
+async def test_expired_one_time_tokens_are_deleted(session):
+    users, tokens = SqlUserRepository(session), SqlOneTimeTokenRepository(session)
+    user = make_user()
+    await users.add(user)
+    purpose = TokenPurpose.EMAIL_VERIFICATION
+    await tokens.add(OneTimeToken.issue(user.id, purpose, "f" * 64, NOW - timedelta(hours=24)))
+    await tokens.add(OneTimeToken.issue(user.id, purpose, "g" * 64, NOW - timedelta(hours=23)))
+    await session.commit()
+
+    await tokens.delete_expired(NOW)
+    await session.commit()
+
+    assert await tokens.get("f" * 64, purpose) is None
+    assert await tokens.get("g" * 64, purpose) is not None
+
+
+async def test_the_startup_cleanup_deletes_expired_sessions_and_links(session):
+    users = SqlUserRepository(session)
+    sessions, tokens = SqlSessionRepository(session), SqlOneTimeTokenRepository(session)
+    user = make_user()
+    await users.add(user)
+    ttl = timedelta(days=7), timedelta(days=30)
+    long_ago = datetime.now(UTC) - timedelta(days=31)
+    await sessions.add(AuthSession.open(user.id, "h" * 64, long_ago, *ttl, user_agent=None))
+    await sessions.add(
+        AuthSession.open(user.id, "i" * 64, datetime.now(UTC), *ttl, user_agent=None)
+    )
+    purpose = TokenPurpose.PASSWORD_RESET
+    await tokens.add(OneTimeToken.issue(user.id, purpose, "j" * 64, long_ago))
+    await session.commit()
+
+    await delete_expired_sign_ins(session=session)
+    await session.commit()
+
+    assert await sessions.get("h" * 64) is None
+    assert await sessions.get("i" * 64) is not None
+    assert await tokens.get("j" * 64, purpose) is None
 
 
 def test_grant_role_command(database_url, capsys):
