@@ -423,6 +423,8 @@ describe('deleting the account', () => {
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(deletes()).toEqual([])
+    // Back where the user was, for keyboard and screen reader users.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Delete my account' })).toHaveFocus())
   })
 
   it('deletes the account once confirmed, then leaves the signed-in space', async () => {
