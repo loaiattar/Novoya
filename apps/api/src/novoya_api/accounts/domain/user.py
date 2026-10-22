@@ -159,10 +159,10 @@ class User:
         if isinstance(by, AdminActor):
             self._check_admin_may_change_role(new_role, by)
         if new_role is not Role.CLIENT and not self.is_active:
-            # Nobody could enable a disabled admin again, nor demote them.
-            raise CannotPromoteDisabled("a disabled account cannot get the agent or admin role")
+            # A disabled account stays a client: enable it before giving it a staff role.
+            raise CannotPromoteDisabled("a disabled account can only have the client role")
         if new_role is not Role.CLIENT and not self.is_email_verified:
-            raise EmailNotVerified("only a verified email address can get the agent or admin role")
+            raise EmailNotVerified("only a verified email address can get a staff role")
         if new_role is self.role:
             return None
         change = RoleChange.record(self.id, self.role, new_role, by, now)

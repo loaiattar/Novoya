@@ -58,7 +58,13 @@ change goes to `role_changes`.
   super admin disables the account from the users page. There is no server command for the
   status.
 - Until someone runs `grant-role --role super_admin`, nobody acts on admins through the API,
-  as with #128.
+  as with #128. Existing admins stay plain admins after the upgrade, so every database that
+  already has users (the Render demo too) needs one more deploy step:
+
+  ```bash
+  alembic upgrade head
+  python -m novoya_api.accounts.presentation.cli grant-role --email <owner> --role super_admin
+  ```
 - The web users page reads the viewer's role from `GET /me`: a plain admin sees the admin rows
   locked and the Admin role greyed out, everybody sees the super admin rows locked, and nobody
   sees Super admin among the roles to give. That is only display: the API checks every change.

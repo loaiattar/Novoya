@@ -117,7 +117,7 @@ class SuperAdminServerOnly(PermissionDenied):
 
 
 class CannotPromoteDisabled(Conflict):
-    """A disabled account stays a client: enable it before giving it the agent or admin role."""
+    """A disabled account stays a client: enable it before giving it a staff role."""
 
     code = "cannot_promote_disabled"
 

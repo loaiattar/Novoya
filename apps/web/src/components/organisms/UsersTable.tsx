@@ -79,6 +79,10 @@ export function UsersTable({
           const disabled = user.status === 'disabled'
           const saving = savingIds.has(user.id)
           const name = user.name ?? user.email
+          // A disabled account stays a client, only a super admin gives the admin role,
+          // and the super admin role is given on the server only.
+          const canGive = (role: Role) =>
+            role !== 'super_admin' && (!disabled || role === 'client') && (superAdmin || !isAdminRole(role))
           return (
             <tr key={user.id} className="border-t border-line">
               <th scope="row" className="px-2 py-4 text-left font-normal md:p-4">
@@ -101,13 +105,7 @@ export function UsersTable({
                   {/* The super admin role is never offered: only the server command gives it. It is
                       listed only to show the current role of a super admin. */}
                   {(user.role === 'super_admin' ? [...GIVEN_ROLES, user.role] : GIVEN_ROLES).map((role) => (
-                    // A disabled account stays a client until it is enabled again, and only a
-                    // super admin gives the admin role.
-                    <option
-                      key={role}
-                      value={role}
-                      disabled={role === 'super_admin' || (disabled && role !== 'client') || (!superAdmin && isAdminRole(role))}
-                    >
+                    <option key={role} value={role} disabled={!canGive(role)}>
                       {t(`roles.${role}`)}
                     </option>
                   ))}
