@@ -2,10 +2,10 @@
 
 - owner_id(wish_id) -> the user who sent the wish, or None when there is none
 - trips(wish_ids) -> text, destination, dates, travellers and budget for those wishes
-
+- delete_for_user(user_id)-> erases every wish of this user. Erase their plans first
+  (plans.wish_id has no cascade).
 Planned:
 - mark_planned(wish_id)
-- delete_for_user(user_id)
 """
 
 from collections.abc import Sequence
