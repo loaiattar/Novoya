@@ -9,8 +9,9 @@ from pathlib import Path
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from novoya_api.catalog.application.dto import ImportCounts
 from novoya_api.catalog.infrastructure.detour.mapping import DetourImportError
-from novoya_api.catalog.infrastructure.detour.run import ImportCounts, import_detour
+from novoya_api.catalog.infrastructure.detour.run import DetourImportBusy, import_detour
 from novoya_api.shared.infrastructure.db.session import close_db
 
 
@@ -32,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     try:
         counts = asyncio.run(_run(source))
-    except DetourImportError as error:
+    except (DetourImportError, DetourImportBusy) as error:
         print(f"error: nothing imported: {error}", file=sys.stderr)
         return 1
     except SQLAlchemyError as error:  # the engine hides the values; the class name is enough

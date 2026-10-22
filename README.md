@@ -42,7 +42,7 @@ Without it, the app has no destinations, offers or reviews. They come from the c
    It prints `imported 396 partners, 792 offers, 54 reviews, 104 extras`. The `-v` part lends the folder to the container for this one command, read-only.
 4. Reload http://localhost:5173: the destinations, offers and reviews are now the client's.
 
-When a teammate shares a newer export, run step 3 again: it updates the same rows. If you ran the made-up seed (`python -m novoya_api.catalog.infrastructure.seed`) on this database before, its partners stay next to the client's. To start clean, run `docker compose down -v`, then steps 2 and 3. This also deletes your local accounts.
+When a teammate shares a newer export, run step 3 again: it updates the same rows. An admin can also upload it on http://localhost:5173/admin/import, which runs the same import and keeps no copy of the file. If you ran the made-up seed (`python -m novoya_api.catalog.infrastructure.seed`) on this database before, its partners stay next to the client's. To start clean, run `docker compose down -v`, then steps 2 and 3. This also deletes your local accounts.
 
 To work without Docker, see [apps/api](apps/api/README.md) and [apps/web](apps/web/README.md). The architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and the backend (modules + Clean Architecture) is explained in [docs/BACKEND.md](docs/BACKEND.md).
 

@@ -63,3 +63,13 @@ class ExtraView:
             supplement_eur=extra.supplement_eur,
             unit=extra.unit,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class ImportCounts:
+    """What a DÉTOUR import wrote. Counts only: never a name or an email."""
+
+    partners: int
+    offers: int
+    reviews: int
+    extras: int

@@ -15,6 +15,7 @@ from novoya_api.shared.domain.errors import (
     InvalidTransition,
     NotFound,
     PermissionDenied,
+    TooLarge,
     TooManyRequests,
     Unauthenticated,
     Unavailable,
@@ -27,6 +28,7 @@ STATUS_BY_ERROR: list[tuple[type[DomainError], int]] = [
     (InvalidTransition, status.HTTP_409_CONFLICT),
     (Conflict, status.HTTP_409_CONFLICT),
     (InvalidInput, status.HTTP_422_UNPROCESSABLE_CONTENT),
+    (TooLarge, status.HTTP_413_CONTENT_TOO_LARGE),
     (TooManyRequests, status.HTTP_429_TOO_MANY_REQUESTS),
     (Unavailable, status.HTTP_503_SERVICE_UNAVAILABLE),
 ]

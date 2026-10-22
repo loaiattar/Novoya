@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from novoya_api.catalog.application.dto import ImportCounts
 from novoya_api.catalog.application.use_cases.update_offer import CLEARABLE
 from novoya_api.catalog.domain import Extra, Offer, Partner, Review
 
@@ -347,3 +348,21 @@ class UpdateExtraRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     hidden: bool
+
+
+class ImportCountsResponse(BaseModel):
+    """What the DÉTOUR import wrote: rows in the export, imported or updated."""
+
+    partners: int
+    offers: int
+    reviews: int
+    extras: int
+
+    @classmethod
+    def of(cls, counts: ImportCounts) -> "ImportCountsResponse":
+        return cls(
+            partners=counts.partners,
+            offers=counts.offers,
+            reviews=counts.reviews,
+            extras=counts.extras,
+        )

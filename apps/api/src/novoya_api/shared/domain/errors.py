@@ -53,6 +53,12 @@ class Unavailable(DomainError):
     code = "unavailable"
 
 
+class TooLarge(DomainError):
+    """The upload is bigger than the server accepts, for example a DÉTOUR export."""
+
+    code = "too_large"
+
+
 class TooManyRequests(DomainError):
     """The caller tried too often. They may try again after `retry_after_seconds`."""
 

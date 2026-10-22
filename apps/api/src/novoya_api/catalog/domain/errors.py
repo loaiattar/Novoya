@@ -1,4 +1,4 @@
-from novoya_api.shared.domain.errors import Conflict, InvalidInput, NotFound
+from novoya_api.shared.domain.errors import Conflict, InvalidInput, NotFound, TooLarge
 
 
 class InvalidPartner(InvalidInput):
@@ -28,3 +28,26 @@ class ImportedRow(Conflict):
     DÉTOUR and arrives with the next import. Novoya only decides featured and hidden."""
 
     code = "imported_row"
+
+
+class NotADetourExport(InvalidInput):
+    """The uploaded file is not a sqlite database, whatever its name says."""
+
+    code = "not_a_detour_export"
+
+
+class DetourExportTooLarge(TooLarge):
+    code = "detour_export_too_large"
+
+
+class CatalogImportFailed(InvalidInput):
+    """The export has a row Novoya cannot take; nothing was written. The message names the
+    DÉTOUR table and id only, never a name, an email or a review text."""
+
+    code = "detour_import_failed"
+
+
+class CatalogImportRunning(Conflict):
+    """Another DÉTOUR import, from the back office or the command line, is still running."""
+
+    code = "import_running"

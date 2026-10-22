@@ -12,16 +12,20 @@ switch on a partner, an offer or an extra, and the admin's switch on a review, k
 imports) and `featured` (offers). A hidden row is left out everywhere an inactive one is.
 A hidden review leaves GET /reviews until an admin shows it again; the import still
 deletes a review that left avis_diffusables.
+
+One import at a time, from the command line or the back office (#132): the transaction takes
+a PostgreSQL advisory lock, so a second one stops with DetourImportBusy instead of waiting.
 """
 
+import asyncio
 from collections.abc import Sequence
-from dataclasses import dataclass
 from pathlib import Path
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from novoya_api.catalog.application.dto import ImportCounts
 from novoya_api.catalog.domain import Extra, Offer, Partner, Review
 from novoya_api.catalog.infrastructure.db.models import ExtraRow, OfferRow, PartnerRow, ReviewRow
 from novoya_api.catalog.infrastructure.detour.mapping import SOURCE, DetourCatalog
@@ -30,20 +34,22 @@ from novoya_api.shared.infrastructure.db.session import get_sessionmaker
 
 # Under PostgreSQL's 32767 parameters per statement for the widest table (offers).
 BATCH = 500
+# Key of the advisory lock held by the import's transaction: "detour" in ASCII.
+LOCK_KEY = 0x6465746F7572
 
 
-@dataclass(frozen=True)
-class ImportCounts:
-    partners: int
-    offers: int
-    reviews: int
-    extras: int
+class DetourImportBusy(Exception):
+    """Another DÉTOUR import is writing. Nothing was written; try again when it is done."""
 
 
 async def import_detour(path: Path) -> ImportCounts:
-    """Reads the whole export first (DetourImportError before any write), then writes it."""
-    catalog = read_catalog(path)
+    """Reads the whole export first (DetourImportError before any write), then writes it.
+    The read runs in a thread, so the API keeps answering meanwhile."""
+    catalog = await asyncio.to_thread(read_catalog, path)
     async with get_sessionmaker()() as session:
+        # Released with the transaction, on commit or rollback.
+        if not await session.scalar(select(func.pg_try_advisory_xact_lock(LOCK_KEY))):
+            raise DetourImportBusy("another DÉTOUR import is running")
         await _upsert(session, PartnerRow, [_partner(item) for item in catalog.partners])
         await _upsert(
             session, OfferRow, [_offer(item) for item in catalog.offers], keep={"featured"}

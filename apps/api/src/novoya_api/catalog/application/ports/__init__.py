@@ -1,7 +1,8 @@
-from collections.abc import Sequence
+from collections.abc import AsyncIterable, Sequence
 from typing import Protocol
 from uuid import UUID
 
+from novoya_api.catalog.application.dto import ImportCounts
 from novoya_api.catalog.domain import Extra, Offer, Partner, Review
 
 
@@ -75,3 +76,12 @@ class ExtraRepository(Protocol):
     async def get(self, extra_id: UUID) -> Extra | None: ...
 
     async def save(self, extra: Extra) -> None: ...
+
+
+class CatalogImporter(Protocol):
+    async def import_export(self, chunks: AsyncIterable[bytes]) -> ImportCounts:
+        """Imports an uploaded DÉTOUR export, all of it or nothing, and keeps no copy.
+
+        Raises DetourExportTooLarge, NotADetourExport, CatalogImportFailed or
+        CatalogImportRunning."""
+        ...

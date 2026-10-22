@@ -7,9 +7,13 @@ on reviews).
 """
 
 from novoya_api.catalog.domain.errors import (
+    CatalogImportFailed,
+    CatalogImportRunning,
+    DetourExportTooLarge,
     ExtraNotFound,
     ImportedRow,
     InvalidPartner,
+    NotADetourExport,
     OfferNotFound,
     PartnerNotFound,
     ReviewNotFound,
@@ -21,6 +25,9 @@ from novoya_api.catalog.domain.partner import Partner, normalize_place
 from novoya_api.catalog.domain.review import InvalidReview, Review
 
 __all__ = [
+    "CatalogImportFailed",
+    "CatalogImportRunning",
+    "DetourExportTooLarge",
     "Extra",
     "ExtraNotFound",
     "ExtraPricing",
@@ -29,6 +36,7 @@ __all__ = [
     "InvalidOffer",
     "InvalidPartner",
     "InvalidReview",
+    "NotADetourExport",
     "Offer",
     "OfferKind",
     "OfferNotFound",
