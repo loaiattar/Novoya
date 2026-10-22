@@ -26,6 +26,7 @@ flowchart TB
 | `wishes` | The client's wish, the coverage check, the preference panel and its answers | #23, #25, #28 |
 | `planning` | The plan built from offers and its status machine, the agent's negotiation (queue, prices) | #29, #76, #50, #51 |
 | `quoting` | The quote: total, validity, PDF, email, the client's accept or reject | #52, #53, #54 |
+| `dashboard` | The admin home's key numbers, counted by each module through its `public.py`. No table | #131 |
 | `health` | Is the API up, does the database answer. The worked example to copy | done |
 | `shared` | The shared kernel: domain errors, common value objects, the database session, the LLM client | |
 
@@ -39,7 +40,7 @@ apps/api/src/novoya_api/
   config.py            settings from NOVOYA_* environment variables
   openapi.py           prints openapi.json for the frontend
 
-  accounts/  catalog/  wishes/  planning/  quoting/  health/
+  accounts/  catalog/  wishes/  planning/  quoting/  dashboard/  health/
     public.py          the only file other modules may import (not in health)
     domain/            entities, value objects, business rules. Pure Python
     application/
@@ -105,6 +106,7 @@ So the inner layers of a module never know other modules exist, and each module 
 | `planning` | `catalog` (check offer ids, LLM travel tools) | `catalog.public` |
 | `quoting` | `planning` (priced plan, mark quoted, accepted or rejected), `accounts` (email, language) | `planning.public`, `accounts.public` |
 | `accounts` | `wishes`, `planning`, `quoting` (delete a user's data) | each `public.delete_for_user` |
+| `dashboard` | `accounts`, `catalog`, `planning`, `quoting` (counts for the admin home) | each `public.count_*` |
 | all routers | `accounts` (`current_user`, `require_client`, `require_agent`, `require_admin`, `Role`, `get_user`) | `accounts.public` |
 
 Each module owns its tables. Foreign keys across modules are allowed in the database, but code reads another module's data only through `public.py`.
@@ -145,6 +147,7 @@ The allowed moves are methods on `Plan`, for example `plan.request_quote(by=user
 | planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice`, `SetExtraPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
 | quoting | `SendQuote`, `GetQuote`, `DownloadQuotePdf`, `DecideQuote` | `POST /agent/plans/{id}/quote`, `/quotes/{id}`, `/quotes/{id}/pdf`, `/accept`, `/reject` | QuoteRepository, Plans, Users, QuoteRenderer, QuoteNotifier |
 | trips | `ListMyTrips` | `GET /me/trips` | TripWishes, TripPlans, TripQuotes |
+| dashboard | `GetAdminStats` | `GET /admin/stats` | Counts |
 | health | `CheckDatabase` | `GET /health`, `GET /health/db` | DatabaseProbe |
 
 Every module also uses the shared `UnitOfWork` port: one use case is one transaction.

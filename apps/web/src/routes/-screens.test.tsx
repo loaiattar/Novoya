@@ -158,7 +158,7 @@ describe('back-office and plan screens', () => {
   afterEach(() => vi.restoreAllMocks())
 
   it('lists the users for an admin', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     // The first render of the admin chunk can be slow on a cold start.
     const table = await screen.findByRole('table', { name: 'Users and roles' }, { timeout: 3000 })
@@ -167,7 +167,7 @@ describe('back-office and plan screens', () => {
   })
 
   it('asks before changing a role, then sends PATCH /admin/users/{id}/role', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     const select = await screen.findByRole('combobox', { name: 'Role of Léa Morel' })
     fireEvent.change(select, { target: { value: 'agent' } })
@@ -186,7 +186,7 @@ describe('back-office and plan screens', () => {
   })
 
   it('sends nothing when the admin cancels the role change', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     const select = await screen.findByRole('combobox', { name: 'Role of Léa Morel' })
     // What the arrow keys do on a closed <select> in Windows: one change per key press.
@@ -199,13 +199,13 @@ describe('back-office and plan screens', () => {
   })
 
   it('does not let an admin change their own role', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     expect(await screen.findByRole('combobox', { name: 'Role of Arthur Roche' })).toBeDisabled()
   })
 
   it('asks before disabling an account, then sends PATCH /admin/users/{id}/status', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
 
@@ -226,7 +226,7 @@ describe('back-office and plan screens', () => {
   })
 
   it('sends nothing when the admin cancels disabling an account', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
@@ -238,7 +238,7 @@ describe('back-office and plan screens', () => {
   it('offers no disable action on their own account nor on another admin', async () => {
     const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
     users = [ADMIN_ROW, LEA, OTHER_ADMIN]
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     expect(await screen.findByRole('button', { name: "Disable Léa Morel's account" })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: "Disable Arthur Roche's account" })).not.toBeInTheDocument()
@@ -246,7 +246,7 @@ describe('back-office and plan screens', () => {
   })
 
   it('explains a refused status change and refreshes the list', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
     const dialog = await screen.findByRole('alertdialog')
@@ -261,7 +261,7 @@ describe('back-office and plan screens', () => {
   })
 
   it('explains that a super admin is managed on the server', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     fireEvent.click(await screen.findByRole('button', { name: "Disable Léa Morel's account" }))
     const dialog = await screen.findByRole('alertdialog')
@@ -278,7 +278,7 @@ describe('back-office and plan screens', () => {
   it("locks another admin's role, and keeps a disabled account a client", async () => {
     const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
     users = [ADMIN_ROW, { ...LEA, status: 'disabled' }, OTHER_ADMIN]
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     expect(await screen.findByRole('combobox', { name: 'Role of Inès Faure' })).toBeDisabled()
     const lea = screen.getByRole('combobox', { name: 'Role of Léa Morel' })
@@ -291,7 +291,7 @@ describe('back-office and plan screens', () => {
     const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
     const BOSS: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000004', name: 'Paul Girard', role: 'super_admin' }
     users = [ADMIN_ROW, LEA, OTHER_ADMIN, BOSS]
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     // A plain admin: the admin and super admin rows are locked, and so are those roles.
     expect(await screen.findByRole('combobox', { name: 'Role of Paul Girard' })).toBeDisabled()
@@ -308,7 +308,7 @@ describe('back-office and plan screens', () => {
     const OTHER_ADMIN: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000003', name: 'Inès Faure', role: 'admin' }
     const OTHER_BOSS: UserResponse = { ...LEA, id: '00000000-0000-4000-8000-000000000004', name: 'Paul Girard', role: 'super_admin' }
     users = [{ ...ADMIN_ROW, role: 'super_admin' }, LEA, OTHER_ADMIN, OTHER_BOSS]
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     expect(await screen.findByRole('combobox', { name: 'Role of Inès Faure' })).toBeEnabled()
     // Super admins, themselves included, are managed on the server only.
@@ -339,12 +339,12 @@ describe('back-office and plan screens', () => {
     const { router } = renderAt('/agent')
 
     expect(await screen.findByRole('heading', { name: 'Quote requests' })).toBeInTheDocument()
-    await router.navigate({ to: '/admin' })
+    await router.navigate({ to: '/admin/users' })
     expect(await screen.findByRole('table', { name: 'Users and roles' })).toBeInTheDocument()
   })
 
   it('filters the users by role', async () => {
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     fireEvent.change(await screen.findByRole('combobox', { name: 'Filter by role' }), { target: { value: 'agent' } })
 
@@ -355,7 +355,7 @@ describe('back-office and plan screens', () => {
 
   it("shows the admin page in the admin's language", async () => {
     me = { ...ADMIN, locale: 'fr' }
-    renderAt('/admin')
+    renderAt('/admin/users')
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Utilisateurs' })).toBeInTheDocument()
     expect(await screen.findByRole('table', { name: 'Utilisateurs et rôles' })).toBeInTheDocument()

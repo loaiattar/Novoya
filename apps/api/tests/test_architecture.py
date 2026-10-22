@@ -1,7 +1,7 @@
 """Architecture rules, checked on every import of src/novoya_api.
 
-The code is split into modules (accounts, catalog, wishes, planning, quoting, health)
-plus a shared kernel. Inside each one, Clean Architecture layers:
+The code is split into modules (accounts, catalog, wishes, planning, quoting, dashboard,
+health) plus a shared kernel. Inside each one, Clean Architecture layers:
 
     presentation  ->  application  ->  domain
     infrastructure ->  application  ->  domain

@@ -8,6 +8,8 @@
 - get_users(user_ids) -> {user_id: UserView}, the same for a whole page of an admin list
 - search_user_ids(query) -> the ids of the users whose email or name contains `query`, so
   an admin list in another module can search by client
+- count_users_by_role() -> {role: count}: every role, 0 when nobody has it, for the admin
+  dashboard. Counts only.
 - delete_expired_sign_ins(): deletes the sessions past their 30 days and the expired email
   links, for the API's startup (sign-ins and new links do it too). The caller commits.
 """
@@ -41,6 +43,7 @@ __all__ = [
     "CurrentUserView",
     "Role",
     "UserView",
+    "count_users_by_role",
     "current_user",
     "delete_expired_sign_ins",
     "get_user",
@@ -88,6 +91,13 @@ async def search_user_ids(query: str, *, session: AsyncSession) -> list[UUID]:
     SEARCH_CAP. For admins only: the caller's router must require the admin role."""
     users = await SqlUserRepository(session).search(query, None, SEARCH_CAP, 0)
     return [user.id.value for user in users]
+
+
+async def count_users_by_role(*, session: AsyncSession) -> dict[str, int]:
+    """How many accounts have each role, disabled ones too. For admins only: the caller's
+    router must require the admin role."""
+    found = await SqlUserRepository(session).count_by_role()
+    return {role.value: found.get(role.value, 0) for role in Role}
 
 
 async def delete_expired_sign_ins(*, session: AsyncSession) -> None:

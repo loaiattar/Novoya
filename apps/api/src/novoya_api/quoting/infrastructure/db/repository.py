@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime, time
 from uuid import UUID
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer
 
@@ -101,8 +101,7 @@ class SqlQuoteRepository:
         if status in (QuoteStatus.ACCEPTED, QuoteStatus.REJECTED):
             statement = statement.where(QuoteModel.answer == status.value)
         elif status is not None:
-            # Quote.has_expired in SQL: the whole validity day counts, in Paris.
-            today = datetime.combine(paris_day(now), time.min, tzinfo=AGENCY_TIMEZONE)
+            today = _start_of_today(now)
             statement = statement.where(
                 QuoteModel.answer.is_(None),
                 QuoteModel.valid_until < today
@@ -113,6 +112,28 @@ class SqlQuoteRepository:
             statement.order_by(QuoteModel.sent_at.desc(), QuoteModel.id).limit(limit).offset(offset)
         )
         return [self._to_quote(row, with_pdf=False) for row in rows]
+
+    async def count_by_status(self, now: datetime) -> dict[QuoteStatus, int]:
+        """Every quote by its status at `now`, as Quote.status gives it."""
+        today = _start_of_today(now)
+        unanswered = QuoteModel.answer.is_(None)
+        row = (
+            await self._session.execute(
+                select(
+                    func.count().filter(unanswered, QuoteModel.valid_until >= today),
+                    func.count().filter(unanswered, QuoteModel.valid_until < today),
+                    func.count().filter(QuoteModel.answer == QuoteStatus.ACCEPTED.value),
+                    func.count().filter(QuoteModel.answer == QuoteStatus.REJECTED.value),
+                )
+            )
+        ).one()
+        statuses = (
+            QuoteStatus.OPEN,
+            QuoteStatus.EXPIRED,
+            QuoteStatus.ACCEPTED,
+            QuoteStatus.REJECTED,
+        )
+        return dict(zip(statuses, row, strict=True))
 
     async def save_answer(self, quote: Quote) -> None:
         """Writes the client's answer, only if the row has none yet: of two answers sent at
@@ -137,3 +158,9 @@ class SqlQuoteRepository:
             .where(QuoteModel.client_id == client_id)
             .execution_options(synchronize_session=False)
         )
+
+
+def _start_of_today(now: datetime) -> datetime:
+    """Quote.has_expired in SQL: a quote valid before this moment has expired, since the
+    whole validity day counts, in Paris."""
+    return datetime.combine(paris_day(now), time.min, tzinfo=AGENCY_TIMEZONE)

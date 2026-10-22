@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -116,6 +116,13 @@ class SqlUserRepository:
                 update(UserModel).where(UserModel.id == user.id.value).values(**changed)
             )
         self._read[user.id] = columns
+
+    async def count_by_role(self) -> dict[str, int]:
+        """Every account, disabled ones too, by role. Roles with nobody are left out."""
+        rows = await self._session.execute(
+            select(UserModel.role, func.count()).group_by(UserModel.role)
+        )
+        return {role: count for role, count in rows}
 
     async def count_active_with_role(self, role: Role) -> int:
         # FOR UPDATE locks these rows until commit: two admins demoting each other at the

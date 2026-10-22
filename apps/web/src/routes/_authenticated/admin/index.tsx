@@ -1,161 +1,148 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
-import { useDeferredValue, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError } from '../../../api/errors'
-import {
-  changeUserRoleMutation,
-  changeUserStatusMutation,
-  listUsersOptions,
-  listUsersQueryKey,
-} from '../../../api/generated/@tanstack/react-query.gen'
+import { getAdminStatsOptions } from '../../../api/generated/@tanstack/react-query.gen'
+import type { AdminStatsResponse, StatsRows } from '../../../api/generated/types.gen'
 import { Eyebrow } from '../../../components/atoms/Eyebrow'
-import { Input } from '../../../components/atoms/Input'
 import { ErrorNote } from '../../../components/molecules/ErrorNote'
-import { RoleChangeDialog, type RoleChange } from '../../../components/organisms/RoleChangeDialog'
-import { type Role, ROLES } from '../../../components/organisms/roles'
-import { StatusChangeDialog, type StatusChange } from '../../../components/organisms/StatusChangeDialog'
-import { UsersTable } from '../../../components/organisms/UsersTable'
+import { StatTile } from '../../../components/molecules/StatTile'
 
 // The guard is in route.tsx: admins only.
 export const Route = createFileRoute('/_authenticated/admin/')({
-  component: AdminPage,
+  component: DashboardPage,
 })
 
-function AdminPage() {
-  const { me } = Route.useRouteContext()
+/** The admin home: the agency's key numbers, each one opening its page. Counts only. */
+function DashboardPage() {
   const { t } = useTranslation('admin')
-  const queryClient = useQueryClient()
-  const [search, setSearch] = useState('')
-  const [role, setRole] = useState<Role | ''>('')
-  // A role change waits here until the admin confirms it.
-  const [pendingChange, setPendingChange] = useState<RoleChange | null>(null)
-  const [pendingStatus, setPendingStatus] = useState<StatusChange | null>(null)
-  const q = useDeferredValue(search.trim())
-
-  const query = { q: q || undefined, role: role || undefined, limit: 50 }
-  const users = useQuery({ ...listUsersOptions({ query }), placeholderData: keepPreviousData })
-  // Refetch after a failure too: the row may have changed in another tab.
-  const changeRole = useMutation({
-    ...changeUserRoleMutation(),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
-  })
-  const changeStatus = useMutation({
-    ...changeUserStatusMutation(),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: listUsersQueryKey() }),
-  })
-  const savingIds = new Set(
-    [changeRole, changeStatus].flatMap((mutation) =>
-      mutation.isPending && mutation.variables ? [mutation.variables.path.user_id] : [],
-    ),
-  )
+  // Read again on every visit: the numbers must show what the admin just changed on the
+  // other pages, and the router keeps a query fresh for 30 seconds by default.
+  const stats = useQuery({ ...getAdminStatsOptions(), staleTime: 0 })
 
   return (
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
-      <h1 className="m-0 text-[39px] md:text-[50px]">{t('title')}</h1>
-
-      <div className="mt-10 mb-4 flex flex-col gap-2.5 md:flex-row">
-        <label className="sr-only" htmlFor="admin-search">
-          {t('searchLabel')}
-        </label>
-        <Input
-          id="admin-search"
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={t('searchPlaceholder')}
-          className="md:max-w-[350px]"
-        />
-        <label className="sr-only" htmlFor="admin-role">
-          {t('roleFilter')}
-        </label>
-        <select
-          id="admin-role"
-          value={role}
-          onChange={(event) => setRole(event.target.value as Role | '')}
-          className="min-h-11 border border-line bg-white px-3"
-        >
-          <option value="">{t('allRoles')}</option>
-          {ROLES.map((value) => (
-            <option key={value} value={value}>
-              {t(`roles.${value}`)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {changeRole.isError && (
-        <p role="alert" className="mb-4 text-danger">
-          {t(roleErrorKey(changeRole.error))}
-        </p>
-      )}
-      {changeStatus.isError && (
-        <p role="alert" className="mb-4 text-danger">
-          {t(statusErrorKey(changeStatus.error))}
-        </p>
-      )}
-
-      {users.isPending ? (
-        <p className="py-6 text-muted">{t('loading')}</p>
-      ) : users.isError ? (
-        <ErrorNote message={t('loadFailed')} onRetry={() => users.refetch()} />
-      ) : users.data.length === 0 ? (
-        <p className="py-6 text-muted">{t('empty')}</p>
+      <h1 className="m-0 text-[39px] md:text-[50px]">{t('dashboard.title')}</h1>
+      <p className="mt-3 mb-8 max-w-[60ch] text-muted">{t('dashboard.intro')}</p>
+      {stats.isPending ? (
+        <p className="py-6 text-muted">{t('dashboard.loading')}</p>
+      ) : !stats.data ? (
+        <ErrorNote message={t('dashboard.loadFailed')} onRetry={() => stats.refetch()} />
       ) : (
-        <UsersTable
-          users={users.data}
-          meId={me.id}
-          meRole={me.role}
-          savingIds={savingIds}
-          onChangeRole={(userId, next) => {
-            const user = users.data.find((row) => row.id === userId)
-            if (!user || user.role === next) return
-            setPendingChange({ userId, name: user.name ?? user.email, from: user.role, to: next })
-          }}
-          onChangeStatus={(userId, next) => {
-            const user = users.data.find((row) => row.id === userId)
-            if (!user || user.status === next) return
-            setPendingStatus({ userId, name: user.name ?? user.email, to: next })
-          }}
-        />
+        <Numbers stats={stats.data} />
       )}
-      <p className="mt-5 text-xs text-muted">
-        {t('note')}
-      </p>
-      <RoleChangeDialog
-        change={pendingChange}
-        onCancel={() => setPendingChange(null)}
-        onConfirm={(change) => {
-          setPendingChange(null)
-          changeRole.mutate({ path: { user_id: change.userId }, body: { role: change.to } })
-        }}
-      />
-      <StatusChangeDialog
-        change={pendingStatus}
-        onCancel={() => setPendingStatus(null)}
-        onConfirm={(change) => {
-          setPendingStatus(null)
-          changeStatus.mutate({ path: { user_id: change.userId }, body: { status: change.to } })
-        }}
-      />
     </>
   )
 }
 
-// Texts in admin.json. A refusal that a retry cannot fix gets its own message.
-function roleErrorKey(error: unknown) {
-  const code = error instanceof ApiError ? error.code : undefined
-  if (code === 'cannot_change_admin_role') return 'changeRefused.adminRole'
-  if (code === 'super_admin_server_only') return 'changeRefused.superAdmin'
-  if (code === 'cannot_promote_disabled') return 'changeRefused.disabledAccount'
-  return 'changeFailed'
+function Numbers({ stats }: { stats: AdminStatsResponse }) {
+  const { t } = useTranslation('admin')
+  const { plans, quotes, users } = stats
+  // What a catalog number leaves out: the rows an admin hid, and those DÉTOUR no longer exports.
+  // Offers have their own texts: in French, the words agree with "offre".
+  const leftOut = (rows: StatsRows, offers = false) => [
+    offers ? t('dashboard.offersHidden', { count: rows.hidden }) : t('dashboard.hidden', { count: rows.hidden }),
+    ...(rows.inactive === 0
+      ? []
+      : [
+          offers
+            ? t('dashboard.offersInactive', { count: rows.inactive })
+            : t('dashboard.inactive', { count: rows.inactive }),
+        ]),
+  ]
+  const toPlans = (content: ReactNode, className: string) => (
+    <Link to="/admin/activity" search={{ tab: 'plans' }} className={className}>
+      {content}
+    </Link>
+  )
+  const toQuotes = (content: ReactNode, className: string) => (
+    <Link to="/admin/activity" search={{ tab: 'quotes' }} className={className}>
+      {content}
+    </Link>
+  )
+  const toPartners = (content: ReactNode, className: string) => (
+    <Link to="/admin/partners" className={className}>
+      {content}
+    </Link>
+  )
+
+  return (
+    <div className="grid gap-10">
+      <Section title={t('dashboard.sections.work')}>
+        <StatTile
+          label={t('dashboard.waiting')}
+          value={plans.requested}
+          details={[t('dashboard.waitingDetail', { count: plans.negotiating })]}
+          renderLink={toPlans}
+        />
+        <StatTile label={t('dashboard.openQuotes')} value={quotes.open} renderLink={toQuotes} />
+        <StatTile label={t('dashboard.expiredQuotes')} value={quotes.expired} renderLink={toQuotes} />
+        <StatTile
+          label={t('dashboard.answered')}
+          value={quotes.accepted}
+          details={[t('dashboard.rejected', { count: quotes.rejected })]}
+          renderLink={toQuotes}
+        />
+      </Section>
+      <Section title={t('dashboard.sections.catalog')}>
+        <StatTile
+          label={t('dashboard.partners')}
+          value={stats.partners.active}
+          details={leftOut(stats.partners)}
+          renderLink={toPartners}
+        />
+        <StatTile
+          label={t('dashboard.offers')}
+          value={stats.offers.active}
+          details={leftOut(stats.offers, true)}
+          renderLink={toPartners}
+        />
+        <StatTile
+          label={t('dashboard.extras')}
+          value={stats.extras.active}
+          details={leftOut(stats.extras)}
+          renderLink={(content, className) => (
+            <Link to="/admin/extras" className={className}>
+              {content}
+            </Link>
+          )}
+        />
+        <StatTile
+          label={t('dashboard.reviews')}
+          value={stats.reviews.published}
+          details={[t('dashboard.hidden', { count: stats.reviews.hidden })]}
+          renderLink={(content, className) => (
+            <Link to="/admin/reviews" className={className}>
+              {content}
+            </Link>
+          )}
+        />
+      </Section>
+      <Section title={t('dashboard.sections.accounts')}>
+        <StatTile
+          label={t('dashboard.users')}
+          value={users.client + users.agent + users.admin + users.super_admin}
+          details={[
+            t('dashboard.byRole', { client: users.client, agent: users.agent, admin: users.admin + users.super_admin }),
+          ]}
+          renderLink={(content, className) => (
+            <Link to="/admin/users" className={className}>
+              {content}
+            </Link>
+          )}
+        />
+      </Section>
+    </div>
+  )
 }
 
-function statusErrorKey(error: unknown) {
-  const code = error instanceof ApiError ? error.code : undefined
-  if (code === 'cannot_change_admin_status') return 'changeRefused.adminStatus'
-  if (code === 'super_admin_server_only') return 'changeRefused.superAdmin'
-  return 'statusChangeFailed'
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section aria-label={title}>
+      <h2 className="mb-4 text-xs font-normal tracking-widest text-muted uppercase">{title}</h2>
+      <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-4">{children}</ul>
+    </section>
+  )
 }

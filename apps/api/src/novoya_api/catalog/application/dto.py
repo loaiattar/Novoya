@@ -63,3 +63,25 @@ class ExtraView:
             supplement_eur=extra.supplement_eur,
             unit=extra.unit,
         )
+
+
+@dataclass(frozen=True)
+class RowCounts:
+    """How many rows clients may see, how many an admin hid, and how many left the DÉTOUR
+    export (inactive, not hidden). An offer counts with its partner: it is hidden when
+    either is hidden, inactive when either is inactive."""
+
+    active: int
+    hidden: int
+    inactive: int
+
+
+@dataclass(frozen=True)
+class CatalogCounts:
+    """The catalog in numbers, for the admin dashboard. A review is published or hidden."""
+
+    partners: RowCounts
+    offers: RowCounts
+    extras: RowCounts
+    reviews_published: int
+    reviews_hidden: int

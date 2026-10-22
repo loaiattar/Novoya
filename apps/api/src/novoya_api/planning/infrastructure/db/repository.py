@@ -145,6 +145,13 @@ class SqlPlanRepository:
         )
         return [self._to_plan(row, ()) for row in rows]
 
+    async def count_by_status(self) -> dict[str, int]:
+        """Every plan by status. Statuses with no plan are left out."""
+        rows = await self._session.execute(
+            select(PlanModel.status, func.count()).group_by(PlanModel.status)
+        )
+        return {status: count for status, count in rows}
+
     async def list_by_ids(self, plan_ids: Sequence[UUID]) -> list[Plan]:
         """These plans, without their items. Missing ids are omitted."""
         if not plan_ids:

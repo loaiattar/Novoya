@@ -5,9 +5,9 @@ import { BackofficeLayout } from '../../../components/organisms/BackofficeLayout
 import { AppShell } from '../../../components/templates/AppShell'
 import { canOpen } from '../../../domain/auth/roles'
 
-// The admin area: users, partners and their offers, the extras, the reviews and the agency's
-// activity. Admins only, like /admin/users in the API; the others go back to /wish before
-// anything is requested.
+// The admin area: the overview, users, partners and their offers, the extras, the reviews and
+// the agency's activity. Admins only, like /admin/users in the API; the others go back to /wish
+// before anything is requested.
 export const Route = createFileRoute('/_authenticated/admin')({
   beforeLoad: ({ context }) => {
     if (!canOpen(context.me.role, 'admin')) throw redirect({ to: '/wish' })
@@ -22,7 +22,8 @@ function AdminArea() {
       <BackofficeLayout
         area={t('area')}
         items={[
-          { label: t('nav.users'), to: '/admin', exact: true },
+          { label: t('nav.overview'), to: '/admin', exact: true },
+          { label: t('nav.users'), to: '/admin/users' },
           { label: t('nav.partners'), to: '/admin/partners' },
           { label: t('nav.extras'), to: '/admin/extras' },
           { label: t('nav.reviews'), to: '/admin/reviews' },

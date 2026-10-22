@@ -93,6 +93,7 @@ The backend is a modular monolith: one application and one database, split by bu
 | `planning` | The plan built from offers, its status machine, the agent's negotiation |
 | `quoting` | The quote: total, validity, PDF, email, accept or reject |
 | `trips` | The client's list of trips: their wishes, each with its plan and its quote, read through the public files of wishes, planning and quoting. Reads only |
+| `dashboard` | The admin home's key numbers. No table: each module counts its own rows |
 | `shared` | Domain errors, common value objects, database session, LLM client |
 
 Inside each module, source code dependencies only point inward:
@@ -301,6 +302,7 @@ Admin (role `admin` only; an admin can also use every agent route):
 | GET | `/admin/quotes` | Every quote with its client, total and status (`open`, `expired`, `accepted`, `rejected`, as `GET /quotes/{id}` gives it) |
 | GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
 | GET, PATCH | `/admin/extras` | List extras, hide or show one |
+| GET | `/admin/stats` | The admin home's counts in one request: partners, offers and extras (active, hidden, inactive), reviews, accounts by role, plans and quotes by status. Counts only |
 
 The three lists live in their own module (wishes, planning, quoting). A search by client goes through `accounts.public.search_user_ids`, called from the module's adapters: a `public.py` never imports accounts, because accounts imports them to erase an account's data.
 
@@ -314,7 +316,7 @@ novoya/
     web/                     React + TanStack (pnpm)
     api/                     FastAPI (uv)
       src/novoya_api/
-        accounts/ catalog/ wishes/ planning/ quoting/ trips/
+        accounts/ catalog/ wishes/ planning/ quoting/ trips/ dashboard/
           public.py          what other modules may use
           domain/            entities, rules
           application/       use_cases/, ports/

@@ -410,6 +410,43 @@
         "title": "AdminReviewResponse",
         "type": "object"
       },
+      "AdminStatsResponse": {
+        "description": "The admin home's numbers. Counts only.",
+        "properties": {
+          "extras": {
+            "$ref": "#/components/schemas/StatsRows"
+          },
+          "offers": {
+            "$ref": "#/components/schemas/StatsRows"
+          },
+          "partners": {
+            "$ref": "#/components/schemas/StatsRows"
+          },
+          "plans": {
+            "$ref": "#/components/schemas/StatsPlans"
+          },
+          "quotes": {
+            "$ref": "#/components/schemas/StatsQuotes"
+          },
+          "reviews": {
+            "$ref": "#/components/schemas/StatsReviews"
+          },
+          "users": {
+            "$ref": "#/components/schemas/StatsUsers"
+          }
+        },
+        "required": [
+          "partners",
+          "offers",
+          "extras",
+          "reviews",
+          "users",
+          "plans",
+          "quotes"
+        ],
+        "title": "AdminStatsResponse",
+        "type": "object"
+      },
       "AdminWish": {
         "description": "One wish in the admin overview. client is null when the account is gone.",
         "properties": {
@@ -3098,6 +3135,145 @@
         "title": "SignInRequest",
         "type": "object"
       },
+      "StatsPlans": {
+        "description": "requested: waiting for an agent to take it and send the quote.",
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "negotiating": {
+            "title": "Negotiating",
+            "type": "integer"
+          },
+          "proposed": {
+            "title": "Proposed",
+            "type": "integer"
+          },
+          "quoted": {
+            "title": "Quoted",
+            "type": "integer"
+          },
+          "rejected": {
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "proposed",
+          "requested",
+          "negotiating",
+          "quoted",
+          "accepted",
+          "rejected"
+        ],
+        "title": "StatsPlans",
+        "type": "object"
+      },
+      "StatsQuotes": {
+        "description": "As GET /quotes/{id} gives them: open until the end of the validity day in Paris.",
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "expired": {
+            "title": "Expired",
+            "type": "integer"
+          },
+          "open": {
+            "title": "Open",
+            "type": "integer"
+          },
+          "rejected": {
+            "title": "Rejected",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "open",
+          "expired",
+          "accepted",
+          "rejected"
+        ],
+        "title": "StatsQuotes",
+        "type": "object"
+      },
+      "StatsReviews": {
+        "properties": {
+          "hidden": {
+            "title": "Hidden",
+            "type": "integer"
+          },
+          "published": {
+            "title": "Published",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "published",
+          "hidden"
+        ],
+        "title": "StatsReviews",
+        "type": "object"
+      },
+      "StatsRows": {
+        "description": "active: clients may see it; hidden: an admin hid it; inactive: it left the D\u00c9TOUR\nexport. An offer counts with its partner: hidden or inactive when its partner is.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "hidden": {
+            "title": "Hidden",
+            "type": "integer"
+          },
+          "inactive": {
+            "title": "Inactive",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "hidden",
+          "inactive"
+        ],
+        "title": "StatsRows",
+        "type": "object"
+      },
+      "StatsUsers": {
+        "description": "Every account by role, disabled ones too.",
+        "properties": {
+          "admin": {
+            "title": "Admin",
+            "type": "integer"
+          },
+          "agent": {
+            "title": "Agent",
+            "type": "integer"
+          },
+          "client": {
+            "title": "Client",
+            "type": "integer"
+          },
+          "super_admin": {
+            "title": "Super Admin",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "client",
+          "agent",
+          "admin",
+          "super_admin"
+        ],
+        "title": "StatsUsers",
+        "type": "object"
+      },
       "TagOut": {
         "properties": {
           "id": {
@@ -5314,6 +5490,48 @@
           }
         },
         "summary": "Update Review",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "description": "The key numbers of the agency in one request: partners, offers and extras (active,\nhidden, inactive), reviews, accounts by role, plans and quotes by status. Admin only.",
+        "operationId": "getAdminStats",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          }
+        },
+        "summary": "Get Admin Stats",
         "tags": [
           "admin"
         ]

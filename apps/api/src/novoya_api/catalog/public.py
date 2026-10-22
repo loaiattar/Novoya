@@ -13,6 +13,8 @@
 - canonical_country(name) -> the English name Novoya stores for a country written in French
   or English ("Grèce", "greece" -> "Greece"), or None. No database.
 - OfferKind: hotel, guide, transport, activity, agency (for OpenAPI on the plan).
+- count_catalog() -> CatalogCounts: partners, offers and extras (active, hidden, inactive)
+  and reviews (published, hidden), for the admin dashboard. Counts only.
 
 Country and city matching is case-insensitive. Prefer the names returned by
 covered_destinations() (English country names) so the LLM and the panel stay consistent.
@@ -28,7 +30,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.catalog.application.dto import ExtraView, OfferView
+from novoya_api.catalog.application.dto import CatalogCounts, ExtraView, OfferView
+from novoya_api.catalog.application.dto import RowCounts as RowCounts
 from novoya_api.catalog.application.use_cases.get_extras import GetExtras
 from novoya_api.catalog.application.use_cases.get_offers import GetOffers
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
@@ -36,6 +39,7 @@ from novoya_api.catalog.application.use_cases.list_tags_at import ListTagsAt
 from novoya_api.catalog.application.use_cases.search_offers import SearchOffers
 from novoya_api.catalog.domain.kinds import OfferKind as OfferKind
 from novoya_api.catalog.infrastructure import countries
+from novoya_api.catalog.infrastructure.db.counts import count_catalog as _count_catalog
 from novoya_api.catalog.infrastructure.db.repositories import (
     SqlExtraRepository,
     SqlOfferRepository,
@@ -91,6 +95,12 @@ async def get_extras(
     """Listed extras by id, in that order. Inactive, hidden and unknown ids are omitted."""
     async with _reading(session) as reading:
         return await GetExtras(SqlExtraRepository(reading))(ids)
+
+
+async def count_catalog(*, session: AsyncSession) -> CatalogCounts:
+    """How many partners, offers, extras and reviews, by state. For admins only: the
+    caller's router must require the admin role."""
+    return await _count_catalog(session)
 
 
 def canonical_country(name: str) -> str | None:
