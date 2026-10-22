@@ -51,7 +51,7 @@ def get_current_agent_id(user: Annotated[CurrentUserView, Depends(require_agent)
 
 def get_staff(user: Annotated[CurrentUserView, Depends(require_agent)]) -> Staff:
     """The signed-in agent or admin: 401 without a session, 403 for a client."""
-    return Staff(user.user_id.value, user.role is Role.ADMIN)
+    return Staff(user.user_id.value, user.role in (Role.ADMIN, Role.SUPER_ADMIN))
 
 
 def get_reader(user: CurrentUser) -> Reader:
