@@ -24,6 +24,7 @@ from novoya_api.accounts.infrastructure.db.models import UserModel
 from novoya_api.catalog.infrastructure.db.models import OfferRow, PartnerRow
 from novoya_api.planning.domain.plan import DraftItem, Plan
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
+from novoya_api.quoting.domain.errors import QuoteAlreadyAnswered
 from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.quoting.infrastructure.db.repository import SqlQuoteRepository
 from novoya_api.shared.domain.value_objects import Locale
@@ -163,6 +164,27 @@ async def test_get_reads_back_the_clients_answer(engine, stored):
         read = await SqlQuoteRepository(session).get(quote.id)
 
     assert read == quote
+
+
+async def test_save_answer_writes_the_answer_once(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+    quote.record_answer(QuoteStatus.ACCEPTED, "Great", NOW)
+
+    async with new_session(engine) as session:
+        await SqlQuoteRepository(session).save_answer(quote)
+        await session.commit()
+    async with new_session(engine) as session:
+        with pytest.raises(QuoteAlreadyAnswered):
+            await SqlQuoteRepository(session).save_answer(quote)
+        read = await SqlQuoteRepository(session).get(quote.id)
+
+    assert read is not None
+    assert (read.answer, read.decided_at, read.client_comment) == (
+        QuoteStatus.ACCEPTED,
+        NOW,
+        "Great",
+    )
 
 
 async def test_an_answer_needs_its_date(engine, stored):

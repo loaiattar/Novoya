@@ -6,8 +6,19 @@ from uuid import UUID
 
 import pytest
 
-from novoya_api.quoting.domain.errors import InvalidQuote, QuoteNotFound
-from novoya_api.quoting.domain.quote import AGENCY_TIMEZONE, VALIDITY, Quote, QuoteStatus
+from novoya_api.quoting.domain.errors import (
+    InvalidQuote,
+    QuoteAlreadyAnswered,
+    QuoteExpired,
+    QuoteNotFound,
+)
+from novoya_api.quoting.domain.quote import (
+    AGENCY_TIMEZONE,
+    COMMENT_MAX_LENGTH,
+    VALIDITY,
+    Quote,
+    QuoteStatus,
+)
 from novoya_api.shared.domain.errors import InvalidInput, NotFound
 from novoya_api.shared.domain.value_objects import Locale
 
@@ -96,3 +107,62 @@ def test_the_number_has_the_paris_date():
     quote = Quote.issue(PLAN_ID, CLIENT_ID, AGENT_ID, Decimal("10"), Locale.FR, late_evening_utc)
 
     assert quote.number.startswith("NV-20261023-")
+
+
+# The client's answer
+
+
+@pytest.mark.parametrize("answer", [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED])
+def test_the_client_answers_an_open_quote(answer):
+    quote = issue()
+
+    quote.record_answer(answer, "  See you there  ", NOW)
+
+    assert quote.answer is answer
+    assert quote.decided_at == NOW
+    assert quote.client_comment == "See you there"
+    assert quote.status(NOW) is answer
+
+
+def test_a_blank_comment_is_no_comment():
+    quote = issue()
+
+    quote.record_answer(QuoteStatus.ACCEPTED, "   ", NOW)
+
+    assert quote.client_comment is None
+
+
+def test_the_last_minute_of_the_validity_day_still_takes_an_answer():
+    quote = issue()
+
+    quote.record_answer(QuoteStatus.ACCEPTED, None, LAST_MINUTE_IN_PARIS)
+
+    assert quote.answer is QuoteStatus.ACCEPTED
+
+
+def test_an_expired_quote_takes_no_answer():
+    quote = issue()
+
+    with pytest.raises(QuoteExpired):
+        quote.record_answer(QuoteStatus.ACCEPTED, None, NEXT_DAY_IN_PARIS)
+    assert quote.answer is None
+
+
+def test_an_answer_is_final():
+    quote = issue()
+    quote.record_answer(QuoteStatus.REJECTED, None, NOW)
+
+    with pytest.raises(QuoteAlreadyAnswered):
+        quote.record_answer(QuoteStatus.ACCEPTED, None, NOW)
+    assert quote.answer is QuoteStatus.REJECTED
+
+
+@pytest.mark.parametrize("answer", [QuoteStatus.OPEN, QuoteStatus.EXPIRED])
+def test_open_and_expired_are_not_answers(answer):
+    with pytest.raises(InvalidQuote):
+        issue().record_answer(answer, None, NOW)
+
+
+def test_the_comment_has_a_limit():
+    with pytest.raises(InvalidQuote):
+        issue().record_answer(QuoteStatus.ACCEPTED, "x" * (COMMENT_MAX_LENGTH + 1), NOW)

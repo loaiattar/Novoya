@@ -9,10 +9,15 @@ from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.domain.errors import QuoteNotFound
 from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from tests.quoting_fakes import (
+    AGENT,
     AGENT_ID,
+    CLIENT_FR,
     CLIENT_ID,
     NOW,
     OTHER_CLIENT,
+    QUOTED,
+    FakePeople,
+    FakePlanQuoting,
     FakeQuotes,
     FixedClock,
     stored_quote,
@@ -23,8 +28,11 @@ QUOTE = stored_quote()
 AFTER = QUOTE.valid_until + timedelta(days=2)
 
 
-def use_case(now: datetime = NOW, quote: Quote = QUOTE) -> GetQuote:
-    return GetQuote(FakeQuotes(quote), FixedClock(now))
+def use_case(
+    now: datetime = NOW, quote: Quote = QUOTE, plans: FakePlanQuoting | None = None
+) -> GetQuote:
+    people = FakePeople(CLIENT_FR, AGENT)
+    return GetQuote(FakeQuotes(quote), plans or FakePlanQuoting(), people, FixedClock(now))
 
 
 async def test_the_client_reads_their_open_quote():
@@ -34,6 +42,27 @@ async def test_the_client_reads_their_open_quote():
     assert detail.id == QUOTE.id
     assert detail.number == QUOTE.number
     assert detail.total == QUOTE.total
+
+
+async def test_the_quote_shows_the_trip_its_lines_and_who_prepared_it():
+    detail = await use_case()(QUOTE.id, CLIENT_ID, staff=False)
+
+    assert detail.agent_name == AGENT.name
+    assert (detail.country, detail.city, detail.persons) == ("Greece", "Chania", 2)
+    assert (detail.start_date, detail.end_date) == (QUOTED.start_date, QUOTED.end_date)
+    assert detail.budget_max == QUOTED.budget_max
+    assert detail.items == QUOTED.items
+    assert detail.extras == QUOTED.extras
+    assert (detail.decided_at, detail.client_comment) == (None, None)
+
+
+async def test_a_quote_whose_plan_is_gone_still_reads():
+    plans = FakePlanQuoting(priced_plan=None)
+
+    detail = await use_case(plans=plans)(QUOTE.id, CLIENT_ID, staff=False)
+
+    assert detail.id == QUOTE.id
+    assert (detail.city, detail.items, detail.extras) == (None, (), ())
 
 
 async def test_the_quote_is_still_open_on_its_last_instant():
@@ -55,6 +84,7 @@ async def test_the_clients_answer_is_the_status(answer):
     detail = await use_case(quote=quote)(quote.id, CLIENT_ID, staff=False)
 
     assert detail.status == answer
+    assert detail.decided_at == quote.decided_at
 
 
 async def test_an_answer_stays_after_the_validity_date():

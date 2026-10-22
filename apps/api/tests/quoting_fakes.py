@@ -14,6 +14,7 @@ from novoya_api.quoting.application.dto import (
     QuoteEmail,
     QuoteTrip,
 )
+from novoya_api.quoting.domain.errors import QuoteAlreadyAnswered
 from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.shared.domain.value_objects import Locale
 
@@ -63,10 +64,22 @@ def document(locale: Locale) -> QuoteDocument:
 
 
 class FakePlanQuoting:
-    def __init__(self, error: Exception | None = None, trip: QuoteTrip | None = TRIP) -> None:
+    """answer_error plays planning refusing the answer (for example a plan moved meanwhile);
+    priced_plan=None plays a plan that is gone."""
+
+    def __init__(
+        self,
+        error: Exception | None = None,
+        trip: QuoteTrip | None = TRIP,
+        priced_plan: QuotedPlan | None = QUOTED,
+        answer_error: Exception | None = None,
+    ) -> None:
         self.error = error
         self.trip_found = trip
+        self.priced_plan = priced_plan
+        self.answer_error = answer_error
         self.calls: list[tuple[UUID, UUID]] = []
+        self.answers: list[tuple[UUID, bool]] = []
 
     async def quote(self, plan_id: UUID, agent_id: UUID) -> QuotedPlan:
         self.calls.append((plan_id, agent_id))
@@ -76,6 +89,14 @@ class FakePlanQuoting:
 
     async def trip(self, plan_id: UUID) -> QuoteTrip | None:
         return self.trip_found
+
+    async def priced(self, plan_id: UUID) -> QuotedPlan | None:
+        return self.priced_plan
+
+    async def record_answer(self, plan_id: UUID, accepted: bool) -> None:
+        if self.answer_error is not None:
+            raise self.answer_error
+        self.answers.append((plan_id, accepted))
 
 
 class FakePeople:
@@ -109,6 +130,17 @@ class FakeQuotes:
         if quote is None or with_pdf:
             return quote
         return replace(quote, pdf=None)
+
+    async def save_answer(self, quote: Quote) -> None:
+        stored = self.quotes[quote.id]
+        if stored.answer is not None:
+            raise QuoteAlreadyAnswered("the quote is already answered")
+        self.quotes[quote.id] = replace(
+            stored,
+            answer=quote.answer,
+            decided_at=quote.decided_at,
+            client_comment=quote.client_comment,
+        )
 
 
 class FakeNotifier:

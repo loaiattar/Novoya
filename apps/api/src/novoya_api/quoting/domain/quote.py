@@ -5,12 +5,14 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from novoya_api.quoting.domain.errors import InvalidQuote
+from novoya_api.quoting.domain.errors import InvalidQuote, QuoteAlreadyAnswered, QuoteExpired
 from novoya_api.shared.domain.value_objects import Locale
 
 # The client has a week to answer; the agent's negotiated prices hold that long.
 VALIDITY = timedelta(days=7)
 CURRENCY = "EUR"
+# The client's optional comment with their answer.
+COMMENT_MAX_LENGTH = 1000
 # The agency works in Paris: the dates on a quote, and in its number, are Paris dates.
 AGENCY_TIMEZONE = ZoneInfo("Europe/Paris")
 
@@ -28,8 +30,9 @@ class QuoteStatus(StrEnum):
 class Quote:
     """The final offer for one plan: its total in euros, in the client's language, valid a
     week. pdf holds the rendered file once the quote is sent; None means not rendered yet,
-    or not read (QuoteRepository.get with with_pdf=False). answer and decided_at are the
-    client's answer and when they gave it, both None until then."""
+    or not read (QuoteRepository.get with with_pdf=False). answer, decided_at and
+    client_comment are the client's answer, when they gave it and what they added; None
+    until then."""
 
     id: UUID
     number: str
@@ -44,6 +47,7 @@ class Quote:
     pdf: bytes | None = None
     answer: QuoteStatus | None = None
     decided_at: datetime | None = None
+    client_comment: str | None = None
 
     @classmethod
     def issue(
@@ -71,6 +75,22 @@ class Quote:
             sent_at=sent_at,
             valid_until=sent_at + VALIDITY,
         )
+
+    def record_answer(self, answer: QuoteStatus, comment: str | None, now: datetime) -> None:
+        """The client accepts or rejects, once, before the validity day is over. A blank
+        comment is no comment."""
+        if answer not in (QuoteStatus.ACCEPTED, QuoteStatus.REJECTED):
+            raise InvalidQuote("the answer is accepted or rejected")
+        if self.answer is not None:
+            raise QuoteAlreadyAnswered("the quote is already answered")
+        if self.has_expired(now):
+            raise QuoteExpired("the quote is no longer valid")
+        comment = (comment or "").strip() or None
+        if comment is not None and len(comment) > COMMENT_MAX_LENGTH:
+            raise InvalidQuote(f"the comment is longer than {COMMENT_MAX_LENGTH} characters")
+        self.answer = answer
+        self.decided_at = now
+        self.client_comment = comment
 
     def readable_by(self, reader_id: UUID, staff: bool) -> bool:
         """Its client and staff (agents, admins) may read it; nobody else."""

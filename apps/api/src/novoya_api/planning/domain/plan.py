@@ -268,6 +268,18 @@ class Plan:
         self.status = PlanStatus.QUOTED
         self.updated_at = now
 
+    def record_answer(self, accepted: bool, now: datetime) -> None:
+        """The client's answer to the quote: accepted or rejected, for good. Only from quoted;
+        quoting checks the quote's validity before it calls this."""
+        if self.status is not PlanStatus.QUOTED:
+            raise InvalidTransition("the plan is not quoted")
+        self.status = PlanStatus.ACCEPTED if accepted else PlanStatus.REJECTED
+        self.updated_at = now
+
+    def is_quoted(self) -> bool:
+        """Quoted, answered or not: its prices are final."""
+        return self.status in (PlanStatus.QUOTED, PlanStatus.ACCEPTED, PlanStatus.REJECTED)
+
     def priced_total(self) -> Decimal:
         """Kept items that already have a negotiated price, plus priced extras (each once).
 

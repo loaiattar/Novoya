@@ -12,3 +12,8 @@ class QuoteRepository(Protocol):
     async def get(self, quote_id: UUID, with_pdf: bool = True) -> Quote | None:
         """The quote, or None. with_pdf=False skips reading the file: its pdf is None."""
         ...
+
+    async def save_answer(self, quote: Quote) -> None:
+        """Writes the quote's answer, decided_at and client_comment. Raises
+        QuoteAlreadyAnswered when the stored quote has an answer already."""
+        ...
