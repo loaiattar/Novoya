@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import Protocol
 from uuid import UUID
@@ -21,9 +22,17 @@ class PlanRepository(Protocol):
 
     async def get(self, plan_id: UUID) -> Plan | None: ...
 
-    async def list_by_status(
-        self, status: PlanStatus, *, limit: int = QUEUE_PAGE, offset: int = 0
-    ) -> list[Plan]: ...
+    async def list_queue(
+        self,
+        statuses: Sequence[PlanStatus],
+        agent_id: UUID,
+        *,
+        limit: int = QUEUE_PAGE,
+        offset: int = 0,
+    ) -> list[Plan]:
+        """Plans in these statuses, oldest updated first, without their items. Requested
+        plans are everyone's; any other status lists only the plans assigned to agent_id."""
+        ...
 
     async def save(self, plan: Plan) -> None:
         """Writes the plan row (status, assignee, timestamps). Not the items. When the plan

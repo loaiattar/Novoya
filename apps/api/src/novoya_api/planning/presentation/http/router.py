@@ -70,6 +70,8 @@ async def request_quote(
     return Plan.of(await use_case(plan_id, client_id, extra_ids))
 
 
+QueueStatus = Literal["requested", "negotiating", "quoted", "accepted", "rejected"]
+
 agent_router = APIRouter(
     prefix="/agent/plans",
     tags=["agent"],
@@ -80,16 +82,19 @@ agent_router = APIRouter(
 @agent_router.get("", operation_id="listQuoteQueue")
 async def list_quote_queue(
     use_case: Annotated[ListQuoteQueue, Depends(get_list_quote_queue)],
-    _: Annotated[UUID, Depends(get_current_agent_id)],
-    status: Literal["requested"] = "requested",
+    agent_id: Annotated[UUID, Depends(get_current_agent_id)],
+    status: Annotated[list[QueueStatus], Query()] = ["requested"],  # noqa: B006
     limit: Annotated[int, Query(ge=1, le=QUEUE_CAP)] = QUEUE_PAGE,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[QueueEntry]:
-    """Plans waiting for a quote, oldest first. Wish text, destination, dates, travellers, budget.
-    Never a price and never a partner name: take the plan to see those."""
+    """The agent's queue, oldest first. Wish text, destination, dates, travellers, budget.
+    status repeats: requested lists the plans waiting for anyone; negotiating, quoted,
+    accepted and rejected list only the caller's own plans. Never a price and never a
+    partner name: open the plan to see those."""
+    statuses = [PlanStatus(value) for value in dict.fromkeys(status)]
     return [
         QueueEntry.of(entry)
-        for entry in await use_case(PlanStatus(status), limit=limit, offset=offset)
+        for entry in await use_case(agent_id, statuses, limit=limit, offset=offset)
     ]
 
 

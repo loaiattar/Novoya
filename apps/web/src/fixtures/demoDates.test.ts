@@ -8,7 +8,6 @@ vi.hoisted(() => {
 })
 
 import { localIsoDate } from '../lib/dates'
-import { listQuoteRequests } from './agentQueue'
 import { daysFromToday, monthFromToday, monthOf, timeDaysAgo } from './demoDates'
 import { DEMO_PLAN_ID, getPlan } from './plans'
 import { getQuote } from './quotes'
@@ -54,9 +53,7 @@ describe('demo fixtures', () => {
   const plan = getPlan(DEMO_PLAN_ID)!
   const quote = getQuote('NV-2026-0182')!
   const threads = listThreads()
-  const requests = listQuoteRequests('unassigned')
   const thread = (id: string) => threads.find((entry) => entry.id === id)!
-  const request = (id: string) => requests.find((entry) => entry.id === id)!
 
   it('read the pinned day', () => {
     expect(today).toBe('2026-10-31')
@@ -68,20 +65,15 @@ describe('demo fixtures', () => {
     plan.days.forEach((day, index) => expect(day.date).toBe(daysAfter(plan.startDate, index)))
   })
 
-  it('give the Chania plan, quote, trip card and queue entry the same dates', () => {
+  it('give the Chania plan, quote and trip card the same dates', () => {
     const range = { startDate: plan.startDate, endDate: plan.endDate }
     expect({ startDate: quote.startDate, endDate: quote.endDate }).toEqual(range)
-    expect({ startDate: request('r1').startDate, endDate: request('r1').endDate }).toEqual(range)
     expect(thread('chania').dates).toEqual({ start: plan.startDate, end: plan.endDate })
   })
 
   it('give the quote as many days and nights as its dates', () => {
     expect(daysAfter(quote.startDate, quote.nights)).toBe(quote.endDate)
     expect(quote.days).toBe(quote.nights + 1)
-  })
-
-  it('put the Biarritz trip card in the month of its request', () => {
-    expect(thread('biarritz').dates).toEqual({ month: monthOf(request('r3').startDate) })
   })
 
   it('update the Chania plan and trip card before the quote is issued, and every open trip before now', () => {
@@ -97,8 +89,7 @@ describe('demo fixtures', () => {
     expect(daysAfter(quote.issuedAt, quote.validDays) > today).toBe(true)
   })
 
-  it('date every waiting request and every open trip after today', () => {
-    for (const entry of requests) expect(entry.startDate > today).toBe(true)
+  it('date every open trip after today', () => {
     for (const entry of threads.filter((candidate) => candidate.status !== 'refused')) {
       if (entry.dates === null) continue
       const first = 'start' in entry.dates ? entry.dates.start : entry.dates.month

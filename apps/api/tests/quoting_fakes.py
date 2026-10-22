@@ -21,6 +21,7 @@ WISH_ID = UUID("00000000-0000-0000-0000-0000000000a1")
 CLIENT_ID = UUID("00000000-0000-0000-0000-000000000001")
 OTHER_CLIENT = UUID("00000000-0000-0000-0000-000000000002")
 AGENT_ID = UUID("00000000-0000-0000-0000-0000000000aa")
+OTHER_AGENT = UUID("00000000-0000-0000-0000-0000000000ab")
 NOW = datetime(2026, 10, 19, 9, 0, tzinfo=UTC)
 FRONTEND = "https://novoya.example"
 
@@ -105,6 +106,9 @@ class FakeQuotes:
 
     async def get(self, quote_id: UUID) -> Quote | None:
         return self.quotes.get(quote_id)
+
+    async def get_for_plan(self, plan_id: UUID) -> Quote | None:
+        return next((quote for quote in self.quotes.values() if quote.plan_id == plan_id), None)
 
 
 class FakeNotifier:

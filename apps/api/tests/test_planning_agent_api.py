@@ -1,6 +1,6 @@
 """Agent quote-queue HTTP: ListQuoteQueue, TakePlan and SetItemPrice on fakes."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
@@ -64,10 +64,12 @@ class FakePlans:
     async def get(self, plan_id: UUID) -> Plan | None:
         return self.plan if self.plan.id == plan_id else None
 
-    async def list_by_status(
-        self, status: PlanStatus, *, limit: int = 50, offset: int = 0
+    async def list_queue(
+        self, statuses: Sequence[PlanStatus], agent_id: UUID, *, limit: int = 50, offset: int = 0
     ) -> list[Plan]:
-        found = [self.plan] if self.plan.status is status else []
+        """Requested plans of everyone, the other statuses only when assigned to agent_id."""
+        mine = self.plan.status is PlanStatus.REQUESTED or self.plan.assigned_agent_id == agent_id
+        found = [self.plan] if self.plan.status in statuses and mine else []
         return found[offset : offset + limit]
 
     async def save(self, plan: Plan) -> None:
@@ -163,6 +165,71 @@ async def test_the_agent_lists_the_quote_queue(plan, client):
     assert body[0]["persons"] == 2
     assert "partner_name" not in body[0]
     assert "items" not in body[0]
+
+
+async def test_the_quote_queue_lists_requested_plans_by_default(plan, client):
+    response = await client.get("/agent/plans")
+
+    assert response.status_code == 200
+    assert [entry["id"] for entry in response.json()] == [str(plan.id)]
+
+
+async def test_the_agent_lists_their_negotiating_plans(plan, client):
+    await client.post(f"/agent/plans/{plan.id}/take")
+
+    response = await client.get("/agent/plans", params={"status": "negotiating"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [entry["id"] for entry in body] == [str(plan.id)]
+    assert body[0]["status"] == "negotiating"
+
+
+async def test_the_agent_lists_several_statuses_at_once(plan, client):
+    await client.post(f"/agent/plans/{plan.id}/take")
+
+    response = await client.get(
+        "/agent/plans", params=[("status", "requested"), ("status", "negotiating")]
+    )
+
+    assert response.status_code == 200
+    assert [entry["id"] for entry in response.json()] == [str(plan.id)]
+
+
+@pytest.mark.parametrize("status", ["quoted", "accepted", "rejected"])
+async def test_the_queue_accepts_every_status_after_the_request(client, status):
+    response = await client.get("/agent/plans", params={"status": status})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.parametrize(
+    "statuses",
+    [[("status", "negotiating")], [("status", "requested"), ("status", "negotiating")]],
+)
+async def test_another_agents_negotiating_plan_never_appears(plan, client, statuses):
+    plan.take(OTHER_AGENT, NOW)
+
+    response = await client.get("/agent/plans", params=statuses)
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.parametrize("status", ["proposed", "bogus"])
+async def test_an_unknown_queue_status_returns_422(client, status):
+    response = await client.get("/agent/plans", params={"status": status})
+
+    assert response.status_code == 422
+
+
+def test_the_queue_status_is_a_repeatable_list_of_statuses(app):
+    queue = app.openapi()["paths"]["/agent/plans"]["get"]
+    status = next(param for param in queue["parameters"] if param["name"] == "status")
+
+    assert status["schema"]["type"] == "array"
+    assert status["schema"]["default"] == ["requested"]
 
 
 async def test_the_agent_takes_a_requested_plan(plan, client):

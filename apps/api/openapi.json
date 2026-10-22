@@ -4223,7 +4223,7 @@
     },
     "/agent/plans": {
       "get": {
-        "description": "Plans waiting for a quote, oldest first. Wish text, destination, dates, travellers, budget.\nNever a price and never a partner name: take the plan to see those.",
+        "description": "The agent's queue, oldest first. Wish text, destination, dates, travellers, budget.\nstatus repeats: requested lists the plans waiting for anyone; negotiating, quoted,\naccepted and rejected list only the caller's own plans. Never a price and never a\npartner name: open the plan to see those.",
         "operationId": "listQuoteQueue",
         "parameters": [
           {
@@ -4231,10 +4231,21 @@
             "name": "status",
             "required": false,
             "schema": {
-              "const": "requested",
-              "default": "requested",
+              "default": [
+                "requested"
+              ],
+              "items": {
+                "enum": [
+                  "requested",
+                  "negotiating",
+                  "quoted",
+                  "accepted",
+                  "rejected"
+                ],
+                "type": "string"
+              },
               "title": "Status",
-              "type": "string"
+              "type": "array"
             }
           },
           {
@@ -4606,6 +4617,78 @@
       }
     },
     "/agent/plans/{plan_id}/quote": {
+      "get": {
+        "description": "The quote sent for this plan, with the id of its PDF. Only the agent who sent it\n(403). 404 before the quote is sent.",
+        "operationId": "getPlanQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plan Quote",
+        "tags": [
+          "agent"
+        ]
+      },
       "post": {
         "description": "Send the quote: the total of the priced items and extras, valid 7 days, rendered as a\nPDF in the language the agent chose (en or fr; the client's language without a body).\nThe plan becomes quoted and the client gets an email that leads to the quote; email_sent\nis false if it did not go out (the quote is saved anyway). Only the assigned agent (403).\n409 if the plan is not negotiating (a second click too). 422 plan_not_ready while a kept\nitem or an on_quote extra has no price, or a supplement is not confirmed.",
         "operationId": "sendQuote",

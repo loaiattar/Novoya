@@ -138,3 +138,18 @@ async def test_a_plan_has_at_most_one_quote(engine, stored):
 
     with pytest.raises(IntegrityError):
         await add_quote(engine, issue(stored))
+
+
+async def test_get_for_plan_reads_back_the_quote_of_the_plan(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        read = await SqlQuoteRepository(session).get_for_plan(stored.plan_id)
+
+    assert read == quote
+
+
+async def test_get_for_plan_returns_none_before_the_quote_is_sent(engine, stored):
+    async with new_session(engine) as session:
+        assert await SqlQuoteRepository(session).get_for_plan(stored.plan_id) is None

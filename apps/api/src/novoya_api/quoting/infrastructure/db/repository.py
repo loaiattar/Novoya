@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.quoting.domain.quote import Quote
@@ -36,8 +36,14 @@ class SqlQuoteRepository:
 
     async def get(self, quote_id: UUID) -> Quote | None:
         row = await self._session.get(QuoteModel, quote_id)
-        if row is None:
-            return None
+        return None if row is None else self._to_quote(row)
+
+    async def get_for_plan(self, plan_id: UUID) -> Quote | None:
+        row = await self._session.scalar(select(QuoteModel).where(QuoteModel.plan_id == plan_id))
+        return None if row is None else self._to_quote(row)
+
+    @staticmethod
+    def _to_quote(row: QuoteModel) -> Quote:
         return Quote(
             id=row.id,
             number=row.number,
