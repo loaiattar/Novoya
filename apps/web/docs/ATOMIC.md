@@ -151,7 +151,7 @@ Un organisme est une **région** que tu poses dans un template. Toujours aliment
 | Nom | Contient | Où on le voit |
 |---|---|---|
 | `AppHeader` | HomeLink, NavItem, Avatar | presque partout |
-| `SiteFooter` | HomeLink, contact confirmé, mentions légales | pages publiques |
+| `SiteFooter` | HomeLink, contact confirmé, mentions légales | toutes les pages sauf la connexion (les pages connectées via `AppShell`) |
 | `WishHero` | WishField, CoverageHint | accueil |
 | `CoverageEmpty` | CoverageHint + SuggestedDestination[] | destination non couverte |
 | `PanelSection` | SectionTitle + TagButton[] | une section du panneau (style, rythme…) |

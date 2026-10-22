@@ -124,7 +124,8 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
   }
 
   return (
-    <AppShell>
+    // Room under the footer for the action bar fixed to the bottom of the screen.
+    <AppShell className="pb-22 md:pb-24">
       <div className="md:grid md:min-h-[calc(100vh-88px)] md:grid-cols-[33%_67%]">
         <IntentAside wish={text} steps={STEPS.map((step) => t(`steps.${step}`))} current={0} />
         <main className="bg-paper px-5 pt-[55px] pb-[155px] md:px-[8vw] md:pt-20 md:pb-40">

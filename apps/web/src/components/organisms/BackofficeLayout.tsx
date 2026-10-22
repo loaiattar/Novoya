@@ -27,12 +27,13 @@ const currentClass = 'bg-ivory font-semibold'
 /**
  * The agency and admin pages: the sections, then the content. On a desktop the sections are a
  * side list; on a phone, when they have pages, a row above the content that scrolls sideways.
+ * It takes the free height of the page frame, so the side list reaches the footer.
  */
 export function BackofficeLayout({ area, items, children }: Props) {
   // Sections without pages yet (the agency area) stay a desktop list: nothing to open on a phone.
   const linked = items.some((item) => item.to)
   return (
-    <div className="min-h-[calc(100vh-88px)] md:grid md:grid-cols-[220px_1fr]">
+    <div className="flex-1 md:grid md:grid-cols-[220px_1fr]">
       <aside
         aria-label={area}
         className={cn(

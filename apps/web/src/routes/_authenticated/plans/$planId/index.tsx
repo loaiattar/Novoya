@@ -78,9 +78,10 @@ function LivePlan({ plan }: { plan: Plan }) {
 function DemoPlanPage() {
   const plan = getPlan(DEMO_PLAN_ID)!
   return (
-    <AppShell>
+    // On large screens the conversation is fixed at the bottom right: room for it under the footer.
+    <AppShell className="lg:pb-28">
       <DemoBanner />
-      <main className="lg:pb-24">
+      <main>
         <PlanHeader {...plan} />
         <DayTimeline days={plan.days} />
         <QuoteNote />

@@ -414,6 +414,22 @@ describe('back-office and plan screens', () => {
     },
   )
 
+  it.each(['/trips', '/admin/partners', '/agent', '/settings', '/wish', '/plans/chania', '/quotes/NV-2026-0182'])(
+    'ends %s with the site footer',
+    async (url) => {
+      renderAt(url)
+
+      const footer = await screen.findByRole('contentinfo', {}, { timeout: 3000 })
+      expect(screen.getAllByRole('contentinfo')).toHaveLength(1)
+      expect(within(footer).getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
+      expect(within(footer).getByRole('link', { name: 'Destinations and reviews' })).toHaveAttribute(
+        'href',
+        '/destinations',
+      )
+      expect(within(footer).getByRole('group', { name: 'Language' })).toBeInTheDocument()
+    },
+  )
+
   it('does not pretend the concierge answers', async () => {
     renderAt('/plans/chania')
 

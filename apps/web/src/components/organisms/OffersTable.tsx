@@ -59,20 +59,20 @@ export function OffersTable({ caption, partnerId, offers, savingIds = new Set(),
     <table className="w-full border-collapse border-t border-line text-sm">
       <caption className="sr-only">{caption}</caption>
       <thead>
-        <tr className="text-start text-xs tracking-widest text-muted uppercase">
-          <th scope="col" className="p-4 font-normal">
+        <tr className="text-xs tracking-widest text-muted uppercase">
+          <th scope="col" className="p-4 text-start font-normal">
             {t('offers.table.offer')}
           </th>
-          <th scope="col" className="hidden p-4 font-normal md:table-cell">
+          <th scope="col" className="hidden p-4 text-start font-normal md:table-cell">
             {t('offers.table.price')}
           </th>
-          <th scope="col" className="hidden p-4 font-normal md:table-cell">
+          <th scope="col" className="hidden p-4 text-start font-normal md:table-cell">
             {t('offers.table.status')}
           </th>
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="px-2 py-4 text-center font-normal">
             {t('offers.table.featured')}
           </th>
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="px-2 py-4 text-center font-normal">
             {t('offers.table.hidden')}
           </th>
         </tr>
@@ -104,8 +104,8 @@ export function OffersTable({ caption, partnerId, offers, savingIds = new Set(),
                 : t('offers.table.noPrice')}
             </td>
             <td className="hidden p-4 md:table-cell">{offer.active ? t('state.active') : t('state.inactive')}</td>
-            <td className="px-2 py-1">{toggle(offer, 'featured')}</td>
-            <td className="px-2 py-1">{toggle(offer, 'hidden')}</td>
+            <td className="px-2 py-1 text-center">{toggle(offer, 'featured')}</td>
+            <td className="px-2 py-1 text-center">{toggle(offer, 'hidden')}</td>
           </tr>
         ))}
       </tbody>

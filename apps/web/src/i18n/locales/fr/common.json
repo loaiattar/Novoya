@@ -5,6 +5,8 @@
   "homeLink": "{{name}}, accueil",
   "footer": {
     "since": "Depuis {{year}}",
+    "contact": "Contact",
+    "nav": "Liens du pied de page",
     "destinations": "Destinations et avis",
     "legalNotices": "Mentions légales",
     "copyright": "© {{year}} {{name}}"

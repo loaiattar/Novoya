@@ -24,17 +24,17 @@ export function PartnersTable({ partners }: Props) {
     <table className="w-full border-collapse border-t border-line text-sm">
       <caption className="sr-only">{t('partners.table.caption')}</caption>
       <thead>
-        <tr className="text-start text-xs tracking-widest text-muted uppercase">
-          <th scope="col" className="p-4 font-normal">
+        <tr className="text-xs tracking-widest text-muted uppercase">
+          <th scope="col" className="p-4 text-start font-normal">
             {t('partners.table.partner')}
           </th>
-          <th scope="col" className="hidden p-4 font-normal md:table-cell">
+          <th scope="col" className="hidden p-4 text-start font-normal md:table-cell">
             {t('partners.table.kind')}
           </th>
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="p-4 text-start font-normal">
             {t('partners.table.status')}
           </th>
-          <th scope="col" className="p-4 font-normal">
+          <th scope="col" className="p-4 text-start font-normal">
             {t('partners.table.source')}
           </th>
         </tr>
