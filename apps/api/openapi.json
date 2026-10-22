@@ -2002,6 +2002,72 @@
         "title": "Quote",
         "type": "object"
       },
+      "QuoteDetail": {
+        "description": "A quote and where it stands: open, or expired once the validity date has passed.\nUnlike the quote just sent, it has no email_sent: that only matters when it is sent.",
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date-time",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "plan_id",
+          "total",
+          "currency",
+          "locale",
+          "sent_at",
+          "valid_until",
+          "status"
+        ],
+        "title": "QuoteDetail",
+        "type": "object"
+      },
       "RegisterRequest": {
         "properties": {
           "email": {
@@ -6498,6 +6564,80 @@
         "summary": "Request Quote",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/quotes/{quote_id}": {
+      "get": {
+        "description": "The quote and where it stands (open, or expired after its validity date), for its\nclient or an agent. 404 for anyone else, so the id stays hidden.",
+        "operationId": "getQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Quote",
+        "tags": [
+          "quoting"
         ]
       }
     },

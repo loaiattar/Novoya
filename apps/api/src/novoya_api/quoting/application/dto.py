@@ -126,6 +126,19 @@ class QuoteView:
 
 
 @dataclass(frozen=True)
+class QuoteDetailView:
+    """A quote and where it stands: open until its validity ends, then expired."""
+
+    quote: QuoteView
+    status: str
+
+    @classmethod
+    def at(cls, quote: Quote, now: datetime) -> "QuoteDetailView":
+        status = "expired" if quote.has_expired(now) else "open"
+        return cls(QuoteView.of(quote), status)
+
+
+@dataclass(frozen=True)
 class QuotePdf:
     filename: str
     content: bytes

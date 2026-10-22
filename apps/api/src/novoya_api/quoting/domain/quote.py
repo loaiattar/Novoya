@@ -57,3 +57,7 @@ class Quote:
             sent_at=sent_at,
             valid_until=sent_at + VALIDITY,
         )
+
+    def has_expired(self, now: datetime) -> bool:
+        """True once the validity ends: the client can no longer answer."""
+        return now > self.valid_until

@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Response, status
 
+from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
@@ -10,13 +11,14 @@ from novoya_api.quoting.presentation.http.dependencies import (
     Reader,
     Staff,
     get_current_agent_id,
+    get_get_quote,
     get_get_quote_pdf,
     get_reader,
     get_resend_quote_email,
     get_send_quote,
     get_staff,
 )
-from novoya_api.quoting.presentation.http.schemas import Quote, SendQuoteRequest
+from novoya_api.quoting.presentation.http.schemas import Quote, QuoteDetail, SendQuoteRequest
 from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 
@@ -68,6 +70,17 @@ async def resend_quote_email(
 
 
 router = APIRouter(prefix="/quotes", tags=["quoting"], responses=ERRORS)
+
+
+@router.get("/{quote_id}", operation_id="getQuote")
+async def get_quote(
+    quote_id: UUID,
+    reader: Annotated[Reader, Depends(get_reader)],
+    use_case: Annotated[GetQuote, Depends(get_get_quote)],
+) -> QuoteDetail:
+    """The quote and where it stands (open, or expired after its validity date), for its
+    client or an agent. 404 for anyone else, so the id stays hidden."""
+    return QuoteDetail.detail(await use_case(quote_id, reader.user_id, reader.staff))
 
 
 @router.get(

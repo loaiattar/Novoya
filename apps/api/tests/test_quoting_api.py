@@ -1,4 +1,4 @@
-"""Quote HTTP: POST /agent/plans/{id}/quote and GET /quotes/{id}/pdf, on fakes."""
+"""Quote HTTP on fakes: send the quote, read it, download its PDF."""
 
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
@@ -13,10 +13,12 @@ from novoya_api.accounts.domain.value_objects import Email, UserId
 from novoya_api.accounts.public import current_user
 from novoya_api.main import create_app
 from novoya_api.planning.domain.errors import PlanNotReady
+from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
 from novoya_api.quoting.presentation.http.dependencies import (
+    get_get_quote,
     get_get_quote_pdf,
     get_resend_quote_email,
     get_send_quote,
@@ -73,6 +75,7 @@ def app_with(
         FixedClock(),
         FRONTEND,
     )
+    app.dependency_overrides[get_get_quote] = lambda: GetQuote(quotes, FixedClock())
     app.dependency_overrides[get_get_quote_pdf] = lambda: GetQuotePdf(quotes)
     limiter = InMemoryRateLimiter(FixedClock())  # one per app: tests don't share counters
     app.dependency_overrides[get_resend_quote_email] = lambda: ResendQuoteEmail(
@@ -288,3 +291,56 @@ async def test_a_fourth_resend_in_an_hour_returns_429():
     assert response.status_code == 429
     assert response.json()["code"] == "too_many_requests"
     assert int(response.headers["Retry-After"]) > 0
+
+
+async def test_the_client_reads_their_quote():
+    app = app_with(FakePlanQuoting(), Role.CLIENT, CLIENT_ID)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(QUOTE.id)
+    assert body["number"] == QUOTE.number
+    assert body["plan_id"] == str(PLAN_ID)
+    assert body["total"] == "1234.50"
+    assert body["currency"] == "EUR"
+    assert body["locale"] == "fr"
+    assert datetime.fromisoformat(body["valid_until"]) == NOW + timedelta(days=7)
+    assert body["status"] == "open"
+    assert "email_sent" not in body
+
+
+@pytest.mark.parametrize(("role", "user_id"), [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID)])
+async def test_staff_read_any_quote(role, user_id):
+    app = app_with(FakePlanQuoting(), role, user_id)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(QUOTE.id)
+
+
+async def test_another_client_gets_404_for_the_quote():
+    app = app_with(FakePlanQuoting(), Role.CLIENT, OTHER_CLIENT)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "not_found"
+
+
+async def test_a_missing_quote_returns_404():
+    app = app_with(FakePlanQuoting(), Role.CLIENT, CLIENT_ID)
+
+    response = await call(app, "GET", f"/quotes/{uuid4()}")
+
+    assert response.status_code == 404
+
+
+async def test_reading_a_quote_without_a_session_returns_401():
+    app = app_with(FakePlanQuoting(), None)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+
+    assert response.status_code == 401

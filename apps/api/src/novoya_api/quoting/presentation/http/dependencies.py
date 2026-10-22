@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from novoya_api.accounts.public import CurrentUser, CurrentUserView, Role, require_agent
 from novoya_api.config import get_settings
 from novoya_api.quoting.application.ports.notifier import QuoteNotifier
+from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
@@ -105,3 +106,7 @@ def get_resend_quote_email(
         rate_limiter=rate_limiter,
         frontend_url=get_settings().frontend_url,
     )
+
+
+def get_get_quote(session: Annotated[AsyncSession, Depends(get_session)]) -> GetQuote:
+    return GetQuote(quotes=SqlQuoteRepository(session), clock=SystemClock())
