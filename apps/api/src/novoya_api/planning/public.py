@@ -10,8 +10,6 @@
   (403, another agent), InvalidTransition (409, not negotiating) or PlanNotReady (422).
 - plan_trip(plan_id) -> TripBrief | None: the wish behind the plan (place, dates,
   travellers), for the quote email. None when the plan or its wish is gone.
-- plan_status(plan_id) -> str | None: the plan's status (`quoted`, `accepted`, ...), so
-  quoting can show the client's answer. None when the plan is gone.
 - delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
   go with them. Erase the user's quotes first (quoting.public.delete_for_user) and the wishes
   after (wishes.public.delete_for_user): neither has a cascade. The caller commits.
@@ -62,7 +60,6 @@ __all__ = [
     "TripBrief",
     "delete_for_user",
     "generate_plan",
-    "plan_status",
     "plan_trip",
     "quote_plan",
 ]
@@ -101,12 +98,6 @@ async def plan_trip(plan_id: UUID, *, session: AsyncSession) -> TripBrief | None
     if plan is None:
         return None
     return (await WishTrips(session).for_wish_ids([plan.wish_id])).get(plan.wish_id)
-
-
-async def plan_status(plan_id: UUID, *, session: AsyncSession) -> str | None:
-    """The plan's status, without loading its items. None when the plan is gone."""
-    status = await SqlPlanRepository(session).status_of(plan_id)
-    return None if status is None else status.value
 
 
 def _writer() -> PlanWriter:

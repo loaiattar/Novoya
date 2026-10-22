@@ -7,7 +7,7 @@ from uuid import UUID
 import pytest
 
 from novoya_api.quoting.domain.errors import InvalidQuote, QuoteNotFound
-from novoya_api.quoting.domain.quote import VALIDITY, Quote
+from novoya_api.quoting.domain.quote import AGENCY_TIMEZONE, VALIDITY, Quote, QuoteStatus
 from novoya_api.shared.domain.errors import InvalidInput, NotFound
 from novoya_api.shared.domain.value_objects import Locale
 
@@ -39,6 +39,32 @@ def test_a_quote_is_valid_for_seven_days_after_sending():
     assert issue().valid_until == datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
 
 
+# valid_until is 26 October 09:00 UTC, 10:00 in Paris (winter time from 25 October).
+LAST_MINUTE_IN_PARIS = datetime(2026, 10, 26, 23, 59, tzinfo=AGENCY_TIMEZONE)
+NEXT_DAY_IN_PARIS = datetime(2026, 10, 27, 0, 0, tzinfo=AGENCY_TIMEZONE)
+
+
+def test_a_quote_is_open_until_the_end_of_its_last_day_in_paris():
+    quote = issue()
+
+    assert quote.status(LAST_MINUTE_IN_PARIS) is QuoteStatus.OPEN
+    assert not quote.has_expired(LAST_MINUTE_IN_PARIS)
+
+
+def test_a_quote_expires_when_the_next_day_starts_in_paris():
+    quote = issue()
+
+    assert quote.status(NEXT_DAY_IN_PARIS) is QuoteStatus.EXPIRED
+
+
+def test_the_answer_is_the_status_even_after_the_validity():
+    quote = issue()
+    quote.answer = QuoteStatus.REJECTED
+
+    assert quote.status(NOW) is QuoteStatus.REJECTED
+    assert quote.status(NEXT_DAY_IN_PARIS) is QuoteStatus.REJECTED
+
+
 def test_the_number_has_the_date_and_the_start_of_the_id():
     quote = issue()
 
@@ -50,7 +76,7 @@ def test_each_quote_gets_its_own_id():
 
 
 def test_a_new_quote_has_no_pdf_yet():
-    assert issue().pdf == b""
+    assert issue().pdf is None
 
 
 @pytest.mark.parametrize("total", [Decimal("0"), Decimal("-1")], ids=["zero", "negative"])

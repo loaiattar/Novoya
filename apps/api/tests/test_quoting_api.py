@@ -17,7 +17,7 @@ from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
-from novoya_api.quoting.domain.quote import QuoteStatus
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.quoting.presentation.http.dependencies import (
     get_get_quote,
     get_get_quote_pdf,
@@ -62,9 +62,13 @@ def signed_in_as(role: Role, user_id: UUID = AGENT_ID) -> CurrentUserView:
 
 
 def app_with(
-    plans: FakePlanQuoting, role: Role | None, user_id: UUID = AGENT_ID, email_sent: bool = True
+    plans: FakePlanQuoting,
+    role: Role | None,
+    user_id: UUID = AGENT_ID,
+    email_sent: bool = True,
+    quote: Quote = QUOTE,
 ):
-    quotes = FakeQuotes(QUOTE)
+    quotes = FakeQuotes(quote)
     app = create_app()
     app.dependency_overrides[get_send_quote] = lambda: SendQuote(
         plans,
@@ -76,7 +80,7 @@ def app_with(
         FixedClock(),
         FRONTEND,
     )
-    app.dependency_overrides[get_get_quote] = lambda: GetQuote(quotes, plans, FixedClock())
+    app.dependency_overrides[get_get_quote] = lambda: GetQuote(quotes, FixedClock())
     app.dependency_overrides[get_get_quote_pdf] = lambda: GetQuotePdf(quotes)
     limiter = InMemoryRateLimiter(FixedClock())  # one per app: tests don't share counters
     app.dependency_overrides[get_resend_quote_email] = lambda: ResendQuoteEmail(
@@ -314,9 +318,10 @@ async def test_the_client_reads_their_quote():
 
 
 async def test_the_quote_shows_the_clients_answer():
-    app = app_with(FakePlanQuoting(answer=QuoteStatus.ACCEPTED), Role.CLIENT, CLIENT_ID)
+    answered = stored_quote(QuoteStatus.ACCEPTED)
+    app = app_with(FakePlanQuoting(), Role.CLIENT, CLIENT_ID, quote=answered)
 
-    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+    response = await call(app, "GET", f"/quotes/{answered.id}")
 
     assert response.status_code == 200
     assert response.json()["status"] == "accepted"

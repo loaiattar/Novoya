@@ -16,4 +16,6 @@ class GetQuotePdf:
         quote = await self._quotes.get(quote_id)
         if quote is None or not quote.readable_by(reader_id, staff):
             raise QuoteNotFound("no such quote")
+        if quote.pdf is None:
+            raise RuntimeError(f"quote {quote.id} was read without its PDF")
         return QuotePdf(f"{quote.number}.pdf", quote.pdf)

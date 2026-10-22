@@ -2,12 +2,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.planning.public import plan_status, plan_trip, quote_plan
+from novoya_api.planning.public import plan_trip, quote_plan
 from novoya_api.quoting.application.dto import QuotedExtra, QuotedItem, QuotedPlan, QuoteTrip
-from novoya_api.quoting.domain.quote import QuoteStatus
-
-# The plan statuses that are the client's answer to the quote.
-ANSWERS = {QuoteStatus.ACCEPTED.value, QuoteStatus.REJECTED.value}
 
 
 class PlanningPlans:
@@ -59,7 +55,3 @@ class PlanningPlans:
         if brief is None:
             return None
         return QuoteTrip(brief.country, brief.city, brief.start_date, brief.end_date)
-
-    async def answer(self, plan_id: UUID) -> QuoteStatus | None:
-        status = await plan_status(plan_id, session=self._session)
-        return QuoteStatus(status) if status in ANSWERS else None

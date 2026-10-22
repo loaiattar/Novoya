@@ -1,7 +1,7 @@
 """Shared quoting test data and fakes: a priced plan, two people and the ports on memory."""
 
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -63,15 +63,9 @@ def document(locale: Locale) -> QuoteDocument:
 
 
 class FakePlanQuoting:
-    def __init__(
-        self,
-        error: Exception | None = None,
-        trip: QuoteTrip | None = TRIP,
-        answer: QuoteStatus | None = None,
-    ) -> None:
+    def __init__(self, error: Exception | None = None, trip: QuoteTrip | None = TRIP) -> None:
         self.error = error
         self.trip_found = trip
-        self.answered = answer
         self.calls: list[tuple[UUID, UUID]] = []
 
     async def quote(self, plan_id: UUID, agent_id: UUID) -> QuotedPlan:
@@ -82,9 +76,6 @@ class FakePlanQuoting:
 
     async def trip(self, plan_id: UUID) -> QuoteTrip | None:
         return self.trip_found
-
-    async def answer(self, plan_id: UUID) -> QuoteStatus | None:
-        return self.answered
 
 
 class FakePeople:
@@ -117,7 +108,7 @@ class FakeQuotes:
         quote = self.quotes.get(quote_id)
         if quote is None or with_pdf:
             return quote
-        return replace(quote, pdf=b"")
+        return replace(quote, pdf=None)
 
 
 class FakeNotifier:
@@ -154,7 +145,11 @@ class FixedClock:
         return self._now
 
 
-def stored_quote() -> Quote:
+def stored_quote(answer: QuoteStatus | None = None) -> Quote:
+    """A sent quote with its PDF; with an answer, the client gave it a day after."""
     quote = Quote.issue(PLAN_ID, CLIENT_ID, AGENT_ID, Decimal("1234.50"), Locale.FR, NOW)
     quote.pdf = b"%PDF-1.7 stored"
+    if answer is not None:
+        quote.answer = answer
+        quote.decided_at = NOW + timedelta(days=1)
     return quote

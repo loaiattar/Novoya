@@ -159,17 +159,6 @@ async def test_get_returns_none_for_an_unknown_plan(engine):
     assert await read_plan(engine, uuid4()) is None
 
 
-async def test_status_of_reads_the_status_alone(engine, wish_id, offer_ids):
-    hotel, _ = offer_ids
-    plan = Plan.propose(wish_id, True, "Sun", [DraftItem(hotel, 1, 7, None)], 8, NOW)
-    await add_plan(engine, plan)
-
-    async with new_session(engine) as session:
-        repository = SqlPlanRepository(session)
-        assert await repository.status_of(plan.id) is PlanStatus.PROPOSED
-        assert await repository.status_of(uuid4()) is None
-
-
 async def test_save_writes_requested_status(engine, wish_id, offer_ids):
     hotel, _boat = offer_ids
     later = datetime(2026, 10, 19, 10, 0, tzinfo=UTC)

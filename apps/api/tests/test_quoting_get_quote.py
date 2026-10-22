@@ -7,23 +7,24 @@ import pytest
 
 from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.domain.errors import QuoteNotFound
-from novoya_api.quoting.domain.quote import QuoteStatus
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from tests.quoting_fakes import (
     AGENT_ID,
     CLIENT_ID,
     NOW,
     OTHER_CLIENT,
-    FakePlanQuoting,
     FakeQuotes,
     FixedClock,
     stored_quote,
 )
 
 QUOTE = stored_quote()
+# Two days after the validity date: whatever the time of day, the last day is over.
+AFTER = QUOTE.valid_until + timedelta(days=2)
 
 
-def use_case(now: datetime = NOW, answer: QuoteStatus | None = None) -> GetQuote:
-    return GetQuote(FakeQuotes(QUOTE), FakePlanQuoting(answer=answer), FixedClock(now))
+def use_case(now: datetime = NOW, quote: Quote = QUOTE) -> GetQuote:
+    return GetQuote(FakeQuotes(quote), FixedClock(now))
 
 
 async def test_the_client_reads_their_open_quote():
@@ -42,24 +43,24 @@ async def test_the_quote_is_still_open_on_its_last_instant():
 
 
 async def test_the_quote_is_expired_after_its_validity_date():
-    later = QUOTE.valid_until + timedelta(seconds=1)
-
-    detail = await use_case(later)(QUOTE.id, CLIENT_ID, staff=False)
+    detail = await use_case(AFTER)(QUOTE.id, CLIENT_ID, staff=False)
 
     assert detail.status == QuoteStatus.EXPIRED
 
 
 @pytest.mark.parametrize("answer", [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED])
 async def test_the_clients_answer_is_the_status(answer):
-    detail = await use_case(answer=answer)(QUOTE.id, CLIENT_ID, staff=False)
+    quote = stored_quote(answer)
+
+    detail = await use_case(quote=quote)(quote.id, CLIENT_ID, staff=False)
 
     assert detail.status == answer
 
 
 async def test_an_answer_stays_after_the_validity_date():
-    later = QUOTE.valid_until + timedelta(days=1)
+    quote = stored_quote(QuoteStatus.ACCEPTED)
 
-    detail = await use_case(later, QuoteStatus.ACCEPTED)(QUOTE.id, CLIENT_ID, staff=False)
+    detail = await use_case(AFTER, quote)(quote.id, CLIENT_ID, staff=False)
 
     assert detail.status == QuoteStatus.ACCEPTED
 

@@ -113,15 +113,15 @@ class QuoteView:
     @classmethod
     def of(cls, quote: Quote, email_sent: bool = False) -> "QuoteView":
         return cls(
-            quote.id,
-            quote.number,
-            quote.plan_id,
-            quote.total,
-            quote.currency,
-            quote.locale.value,
-            quote.sent_at,
-            quote.valid_until,
-            email_sent,
+            id=quote.id,
+            number=quote.number,
+            plan_id=quote.plan_id,
+            total=quote.total,
+            currency=quote.currency,
+            locale=quote.locale.value,
+            sent_at=quote.sent_at,
+            valid_until=quote.valid_until,
+            email_sent=email_sent,
         )
 
 
@@ -142,15 +142,15 @@ class QuoteDetailView:
     @classmethod
     def at(cls, quote: Quote, status: QuoteStatus) -> "QuoteDetailView":
         return cls(
-            quote.id,
-            quote.number,
-            quote.plan_id,
-            quote.total,
-            quote.currency,
-            quote.locale.value,
-            quote.sent_at,
-            quote.valid_until,
-            status,
+            id=quote.id,
+            number=quote.number,
+            plan_id=quote.plan_id,
+            total=quote.total,
+            currency=quote.currency,
+            locale=quote.locale.value,
+            sent_at=quote.sent_at,
+            valid_until=quote.valid_until,
+            status=status,
         )
 
 

@@ -10,5 +10,5 @@ class QuoteRepository(Protocol):
         ...
 
     async def get(self, quote_id: UUID, with_pdf: bool = True) -> Quote | None:
-        """The quote, or None. with_pdf=False leaves its pdf empty and skips reading the file."""
+        """The quote, or None. with_pdf=False skips reading the file: its pdf is None."""
         ...

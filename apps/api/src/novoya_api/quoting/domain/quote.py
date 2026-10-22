@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -27,7 +27,9 @@ class QuoteStatus(StrEnum):
 @dataclass(slots=True)
 class Quote:
     """The final offer for one plan: its total in euros, in the client's language, valid a
-    week. pdf holds the rendered file once the quote is sent."""
+    week. pdf holds the rendered file once the quote is sent; None means not rendered yet,
+    or not read (QuoteRepository.get with with_pdf=False). answer and decided_at are the
+    client's answer and when they gave it, both None until then."""
 
     id: UUID
     number: str
@@ -39,7 +41,9 @@ class Quote:
     locale: Locale
     sent_at: datetime
     valid_until: datetime
-    pdf: bytes = b""
+    pdf: bytes | None = None
+    answer: QuoteStatus | None = None
+    decided_at: datetime | None = None
 
     @classmethod
     def issue(
@@ -73,12 +77,17 @@ class Quote:
         return staff or self.client_id == reader_id
 
     def has_expired(self, now: datetime) -> bool:
-        """True once the validity ends: the client can no longer answer."""
-        return now > self.valid_until
+        """True once the validity day is over in Paris: the PDF and the email show the client
+        only that day ("valid until 29 October"), so the whole day counts."""
+        return paris_day(now) > paris_day(self.valid_until)
 
-    def status(self, now: datetime, answer: QuoteStatus | None) -> QuoteStatus:
+    def status(self, now: datetime) -> QuoteStatus:
         """The client's answer once given, even after the validity ends; before it, open
         until the validity ends, then expired."""
-        if answer is not None:
-            return answer
+        if self.answer is not None:
+            return self.answer
         return QuoteStatus.EXPIRED if self.has_expired(now) else QuoteStatus.OPEN
+
+
+def paris_day(moment: datetime) -> date:
+    return moment.astimezone(AGENCY_TIMEZONE).date()
