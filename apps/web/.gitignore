@@ -29,3 +29,6 @@ src/routeTree.gen.ts
 
 # TanStack router generator scratch files
 .tanstack
+
+# lawha page-check reports and screenshots (local only)
+.lawha
