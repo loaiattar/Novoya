@@ -12,6 +12,8 @@
   travellers), for the quote email. None when the plan or its wish is gone.
 - find_plan_ids(query, user_ids) -> the ids of the plans whose destination contains `query`
   or whose client is one of `user_ids`, for the admin search of quotes. At most SEARCH_CAP.
+- count_plans_by_status() -> {status: count}: every status, 0 when no plan has it, for the
+  admin dashboard. Counts only.
 - plan_trips(plan_ids) -> {plan_id: TripBrief}: where and when each plan's trip goes; a plan
   whose wish is gone is left out.
 - priced_plan(plan_id) -> PricedPlan | None: a quoted plan (answered or not) as its quote
@@ -44,6 +46,7 @@ from novoya_api.planning.application.use_cases.get_priced_plan import GetPricedP
 from novoya_api.planning.application.use_cases.quote_plan import QuotePlan
 from novoya_api.planning.application.use_cases.record_answer import RecordAnswer
 from novoya_api.planning.domain.errors import NoOfferFits, PlanNotFound, PlanNotReady
+from novoya_api.planning.domain.plan import PlanStatus
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
 from novoya_api.planning.infrastructure.llm.plan_writer import LlmPlanWriter, NoModelPlanWriter
@@ -68,13 +71,14 @@ __all__ = [
     "PricedItem",
     "PricedPlan",
     "TripBrief",
+    "count_plans_by_status",
     "delete_for_user",
     "find_plan_ids",
     "generate_plan",
     "mark_accepted",
     "mark_rejected",
-    "plan_trips",
     "plan_trip",
+    "plan_trips",
     "priced_plan",
     "quote_plan",
 ]
@@ -140,6 +144,13 @@ async def mark_rejected(plan_id: UUID, *, session: AsyncSession) -> None:
     """The client rejected the quote: the plan becomes rejected in `session`. The caller
     commits."""
     await RecordAnswer(SqlPlanRepository(session), SystemClock())(plan_id, accepted=False)
+
+
+async def count_plans_by_status(*, session: AsyncSession) -> dict[str, int]:
+    """How many plans have each status. For admins only: the caller's router must require
+    the admin role."""
+    found = await SqlPlanRepository(session).count_by_status()
+    return {status.value: found.get(status.value, 0) for status in PlanStatus}
 
 
 async def find_plan_ids(

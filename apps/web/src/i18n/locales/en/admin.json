@@ -1,6 +1,7 @@
 {
   "area": "Administration",
   "nav": {
+    "overview": "Overview",
     "users": "Users",
     "partners": "Partners",
     "extras": "Extras",
@@ -360,6 +361,39 @@
       "hiddenOf": "Hidden: {{author}}",
       "ratingOf": "{{rating}} / 5"
     }
+  },
+  "dashboard": {
+    "title": "Overview",
+    "intro": "The agency at a glance. Each number opens its page.",
+    "loading": "Loading the numbers…",
+    "loadFailed": "The numbers could not be loaded.",
+    "sections": {
+      "work": "Quotes to handle",
+      "catalog": "Catalog",
+      "accounts": "Accounts"
+    },
+    "waiting": "Plans waiting for a quote",
+    "waitingDetail_one": "{{count}} being negotiated",
+    "waitingDetail_other": "{{count}} being negotiated",
+    "openQuotes": "Quotes waiting for the client",
+    "expiredQuotes": "Expired quotes",
+    "answered": "Accepted quotes",
+    "rejected_one": "{{count}} rejected",
+    "rejected_other": "{{count}} rejected",
+    "partners": "Active partners",
+    "offers": "Active offers",
+    "extras": "Active extras",
+    "reviews": "Published reviews",
+    "hidden_one": "{{count}} hidden",
+    "hidden_other": "{{count}} hidden",
+    "inactive_one": "{{count}} no longer in {{agency}}",
+    "inactive_other": "{{count}} no longer in {{agency}}",
+    "offersHidden_one": "{{count}} hidden",
+    "offersHidden_other": "{{count}} hidden",
+    "offersInactive_one": "{{count}} no longer in {{agency}}",
+    "offersInactive_other": "{{count}} no longer in {{agency}}",
+    "users": "Accounts",
+    "byRole": "{{client}} clients · {{agent}} agents · {{admin}} admins"
   },
   "import": {
     "title": "Import an export",

@@ -1,6 +1,7 @@
 {
   "area": "Administration",
   "nav": {
+    "overview": "Vue d'ensemble",
     "users": "Utilisateurs",
     "partners": "Partenaires",
     "extras": "Extras",
@@ -360,6 +361,39 @@
       "hiddenOf": "Masqué : {{author}}",
       "ratingOf": "{{rating}} / 5"
     }
+  },
+  "dashboard": {
+    "title": "Vue d'ensemble",
+    "intro": "L'agence en un coup d'œil. Chaque chiffre ouvre sa page.",
+    "loading": "Chargement des chiffres…",
+    "loadFailed": "Les chiffres n'ont pas pu être chargés.",
+    "sections": {
+      "work": "Devis à traiter",
+      "catalog": "Catalogue",
+      "accounts": "Comptes"
+    },
+    "waiting": "Plans en attente de devis",
+    "waitingDetail_one": "{{count}} en négociation",
+    "waitingDetail_other": "{{count}} en négociation",
+    "openQuotes": "Devis en attente du client",
+    "expiredQuotes": "Devis expirés",
+    "answered": "Devis acceptés",
+    "rejected_one": "{{count}} refusé",
+    "rejected_other": "{{count}} refusés",
+    "partners": "Partenaires actifs",
+    "offers": "Offres actives",
+    "extras": "Extras actifs",
+    "reviews": "Avis publiés",
+    "hidden_one": "{{count}} masqué",
+    "hidden_other": "{{count}} masqués",
+    "inactive_one": "{{count}} retiré de {{agency}}",
+    "inactive_other": "{{count}} retirés de {{agency}}",
+    "offersHidden_one": "{{count}} masquée",
+    "offersHidden_other": "{{count}} masquées",
+    "offersInactive_one": "{{count}} retirée de {{agency}}",
+    "offersInactive_other": "{{count}} retirées de {{agency}}",
+    "users": "Comptes",
+    "byRole": "{{client}} clients · {{agent}} agents · {{admin}} admins"
   },
   "import": {
     "title": "Importer un export",

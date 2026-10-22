@@ -9,6 +9,7 @@ from novoya_api.accounts.presentation.http.router import router as accounts_rout
 from novoya_api.accounts.public import delete_expired_sign_ins
 from novoya_api.catalog.presentation.http.router import router as catalog_router
 from novoya_api.config import get_settings
+from novoya_api.dashboard.presentation.http.router import router as dashboard_router
 from novoya_api.health.presentation.http.router import router as health_router
 from novoya_api.planning.presentation.http.router import admin_router as admin_plans_router
 from novoya_api.planning.presentation.http.router import agent_router as planning_agent_router
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(quoting_agent_router)
     app.include_router(agent_quotes_router)
     app.include_router(admin_quotes_router)
+    app.include_router(dashboard_router)
     return app
 
 
