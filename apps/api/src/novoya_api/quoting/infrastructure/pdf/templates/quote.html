@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+<meta charset="utf-8">
+<title>{{ t.quote }} {{ quote.number }}</title>
+<style>
+{{ fonts_css }}
+  @page { size: A4; margin: 14mm 16mm 18mm;
+    @bottom-center { content: element(footer); }
+    @bottom-right { content: counter(page) " / " counter(pages); font-size: 8pt; color: #6b6b6b; } }
+  body { font-family: "Liberation Sans", sans-serif; font-size: 9.5pt; color: #1d1d1b; line-height: 1.45; }
+  h1 { font-size: 20pt; margin: 0; letter-spacing: 0.02em; }
+  h2 { font-size: 11pt; margin: 13pt 0 5pt; padding-bottom: 3pt; border-bottom: 1px solid #d9d4c7; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .logo { height: 13mm; display: block; margin-bottom: 4pt; }
+  /* In the page margin: on every page, and never alone on a page of its own. */
+  .footer { position: running(footer); font-size: 8pt; color: #6b6b6b; text-align: center; }
+  .meta { text-align: right; font-size: 9pt; }
+  .meta div { margin-bottom: 2pt; }
+  .grid { display: flex; gap: 12pt; margin-top: 10pt; }
+  .box { flex: 1; border: 1px solid #d9d4c7; border-radius: 4pt; padding: 8pt 10pt; }
+  .box .label { font-size: 8pt; text-transform: uppercase; color: #6b6b6b; letter-spacing: 0.04em; }
+  .wish { font-style: italic; }
+  .tags span { display: inline-block; border: 1px solid #c9c2b0; border-radius: 8pt; padding: 0 6pt; margin: 2pt 3pt 0 0; font-size: 8.5pt; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 8pt; text-transform: uppercase; color: #6b6b6b; border-bottom: 1px solid #d9d4c7; padding: 4pt 4pt; }
+  td { padding: 4pt 4pt; border-bottom: 1px solid #eee9de; vertical-align: top; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .day { white-space: nowrap; color: #16233F; font-weight: bold; }
+  .desc { color: #555; font-size: 8.5pt; }
+  .totals { margin-top: 10pt; margin-left: auto; width: 55%; }
+  .totals td { border: none; padding: 3pt 4pt; }
+  .totals .total td { font-size: 12pt; font-weight: bold; border-top: 2px solid #1d1d1b; }
+  .budget td { color: #6b6b6b; }
+  ul { margin: 4pt 0; padding-left: 14pt; }
+  .answer { background: #f4f1ea; border-radius: 4pt; padding: 2pt 10pt; break-inside: avoid; }
+  .answer p { margin: 6pt 0; }
+  tr { break-inside: avoid; }
+  .url { word-break: break-all; color: #16233F; }
+</style>
+</head>
+<body>
+  <div class="footer">{{ agency.name }} · {{ agency.website }} · {{ agency.email }} · {{ agency.phone }}</div>
+  <div class="head">
+    <div>
+      <img class="logo" src="{{ logo }}" alt="{{ agency.name }}">
+      <h1>{{ t.quote }}</h1>
+    </div>
+    <div class="meta">
+      <div><strong>{{ t.number }}</strong> {{ quote.number }}</div>
+      <div><strong>{{ t.issued }}</strong> {{ quote.sent_at | day }}</div>
+      <div><strong>{{ t.valid_until }}</strong> {{ quote.valid_until | day }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="box">
+      <div class="label">{{ t.client }}</div>
+      <div>{{ client.name or client.email }}</div>
+      <div>{{ client.email }}</div>
+    </div>
+    <div class="box">
+      <div class="label">{{ t.your_agent }}</div>
+      <div>{{ agent.name or agency.name }}</div>
+      <div>{{ agent.email }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="box">
+      <div class="label">{{ t.destination }}</div>
+      <div>{{ destination }}</div>
+    </div>
+    <div class="box">
+      <div class="label">{{ t.dates }}</div>
+      <div>{% if plan.start_date %}{{ plan.start_date | day }} – {{ plan.end_date | day }}{% else %}–{% endif %}</div>
+    </div>
+    <div class="box">
+      <div class="label">{{ t.travellers }}</div>
+      <div>{{ plan.persons or "–" }}</div>
+    </div>
+  </div>
+
+  <h2>{{ t.your_wish }}</h2>
+  <p class="wish">{{ plan.wish_text }}</p>
+  {% if tags %}<div class="tags">{% for tag in tags %}<span>{{ tag }}</span>{% endfor %}</div>{% endif %}
+
+  <h2>{{ t.your_trip }}</h2>
+  <table>
+    <thead>
+      <tr><th>{{ t.day }}</th><th>{{ t.item }}</th><th class="num">{{ t.quantity }}</th><th class="num">{{ t.price }}</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td class="day">{{ t.day }} {{ item.day }}{% if item.date %}<br><span class="desc">{{ item.date | day }}</span>{% endif %}</td>
+        <td>{{ item.title or t.unavailable }}{% if item.description %}<div class="desc">{{ item.description }}</div>{% endif %}</td>
+        <td class="num">{{ item.quantity }}</td>
+        <td class="num">{{ item.price | money }}</td>
+      </tr>
+      {% endfor %}
+      {% for extra in plan.extras %}
+      <tr>
+        <td class="day">{{ t.extra }}</td>
+        <td>{{ extra.label }}{% if extra.unit %}<div class="desc">{{ extra.unit }}</div>{% endif %}</td>
+        <td class="num">1</td>
+        <td class="num">{% if extra.price is none %}{{ t.included }}{% else %}{{ extra.price | money }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr class="total"><td>{{ t.total }}</td><td class="num">{{ quote.total | money }}</td></tr>
+    {% if plan.budget_max is not none %}
+    <tr class="budget"><td>{{ t.your_budget }}</td><td class="num">{{ plan.budget_max | money }}</td></tr>
+    {% endif %}
+  </table>
+
+  <h2>{{ t.not_included_title }}</h2>
+  <p>{{ t.not_included }}</p>
+
+  <h2>{{ t.how_to_answer_title }}</h2>
+  <div class="answer">
+    <p>{{ t.how_to_answer | replace("{date}", quote.valid_until | day) }}</p>
+    <p class="url">{{ answer_url }}</p>
+    <p>{{ t.questions }} {{ agent.email }}, {{ t.or_call }} {{ agency.phone }}</p>
+  </div>
+</body>
+</html>

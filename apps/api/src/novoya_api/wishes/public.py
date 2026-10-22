@@ -1,11 +1,12 @@
 """What other modules may use from wishes. Nothing else in wishes may be imported.
 
 - owner_id(wish_id) -> the user who sent the wish, or None when there is none
-- trips(wish_ids) -> text, destination, dates, travellers and budget for those wishes
+- trips(wish_ids) -> text, destination, dates, travellers, budget and tags for those wishes
+- delete_for_user(user_id) -> erases every wish of this user. Erase their plans first
+  (plans.wish_id has no cascade).
 
 Planned:
 - mark_planned(wish_id)
-- delete_for_user(user_id)
 """
 
 from collections.abc import Sequence
@@ -32,6 +33,7 @@ class WishTrip:
     persons: int | None
     start_date: date | None
     end_date: date | None
+    tags: tuple[str, ...] = ()  # "section:tag", what the client clicked
 
 
 async def owner_id(wish_id: UUID, *, session: AsyncSession) -> UUID | None:
@@ -41,7 +43,8 @@ async def owner_id(wish_id: UUID, *, session: AsyncSession) -> UUID | None:
 
 
 async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID, WishTrip]:
-    """Wish text, place, dates, travellers and budget, keyed by wish id. Missing ids are omitted."""
+    """Wish text, place, dates, travellers, budget and tags, keyed by wish id. Missing ids are
+    omitted."""
     found: dict[UUID, WishTrip] = {}
     for wish in await SqlWishRepository(session).list_by_ids(wish_ids):
         answers = wish.answers
@@ -56,5 +59,15 @@ async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID
             persons=answers.persons if answers else None,
             start_date=answers.start_date if answers else None,
             end_date=answers.end_date if answers else None,
+            tags=(
+                tuple(f"{tag.section}:{tag.tag}" for tag in answers.selected_tags)
+                if answers
+                else ()
+            ),
         )
     return found
+
+
+async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:
+    """Erase every wish of this user. Plans must be erased first. The caller commits."""
+    await SqlWishRepository(session).delete_for_user(user_id)

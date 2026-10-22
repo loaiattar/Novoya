@@ -132,6 +132,27 @@ async def test_trips_returns_text_place_and_answers(engine, user_id):
     assert missing not in found
 
 
+async def test_trips_returns_the_selected_tags_as_section_and_tag(engine, user_id):
+    wish = shown_wish(user_id)
+    wish.answer(ANSWERS, LATER)
+    await add_wish(engine, wish)
+
+    async with new_session(engine) as session:
+        found = await trips([wish.id], session=session)
+
+    assert found[wish.id].tags == ("style:beach", "food:seafood")
+
+
+async def test_trips_of_an_unanswered_wish_has_no_tags(engine, user_id):
+    wish = shown_wish(user_id)
+    await add_wish(engine, wish)
+
+    async with new_session(engine) as session:
+        found = await trips([wish.id], session=session)
+
+    assert found[wish.id].tags == ()
+
+
 async def test_trips_of_a_draft_has_text_and_no_place_or_answers(engine, user_id):
     wish = Wish.create(user_id, "Somewhere warm", NOW)
     await add_wish(engine, wish)

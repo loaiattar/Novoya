@@ -50,6 +50,28 @@ uv run python -m novoya_api.catalog.infrastructure.detour --source /path/to/deto
 
 It opens the file read-only and writes everything in one transaction: an invalid row stops the import and nothing is written. The error names the DÉTOUR table and id, never a name or an email. Running it again updates the same rows (stable ids), deletes the reviews that are no longer publishable, and deactivates (never deletes) the partners, offers and extras that left the export. Reviews come only from the view `avis_diffusables` (consented and pseudonymised). Once it has run, the development seed refuses to run, so made-up offers never mix with the client's.
 
+### Use the client's data on your machine
+
+Each developer has their own database (the `db-data` Docker volume on their computer); nothing is shared until the demo is deployed. The migrations give everyone the same tables, but the client's data is not in git: the export holds partner contacts and reviews, so it is personal data.
+
+**If you run the app with `docker compose up`**, follow [Load the client's catalog](../../README.md#load-the-clients-catalog-détour) in the root README instead: the API container always uses the `novoya` database, so the steps below would not reach it.
+
+Without Docker (the API runs with `uv` on your machine):
+
+1. Ask a teammate for the DÉTOUR export (`DETOUR.zip`). Get it privately, never through git, an issue or a public channel, and keep it outside the repository.
+2. Import it into a new, empty database, so the made-up seed partners don't mix with the client's:
+
+   ```bash
+   docker exec novoya-db-1 createdb -U novoya novoya_detour
+   export NOVOYA_DATABASE_URL=postgresql+asyncpg://novoya:novoya@localhost:5432/novoya_detour
+   uv run alembic upgrade head
+   uv run python -m novoya_api.catalog.infrastructure.detour --source /path/to/DETOUR/livraison/detour.sqlite
+   ```
+
+3. Start the API in the same terminal (the exported URL wins over `.env`): `uv run uvicorn novoya_api.main:app --reload`.
+
+To go back to the seed, `unset NOVOYA_DATABASE_URL`. To remove the client's data, `docker exec novoya-db-1 dropdb -U novoya novoya_detour`.
+
 ## Accounts and roles
 
 Sign-up is by email and password; the account is a `client` and must confirm its email before signing in. Locally, the emails land in Mailpit: http://localhost:8025 (`docker compose up mailpit`).

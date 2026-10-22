@@ -1966,6 +1966,63 @@
         "title": "QueueEntry",
         "type": "object"
       },
+      "Quote": {
+        "description": "A sent quote. total is in currency (always EUR); the PDF is at GET /quotes/{id}/pdf.",
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date-time",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "plan_id",
+          "total",
+          "currency",
+          "locale",
+          "sent_at",
+          "valid_until"
+        ],
+        "title": "Quote",
+        "type": "object"
+      },
       "RegisterRequest": {
         "properties": {
           "email": {
@@ -2120,6 +2177,28 @@
           "tag"
         ],
         "title": "SelectedTagIn",
+        "type": "object"
+      },
+      "SendQuoteRequest": {
+        "description": "The quote's language, chosen by the agent. Without it, the client's language.",
+        "properties": {
+          "locale": {
+            "anyOf": [
+              {
+                "enum": [
+                  "en",
+                  "fr"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locale"
+          }
+        },
+        "title": "SendQuoteRequest",
         "type": "object"
       },
       "SendWishRequest": {
@@ -4413,6 +4492,107 @@
         ]
       }
     },
+    "/agent/plans/{plan_id}/quote": {
+      "post": {
+        "description": "Send the quote: the total of the priced items and extras, valid 7 days, rendered as a\nPDF in the language the agent chose (en or fr; the client's language without a body).\nThe plan becomes quoted. Only the assigned agent (403).\n409 if the plan is not negotiating (a second click too). 422 plan_not_ready while a kept\nitem or an on_quote extra has no price, or a supplement is not confirmed.",
+        "operationId": "sendQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SendQuoteRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Send Quote",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
     "/agent/plans/{plan_id}/take": {
       "post": {
         "description": "Assign this requested plan to me and move it to negotiating. 409 if it is already taken.",
@@ -6045,6 +6225,76 @@
         "summary": "Request Quote",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/quotes/{quote_id}/pdf": {
+      "get": {
+        "description": "The quote as a PDF, for its client or an agent. 404 for anyone else, so the id stays\nhidden.",
+        "operationId": "getQuotePdf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "The quote PDF"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Quote Pdf",
+        "tags": [
+          "quoting"
         ]
       }
     },

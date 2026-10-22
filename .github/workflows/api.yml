@@ -37,6 +37,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.13.1"
+      - name: WeasyPrint system libraries (quote PDF)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
       - run: uv sync --frozen
       - name: Lint
         run: uv run ruff check . && uv run ruff format --check .
@@ -51,3 +53,8 @@ jobs:
             echo "::error::apps/api/openapi.json is out of date. Run: uv run python -m novoya_api.openapi > openapi.json"
             exit 1
           }
+      - name: Docker image builds and renders a PDF
+        # The Dockerfile's apt packages are what WeasyPrint needs in the deployed API (#52).
+        run: |
+          docker build -t novoya-api .
+          docker run --rm novoya-api python -c "import weasyprint; assert weasyprint.HTML(string='<p>ok</p>').write_pdf().startswith(b'%PDF')"

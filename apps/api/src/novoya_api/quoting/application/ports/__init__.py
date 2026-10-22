@@ -1,3 +1,3 @@
-"""Ports: QuoteRepository, Plans (read the priced plan, mark it quoted, accepted or
-rejected), QuoteRenderer (PDF), QuoteNotifier (email), Users (email and locale).
+"""Ports: QuoteRepository, PlanQuoting (marks the plan quoted, reads its prices), People
+(name, email and language), QuoteRenderer (PDF). Planned: QuoteNotifier (email, #53).
 """
