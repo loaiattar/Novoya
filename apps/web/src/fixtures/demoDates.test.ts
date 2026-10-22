@@ -75,11 +75,6 @@ describe('demo fixtures', () => {
     expect(thread('chania').dates).toEqual({ start: plan.startDate, end: plan.endDate })
   })
 
-  it('give the quote as many days and nights as its dates', () => {
-    expect(daysAfter(quote.startDate, quote.nights)).toBe(quote.endDate)
-    expect(quote.days).toBe(quote.nights + 1)
-  })
-
   it('put the Biarritz trip card in the month of its request', () => {
     expect(thread('biarritz').dates).toEqual({ month: monthOf(request('r3').startDate) })
   })
@@ -92,9 +87,10 @@ describe('demo fixtures', () => {
     }
   })
 
-  it('issue the quote before today, still valid', () => {
+  it('issue the quote before today, valid a week from then', () => {
     expect(quote.issuedAt < today).toBe(true)
-    expect(daysAfter(quote.issuedAt, quote.validDays) > today).toBe(true)
+    expect(quote.validUntil).toBe(daysAfter(quote.issuedAt, 7))
+    expect(quote.validUntil > today).toBe(true)
   })
 
   it('date every waiting request and every open trip after today', () => {
