@@ -6,7 +6,7 @@ import { Field } from './Field'
 
 type Props = {
   label: string
-  type?: 'text' | 'email' | 'password'
+  type?: 'text' | 'email' | 'password' | 'tel' | 'date'
   name?: string
   value: string
   onChange: (value: string) => void
@@ -15,12 +15,15 @@ type Props = {
   placeholder?: string
   required?: boolean
   maxLength?: number
+  /** Shown, but cannot be changed (a field owned elsewhere). */
+  readOnly?: boolean
+  inputMode?: 'numeric' | 'text' | 'email' | 'tel'
   hint?: string
   error?: string
   className?: string
 }
 
-/** A labelled form field (e-mail, password), with its error. A password can be shown. */
+/** A labelled form field (e-mail, password, text, date), with its error. A password can be shown. */
 export function TextField({
   label,
   type = 'text',
@@ -32,6 +35,8 @@ export function TextField({
   placeholder,
   required,
   maxLength,
+  readOnly,
+  inputMode,
   hint,
   error,
   className,
@@ -55,16 +60,18 @@ export function TextField({
             placeholder={placeholder}
             required={required}
             maxLength={maxLength}
+            readOnly={readOnly}
+            inputMode={inputMode}
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
-            className={isPassword ? 'pr-24' : undefined}
+            className={isPassword ? 'pe-24' : undefined}
           />
           {isPassword && (
             <button
               type="button"
               aria-pressed={shown}
               onClick={() => setShown(!shown)}
-              className="absolute top-1/2 right-1 min-h-11 -translate-y-1/2 px-3 text-xs underline underline-offset-4"
+              className="absolute top-1/2 end-1 min-h-11 -translate-y-1/2 px-3 text-xs underline underline-offset-4"
             >
               {shown ? t('hidePassword') : t('showPassword')}
             </button>

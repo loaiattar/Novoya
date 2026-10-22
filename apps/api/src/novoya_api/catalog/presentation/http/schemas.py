@@ -11,8 +11,13 @@ KindName = Literal["hotel", "guide", "transport", "activity", "agency"]
 PriceUnitName = Literal["person/night", "person/trip", "person/activity"]
 ExtraPricingName = Literal["included", "supplement", "on_quote"]
 Month = Annotated[int, Field(ge=1, le=12)]
-Price = Annotated[int, Field(gt=0)]
-Delay = Annotated[int, Field(ge=0)]
+# Bounded so a value always fits the offers columns (int4), with room to spare.
+PRICE_MAX_EUR = 1_000_000
+DELAY_MAX_HOURS = 720  # 30 days
+PERSONS_MAX = 1_000
+Price = Annotated[int, Field(gt=0, le=PRICE_MAX_EUR)]
+Delay = Annotated[int, Field(ge=0, le=DELAY_MAX_HOURS)]
+Persons = Annotated[int, Field(ge=1, le=PERSONS_MAX)]
 PlaceName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 LongText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -147,8 +152,8 @@ class CreateOfferRequest(BaseModel):
     description: LongText
     country: PlaceName
     city: PlaceName
-    min_persons: Annotated[int, Field(ge=1)]
-    max_persons: Annotated[int, Field(ge=1)]
+    min_persons: Persons
+    max_persons: Persons
     available_from: date
     available_to: date
     tags: list[str] = Field(default_factory=list, max_length=50)
@@ -175,8 +180,8 @@ class UpdateOfferRequest(BaseModel):
     description: LongText | None = None
     country: PlaceName | None = None
     city: PlaceName | None = None
-    min_persons: Annotated[int, Field(ge=1)] | None = None
-    max_persons: Annotated[int, Field(ge=1)] | None = None
+    min_persons: Persons | None = None
+    max_persons: Persons | None = None
     available_from: date | None = None
     available_to: date | None = None
     tags: Annotated[list[str], Field(max_length=50)] | None = None

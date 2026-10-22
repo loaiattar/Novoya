@@ -343,6 +343,34 @@ async def test_list_offers_includes_inactive_ones():
     assert [offer.title for offer in listed] == ["Hidden", "Shown"]
 
 
+async def test_list_offers_of_one_partner_leaves_out_the_others():
+    riad = _partner(name="Riad Lune")
+    lodge = _partner(name="Lodge Nord")
+    offers = FakeOffers(
+        [
+            _offer(riad, title="Patio room"),
+            _offer(lodge, title="Cabin"),
+            _offer(riad, title="Roof suite", active=False),
+        ]
+    )
+    offers.partners = FakePartners([riad, lodge])
+
+    listed = await ListOffers(offers)(partner_id=riad.id)
+
+    assert [offer.title for offer in listed] == ["Patio room", "Roof suite"]
+
+
+async def test_list_offers_without_a_partner_keeps_every_offer():
+    riad = _partner(name="Riad Lune")
+    lodge = _partner(name="Lodge Nord")
+    offers = FakeOffers([_offer(riad, title="Patio room"), _offer(lodge, title="Cabin")])
+    offers.partners = FakePartners([riad, lodge])
+
+    listed = await ListOffers(offers)(partner_id=None)
+
+    assert [offer.title for offer in listed] == ["Cabin", "Patio room"]
+
+
 # Rows imported from DÉTOUR: DÉTOUR owns their content, Novoya only featured and hidden.
 
 
@@ -779,6 +807,59 @@ async def test_an_imported_offer_is_featured_and_hidden_over_http(app, client):
     assert (response.json()["featured"], response.json()["hidden"]) == (True, True)
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "accepted"),
+    [
+        ("price_eur", 1_000_000, True),
+        ("price_eur", 1_000_001, False),
+        ("confirmation_delay_hours", 720, True),
+        ("confirmation_delay_hours", 721, False),
+        ("max_persons", 1_000, True),
+        ("max_persons", 1_001, False),
+    ],
+)
+async def test_offer_price_and_delay_stay_within_their_columns(app, client, field, value, accepted):
+    partner = _partner()
+    offers = FakeOffers([])
+    offers.partners = FakePartners([partner])
+    _as_agent(app, offers.partners, offers)
+    body = {
+        "partner_id": str(partner.id),
+        "kind": "hotel",
+        "title": "Stay",
+        "description": "A room",
+        "country": "greece",
+        "city": "chania",
+        "min_persons": 2,
+        "max_persons": 4,
+        "available_from": "2026-04-01",
+        "available_to": "2026-10-31",
+        "price_unit": "person/night",
+        "price_eur": 90,
+        field: value,
+    }
+
+    created = await client.post("/admin/offers", json=body)
+
+    assert created.status_code == (201 if accepted else 422)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("price_eur", 1_000_001), ("confirmation_delay_hours", 721), ("max_persons", 1_001)],
+)
+async def test_an_offer_patch_beyond_the_columns_is_a_422(app, client, field, value):
+    partner = _partner()
+    offer = _offer(partner, price_eur=90, price_unit=PriceUnit.PERSON_NIGHT)
+    offers = FakeOffers([offer])
+    _as_agent(app, FakePartners([partner]), offers)
+
+    response = await client.patch(f"/admin/offers/{offer.id}", json={field: value})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "invalid_input"
+
+
 async def test_editing_an_imported_partner_is_a_409(app, client):
     partner = _partner(imported=True)
     _as_agent(app, FakePartners([partner]))
@@ -871,6 +952,39 @@ async def test_admin_extras_need_an_agent(app, client):
     assert (await client.get("/admin/extras")).status_code == 403
 
 
+async def test_admin_offers_filtered_by_partner_over_http(app, client):
+    riad = _partner(name="Riad Lune")
+    lodge = _partner(name="Lodge Nord")
+    patio = _offer(riad, title="Patio room")
+    offers = FakeOffers([patio, _offer(lodge, title="Cabin")])
+    _as_agent(app, FakePartners([riad, lodge]), offers)
+
+    response = await client.get("/admin/offers", params={"partner_id": str(riad.id)})
+
+    assert response.status_code == 200
+    assert [row["id"] for row in response.json()] == [str(patio.id)]
+
+
+async def test_admin_offers_of_an_unknown_partner_is_an_empty_list(app, client):
+    riad = _partner(name="Riad Lune")
+    _as_agent(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
+
+    response = await client.get("/admin/offers", params={"partner_id": str(uuid4())})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+async def test_admin_offers_with_a_malformed_partner_id_is_a_422(app, client):
+    riad = _partner(name="Riad Lune")
+    _as_agent(app, FakePartners([riad]), FakeOffers([_offer(riad)]))
+
+    response = await client.get("/admin/offers", params={"partner_id": "not-a-uuid"})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "invalid_input"
+
+
 def test_admin_catalog_routes_are_documented(app):
     paths = app.openapi()["paths"]
     assert paths["/admin/partners"]["get"]["operationId"] == "listPartners"
@@ -882,6 +996,11 @@ def test_admin_catalog_routes_are_documented(app):
     assert paths["/admin/extras"]["get"]["operationId"] == "listAllExtras"
     assert paths["/admin/extras/{extra_id}"]["patch"]["operationId"] == "updateExtra"
     assert "409" in paths["/admin/offers/{offer_id}"]["patch"]["responses"]
+    offer_params = {
+        param["name"]: param for param in paths["/admin/offers"]["get"].get("parameters", [])
+    }
+    assert offer_params["partner_id"]["in"] == "query"
+    assert offer_params["partner_id"]["required"] is False
     responses = paths["/admin/partners"]["get"]["responses"]
     for status in ("401", "403", "422"):
         ref = responses[status]["content"]["application/json"]["schema"]["$ref"]

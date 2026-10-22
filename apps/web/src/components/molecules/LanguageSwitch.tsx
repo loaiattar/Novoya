@@ -32,6 +32,8 @@ export function LanguageSwitch({ value, onChange, busy = false, error, className
             key={locale}
             type="button"
             lang={locale}
+            // Voice control users say what they see: the name starts with it.
+            aria-label={`${short}, ${name}`}
             aria-pressed={value === locale}
             disabled={busy}
             onClick={() => onChange(locale)}
@@ -46,9 +48,7 @@ export function LanguageSwitch({ value, onChange, busy = false, error, className
                   : 'text-muted hover:text-ink',
             )}
           >
-            {/* Voice control users say what they see: the name starts with it. */}
             {short}
-            <span className="sr-only">, {name}</span>
           </button>
         ))}
       </div>

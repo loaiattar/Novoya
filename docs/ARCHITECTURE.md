@@ -283,7 +283,7 @@ Agent (roles `agent` and `admin`):
 | PATCH | `/agent/plans/{id}/items/{item_id}` | Set the negotiated price, or remove the item |
 | PATCH | `/agent/plans/{id}/extras/{extra_id}` | Price an `on_quote` extra, or adjust or confirm a supplement |
 | POST | `/agent/plans/{id}/quote` | Compute the total, render the PDF, status `quoted` |
-| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers. Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
+| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
 | GET, PATCH | `/admin/extras` | List extras, hide or show one |
 
 Admin (role `admin` only; an admin can also use every agent route):

@@ -54,7 +54,7 @@ export function AppHeader({ userName, role = 'client', onSignOut, signingOut = f
                 </Link>
               )}
             </nav>
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-4 md:gap-6">
               <LanguageChoice />
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex min-h-11 items-center gap-2.5 rounded-full text-sm">

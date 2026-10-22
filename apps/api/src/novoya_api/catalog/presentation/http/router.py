@@ -175,9 +175,11 @@ async def update_partner(
 @offers_router.get("", operation_id="listOffers")
 async def list_offers(
     use_case: Annotated[ListOffers, Depends(get_list_offers)],
+    partner_id: Annotated[UUID | None, Query()] = None,
 ) -> list[OfferResponse]:
-    """All offers, including inactive ones. Agents only."""
-    return [OfferResponse.of(offer) for offer in await use_case()]
+    """All offers, including inactive ones. With partner_id, only that partner's offers (an
+    unknown partner gives an empty list). Agents only."""
+    return [OfferResponse.of(offer) for offer in await use_case(partner_id)]
 
 
 @offers_router.post("", operation_id="createOffer", status_code=status.HTTP_201_CREATED)

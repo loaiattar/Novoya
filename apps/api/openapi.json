@@ -585,6 +585,7 @@
           "confirmation_delay_hours": {
             "anyOf": [
               {
+                "maximum": 720.0,
                 "minimum": 0.0,
                 "type": "integer"
               },
@@ -622,11 +623,13 @@
             "type": "string"
           },
           "max_persons": {
+            "maximum": 1000.0,
             "minimum": 1.0,
             "title": "Max Persons",
             "type": "integer"
           },
           "min_persons": {
+            "maximum": 1000.0,
             "minimum": 1.0,
             "title": "Min Persons",
             "type": "integer"
@@ -650,6 +653,7 @@
             "anyOf": [
               {
                 "exclusiveMinimum": 0.0,
+                "maximum": 1000000.0,
                 "type": "integer"
               },
               {
@@ -2313,6 +2317,7 @@
           "confirmation_delay_hours": {
             "anyOf": [
               {
+                "maximum": 720.0,
                 "minimum": 0.0,
                 "type": "integer"
               },
@@ -2390,6 +2395,7 @@
           "max_persons": {
             "anyOf": [
               {
+                "maximum": 1000.0,
                 "minimum": 1.0,
                 "type": "integer"
               },
@@ -2402,6 +2408,7 @@
           "min_persons": {
             "anyOf": [
               {
+                "maximum": 1000.0,
                 "minimum": 1.0,
                 "type": "integer"
               },
@@ -2432,6 +2439,7 @@
             "anyOf": [
               {
                 "exclusiveMinimum": 0.0,
+                "maximum": 1000000.0,
                 "type": "integer"
               },
               {
@@ -2982,8 +2990,27 @@
     },
     "/admin/offers": {
       "get": {
-        "description": "All offers, including inactive ones. Agents only.",
+        "description": "All offers, including inactive ones. With partner_id, only that partner's offers (an\nunknown partner gives an empty list). Agents only.",
         "operationId": "listOffers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "partner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Partner Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

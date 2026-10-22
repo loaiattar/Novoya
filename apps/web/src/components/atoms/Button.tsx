@@ -5,7 +5,8 @@ import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-4 rounded-full font-semibold text-sm no-underline transition duration-250 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60',
+  // Only the lift and the colours move: the focus ring (index.css) must show at once.
+  'inline-flex items-center justify-center gap-4 rounded-full font-semibold text-sm no-underline transition-[translate,background-color,color] duration-250 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60',
   {
     variants: {
       variant: {

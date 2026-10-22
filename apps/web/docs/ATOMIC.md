@@ -127,6 +127,7 @@ C’est le vrai vocabulaire de l’app. Si ce niveau est propre, le reste s’as
 | `BudgetSlider` | label + slider + Price | fixer le budget max |
 | `GoogleButton` | Icon + Button | “Continuer avec Google” |
 | `TextField` | label + Input + message d’erreur | un champ de formulaire (e-mail, mot de passe) |
+| `TextAreaField` / `SelectField` / `CheckField` | label + Textarea, select ou case à cocher | un champ des formulaires admin |
 | `TravelerStepper` | boutons − / + et un nombre | nombre de voyageurs |
 | `DateRangeField` | deux dates | départ / retour |
 | `CoverageHint` | Text + Badge | on couvre / on ne couvre pas cette destination |
@@ -166,6 +167,8 @@ Un organisme est une **région** que tu poses dans un template. Toujours aliment
 | `EmailForm` | TextField e-mail + Button | mot de passe oublié, renvoyer l’e-mail de vérification |
 | `ResetPasswordForm` | TextField mot de passe + Button | nouveau mot de passe |
 | `ChangePasswordForm` | TextField × 2 + Button | réglages du compte |
+| `PartnersTable` / `OffersTable` | tableau, liens, cases mise en avant / masquée | admin des partenaires et des offres |
+| `PartnerForm` / `OfferForm` | champs, note « à modifier dans DÉTOUR » si la ligne est importée | création et modification |
 | `QuoteSummary` | lignes du devis, Price total, lien PDF, Button accepter / refuser | le devis |
 | `SavedTripCard` | titre, dates, Badge (statut du devis) | liste “mes voyages” |
 | `OnboardingSlide` | titre + texte + visuel | intro |
