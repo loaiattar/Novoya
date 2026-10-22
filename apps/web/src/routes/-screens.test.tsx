@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../api/client'
 import { client } from '../api/generated/client.gen'
-import type { MeResponse, Plan, UserResponse } from '../api/generated/types.gen'
+import type { MeResponse, Plan, QueueEntry, UserResponse } from '../api/generated/types.gen'
 import { createAppRouter } from '../router'
 
 const ADMIN: MeResponse = {
@@ -65,6 +65,23 @@ const PLAN: Plan = {
   ],
 }
 
+// The one request waiting in the agency queue.
+const REQUEST: QueueEntry = {
+  id: '00000000-0000-4000-8000-000000000030',
+  wish_id: '00000000-0000-4000-8000-000000000010',
+  status: 'requested',
+  summary: 'Chania, au rythme de la mer',
+  updated_at: '2026-10-22T08:00:00Z',
+  wish_text: 'Une semaine calme, de bonnes tables et beaucoup de mer.',
+  country: 'Greece',
+  city: 'Chania',
+  persons: 2,
+  start_date: '2027-05-12',
+  end_date: '2027-05-19',
+  budget_max: '3500.00',
+  currency: 'EUR',
+}
+
 let me: MeResponse
 let signedIn: boolean
 let planAnswer: (path: string) => Response | Promise<Response>
@@ -83,6 +100,12 @@ function mockApi() {
       return signedIn ? Response.json(me) : Response.json({ code: 'unauthenticated', detail: 'no session' }, { status: 401 })
     }
     if (url.pathname === '/admin/users') return Response.json(users)
+    if (url.pathname === '/agent/plans' && request.method === 'GET') {
+      return Response.json([REQUEST].filter((entry) => url.searchParams.getAll('status').includes(entry.status)))
+    }
+    if (url.pathname === `/agent/plans/${REQUEST.id}/take` && request.method === 'POST') {
+      return Response.json({ code: 'invalid_transition', detail: 'already taken' }, { status: 409 })
+    }
     if (url.pathname.startsWith('/plans/') && request.method === 'GET') return planAnswer(url.pathname)
     const role = url.pathname.match(/^\/admin\/users\/([^/]+)\/role$/)
     if (role && request.method === 'PATCH') {
@@ -444,7 +467,7 @@ describe('back-office and plan screens', () => {
     me = { ...ADMIN, role: 'agent' }
     renderAt('/agent')
 
-    expect(await screen.findByRole('tab', { name: 'To assign · 3' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'To take · 1' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'In progress · 0' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Decided · 0' })).toBeInTheDocument()
   })
@@ -565,7 +588,7 @@ describe('back-office and plan screens', () => {
     expect(screen.getByText(/Answering an offer is coming soon/)).toBeInTheDocument()
   })
 
-  it.each(['/trips', '/plans/chania', '/quotes/NV-2026-0182', '/agent'])(
+  it.each(['/trips', '/plans/chania', '/quotes/NV-2026-0182'])(
     'says %s shows demo data',
     async (url) => {
       renderAt(url)
@@ -606,12 +629,25 @@ describe('back-office and plan screens', () => {
     expect(screen.queryByText(/\d+ messages?/)).not.toBeInTheDocument()
   })
 
-  it('does not let an agent take a demo request', async () => {
+  it('shows the real agency queue, without the demo banner', async () => {
     me = { ...ADMIN, role: 'agent' }
     renderAt('/agent')
 
-    const buttons = await screen.findAllByRole('button', { name: 'Take the plan' })
-    for (const button of buttons) expect(button).toBeDisabled()
+    expect(await screen.findByRole('heading', { name: REQUEST.summary })).toBeInTheDocument()
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  it('lets an agent take a request from the queue', async () => {
+    me = { ...ADMIN, role: 'agent' }
+    renderAt('/agent')
+
+    const button = await screen.findByRole('button', { name: 'Take the plan' })
+    expect(button).toBeEnabled()
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(requests).toContainEqual(expect.objectContaining({ method: 'POST', path: `/agent/plans/${REQUEST.id}/take` })),
+    )
   })
 
   it('names the preview version once in the trip panel', async () => {

@@ -20,7 +20,7 @@ export function PlanItem({ item }: { item: PlanItemResponse }) {
             <Link
               to="/offers/$offerId"
               params={{ offerId: item.offer_id }}
-              className="text-ink underline decoration-line underline-offset-4 hover:decoration-ink"
+              className="inline-block min-h-6 text-ink underline decoration-line underline-offset-4 hover:decoration-ink"
             >
               {item.title}
             </Link>

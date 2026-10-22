@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Sequence
 from uuid import UUID
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.planning.application.ports.plan_repository import QUEUE_PAGE, ItemWrite
@@ -85,13 +85,28 @@ class SqlPlanRepository:
         )
         return self._to_plan(row, items, extras)
 
-    async def list_by_status(
-        self, status: PlanStatus, *, limit: int = QUEUE_PAGE, offset: int = 0
+    async def list_queue(
+        self,
+        statuses: Sequence[PlanStatus],
+        agent_id: UUID,
+        *,
+        limit: int = QUEUE_PAGE,
+        offset: int = 0,
     ) -> list[Plan]:
+        mine = [status.value for status in statuses if status is not PlanStatus.REQUESTED]
+        conditions = []
+        if PlanStatus.REQUESTED in statuses:
+            conditions.append(PlanModel.status == PlanStatus.REQUESTED.value)
+        if mine:
+            conditions.append(
+                and_(PlanModel.status.in_(mine), PlanModel.assigned_agent_id == agent_id)
+            )
+        if not conditions:
+            return []
         rows = (
             await self._session.scalars(
                 select(PlanModel)
-                .where(PlanModel.status == status.value)
+                .where(or_(*conditions))
                 .order_by(PlanModel.updated_at, PlanModel.id)
                 .limit(limit)
                 .offset(offset)

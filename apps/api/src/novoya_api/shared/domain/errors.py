@@ -47,6 +47,12 @@ class InvalidInput(DomainError):
     code = "invalid_input"
 
 
+class Unavailable(DomainError):
+    """A service the action needs, for example the email server, did not answer. Try again."""
+
+    code = "unavailable"
+
+
 class TooManyRequests(DomainError):
     """The caller tried too often. They may try again after `retry_after_seconds`."""
 

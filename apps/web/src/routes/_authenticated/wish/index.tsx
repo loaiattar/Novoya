@@ -13,7 +13,7 @@ import { WishComposer } from '../../../components/organisms/WishComposer'
 import { AppShell } from '../../../components/templates/AppShell'
 import { givenName } from '../../../domain/auth/session'
 import { destinationLabel, destinationPhoto, destinationPlace } from '../../../domain/wish/destination'
-import { sendWishErrorKey, WISH_MAX_LENGTH, wishTextError, type WishTextErrorKey } from '../../../domain/wish/wish'
+import { sendWishError, WISH_MAX_LENGTH, wishTextError, type WishTextErrorKey } from '../../../domain/wish/wish'
 
 export const Route = createFileRoute('/_authenticated/wish/')({
   component: WishPage,
@@ -82,16 +82,20 @@ function WishPage() {
     )
   }
 
-  const sendError = send.isError
-    ? tErrors(sendWishErrorKey(send.error instanceof ApiError ? send.error.code : undefined))
+  const refused = send.isError
+    ? sendWishError(
+        send.error instanceof ApiError ? send.error.code : undefined,
+        send.error instanceof ApiError ? send.error.retryAfterSeconds : undefined,
+      )
     : undefined
+  const sendError = refused ? tErrors(refused.key, { count: refused.count }) : undefined
   const textError = checkError ? tErrors(checkError, { max: WISH_MAX_LENGTH }) : undefined
   const firstName = givenName(me)
 
   return (
     <AppShell tone="ivory">
       <main className="flex min-h-[calc(100vh-72px)] flex-col items-center justify-center px-[18px] py-10 text-center md:min-h-[calc(100vh-88px)] md:px-5 md:py-[70px]">
-        <Seal className="mb-5 size-[57px] shadow-[0_0_0_10px_rgb(239_118_94/0.07)]" />
+        <Seal className="mb-5 size-[57px] shadow-[0_0_0_10px_rgb(242_183_5/0.1)]" />
         <Eyebrow>{firstName ? t('greeting', { name: firstName }) : t('greetingNoName')}</Eyebrow>
         <h1 className="mb-[23px] text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
           {t('titleStart')}

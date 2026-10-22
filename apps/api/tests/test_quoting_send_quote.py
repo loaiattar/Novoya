@@ -23,6 +23,8 @@ from tests.quoting_fakes import (
     OTHER_CLIENT,
     PLAN_ID,
     QUOTED,
+    TRIP,
+    FakeNotifier,
     FakePeople,
     FakePlanQuoting,
     FakeQuotes,
@@ -34,16 +36,20 @@ from tests.quoting_fakes import (
 
 
 class Sending:
-    def __init__(self, plans: FakePlanQuoting | None = None, client=CLIENT_FR) -> None:
+    def __init__(
+        self, plans: FakePlanQuoting | None = None, client=CLIENT_FR, email_sent: bool = True
+    ) -> None:
         self.plans = plans or FakePlanQuoting()
         self.renderer = FakeRenderer()
         self.quotes = FakeQuotes()
         self.uow = FakeUow()
+        self.notifier = FakeNotifier(email_sent, self.uow)
         self.use_case = SendQuote(
             self.plans,
             FakePeople(client, AGENT),
             self.renderer,
             self.quotes,
+            self.notifier,
             self.uow,
             FixedClock(),
             FRONTEND,
@@ -130,6 +136,38 @@ async def test_a_plan_that_is_not_ready_sends_nothing():
     assert sending.quotes.added == []
     assert sending.renderer.documents == []
     assert sending.uow.commits == 0
+    assert sending.notifier.emails == []
+
+
+async def test_the_client_gets_an_email_after_the_commit():
+    sending = Sending()
+
+    view = await sending.use_case(PLAN_ID, AGENT_ID)
+
+    [email] = sending.notifier.emails
+    assert sending.notifier.commits_before == [1]
+    assert (email.to, email.name) == (CLIENT_FR.email, CLIENT_FR.name)
+    assert email.trip == TRIP
+    assert email.quote_url == f"{FRONTEND}/quotes/{view.id}"
+    assert view.email_sent is True
+
+
+async def test_the_email_is_in_the_quotes_language():
+    sending = Sending(client=CLIENT_FR)
+
+    await sending.use_case(PLAN_ID, AGENT_ID, Locale.EN)
+
+    assert sending.notifier.emails[0].locale is Locale.EN
+
+
+async def test_a_failed_email_keeps_the_quote():
+    sending = Sending(email_sent=False)
+
+    view = await sending.use_case(PLAN_ID, AGENT_ID)
+
+    assert view.email_sent is False
+    assert sending.uow.commits == 1
+    assert sending.quotes.added[0].id == view.id
 
 
 async def test_the_client_reads_their_quote_pdf():

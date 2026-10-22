@@ -4,8 +4,8 @@ Uses the database fixture of test_catalog_sql.py: skipped when Postgres does not
 """
 
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from dataclasses import dataclass, replace
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -24,7 +24,8 @@ from novoya_api.accounts.infrastructure.db.models import UserModel
 from novoya_api.catalog.infrastructure.db.models import OfferRow, PartnerRow
 from novoya_api.planning.domain.plan import DraftItem, Plan
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
-from novoya_api.quoting.domain.quote import Quote
+from novoya_api.quoting.domain.errors import QuoteAlreadyAnswered
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.quoting.infrastructure.db.repository import SqlQuoteRepository
 from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.wishes.domain.wish import Wish
@@ -128,6 +129,72 @@ async def test_get_reads_back_an_added_quote_with_its_pdf(engine, stored):
     assert read == quote
 
 
+async def test_get_without_the_pdf_leaves_it_empty(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        read = await SqlQuoteRepository(session).get(quote.id, with_pdf=False)
+
+    assert read is not None
+    assert read.pdf is None
+    assert read.number == quote.number
+
+
+async def test_get_with_the_pdf_after_a_read_without_it_in_one_session(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        repository = SqlQuoteRepository(session)
+        await repository.get(quote.id, with_pdf=False)
+        read = await repository.get(quote.id)
+
+    assert read is not None
+    assert read.pdf == quote.pdf
+
+
+async def test_get_reads_back_the_clients_answer(engine, stored):
+    quote = issue(stored)
+    quote.answer = QuoteStatus.ACCEPTED
+    quote.decided_at = NOW + timedelta(days=1)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        read = await SqlQuoteRepository(session).get(quote.id)
+
+    assert read == quote
+
+
+async def test_save_answer_writes_the_answer_once(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+    quote.record_answer(QuoteStatus.ACCEPTED, "Great", NOW)
+
+    async with new_session(engine) as session:
+        await SqlQuoteRepository(session).save_answer(quote)
+        await session.commit()
+    async with new_session(engine) as session:
+        with pytest.raises(QuoteAlreadyAnswered):
+            await SqlQuoteRepository(session).save_answer(quote)
+        read = await SqlQuoteRepository(session).get(quote.id)
+
+    assert read is not None
+    assert (read.answer, read.decided_at, read.client_comment) == (
+        QuoteStatus.ACCEPTED,
+        NOW,
+        "Great",
+    )
+
+
+async def test_an_answer_needs_its_date(engine, stored):
+    quote = issue(stored)
+    quote.answer = QuoteStatus.REJECTED
+
+    with pytest.raises(IntegrityError):
+        await add_quote(engine, quote)
+
+
 async def test_get_returns_none_for_an_unknown_quote(engine, stored):
     async with new_session(engine) as session:
         assert await SqlQuoteRepository(session).get(uuid4()) is None
@@ -138,3 +205,18 @@ async def test_a_plan_has_at_most_one_quote(engine, stored):
 
     with pytest.raises(IntegrityError):
         await add_quote(engine, issue(stored))
+
+
+async def test_get_for_plan_reads_back_the_quote_of_the_plan_without_its_pdf(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        read = await SqlQuoteRepository(session).get_for_plan(stored.plan_id)
+
+    assert read == replace(quote, pdf=None)
+
+
+async def test_get_for_plan_returns_none_before_the_quote_is_sent(engine, stored):
+    async with new_session(engine) as session:
+        assert await SqlQuoteRepository(session).get_for_plan(stored.plan_id) is None

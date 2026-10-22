@@ -68,7 +68,7 @@ export function SignInForm({ googleHref, onSubmit, pending = false, error }: Pro
           )}
         </form.Field>
         <p className="-mt-1 mb-4 text-right text-sm">
-          <Link to="/forgot-password" className="underline underline-offset-4">
+          <Link to="/forgot-password" className="inline-flex min-h-6 items-center underline underline-offset-4">
             {t('forgotPassword')}
           </Link>
         </p>

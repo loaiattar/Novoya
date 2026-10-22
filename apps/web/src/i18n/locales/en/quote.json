@@ -7,8 +7,6 @@
   "sheet": {
     "label": "Offer details",
     "agency": "Travel agency",
-    "validity_one": "Valid for {{count}} day",
-    "validity_other": "Valid for {{count}} days",
     "issued": "Issued on {{date}}",
     "travellers_one": "{{count}} traveller",
     "travellers_other": "{{count}} travellers",
@@ -20,7 +18,12 @@
     "total": "Total incl. VAT",
     "budget": "Your stated maximum budget: {{amount}}",
     "download": "↓ Download the offer PDF",
-    "pdfSoon": "The PDF will be available once the offer is sent."
+    "validUntil": "Valid until {{date}}",
+    "included": "Included",
+    "unavailable": "An item no longer listed",
+    "itemDetail_one": "Day {{day}} · {{count}} unit",
+    "itemDetail_other": "Day {{day}} · {{count}} units",
+    "pdfDemo": "This offer is an example, so it has no PDF."
   },
   "decision": {
     "title": "Your decision",
@@ -29,6 +32,19 @@
     "accept": "Accept the offer",
     "refuse": "Decline the offer",
     "noSupplier": "No supplier name appears on the offer.",
-    "unavailable": "Answering an offer is coming soon. This one is an example, so there is nothing to accept yet."
-  }
+    "unavailable": "Answering an offer is coming soon. This one is an example, so there is nothing to accept yet.",
+    "final": "Your answer is final. Your advisor sees it with your comment.",
+    "sending": "Sending your answer…",
+    "failed": "Your answer didn't go through. Try again.",
+    "expired": "This offer expired on {{date}}.",
+    "accepted": "You accepted this offer on {{date}}.",
+    "rejected": "You declined this offer on {{date}}.",
+    "yourComment": "Your comment:",
+    "afterAccept": "Your advisor will contact you to book the trip.",
+    "afterReject": "You can describe a new trip whenever you like.",
+    "afterExpired": "Ask your advisor for a new offer, or describe a new trip."
+  },
+  "preparedByAgency": "Carefully prepared by your {{agency}} advisor.",
+  "loading": "Loading your offer…",
+  "loadFailed": "Your offer could not be loaded."
 }

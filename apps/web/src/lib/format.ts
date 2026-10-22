@@ -34,9 +34,15 @@ export function formatShortDate(locale: string, iso: string): string {
   return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
 }
 
-/** €1,860 / 1 860 €. Whole euros: quotes are entered in euros by the agent. */
+/** €1,860 / 1 860 €, and €1,234.50 / 1 234,50 € when there are cents (negotiated prices). */
 export function formatEuros(locale: string, amount: number): string {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount)
+  const digits = Number.isInteger(amount) ? 0 : 2
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount)
+}
+
+/** October 29, 2026 / 29 octobre 2026: the day in Paris, the agency's day, as the quote PDF shows it. */
+export function formatAgencyDay(locale: string, iso: string): string {
+  return new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Paris', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))
 }
 
 /** 2 hours ago / il y a 2 heures. */

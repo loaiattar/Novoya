@@ -3,58 +3,46 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 import { Photo } from '../atoms/Photo'
-import { Chip } from '../atoms/Chip'
 
 type Props = {
   image: string
   imageAlt: string
-  /** The small label on the photo ("Populaire"). */
+  /** The small round label on the photo ("01"). */
   badge: string
   place: string
   title: string
   copy: string
-  tags: string[]
-  /** The photo is taller for the first, featured card. */
-  tall?: boolean
   /** The link around the card (a router `Link`), given the card's content. */
   renderLink: (content: ReactNode) => ReactNode
   className?: string
 }
 
-/** An inspiration: photo, place, title, a line and tags. The whole card is one link. */
-export function TripCard({ image, imageAlt, badge, place, title, copy, tags, tall = false, renderLink, className }: Props) {
+/** An inspiration: photo, place, title and a line. The whole card is one link. */
+export function TripCard({ image, imageAlt, badge, place, title, copy, renderLink, className }: Props) {
   return (
     <article className={cn('group', className)}>
       {renderLink(
         <>
-          <div className={cn('relative h-[400px] overflow-hidden', tall ? 'md:h-[540px]' : 'md:h-[420px]')}>
+          <div className="relative mb-6 h-[420px] overflow-hidden rounded-2xl md:h-[520px]">
             <Photo
               src={image}
-              sizes="(min-width: 768px) 40vw, 84vw"
+              sizes="(min-width: 768px) 30vw, 84vw"
               alt={imageAlt}
               loading="lazy"
-              className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+              className="size-full object-cover saturate-[0.84] transition-transform duration-600 group-hover:scale-[1.04]"
             />
-            <span className="absolute top-4 left-4 rounded-full bg-paper px-3 py-2 text-xs tracking-[0.12em] uppercase">
-              {badge}
-            </span>
             <span
               aria-hidden="true"
-              className="absolute right-4 bottom-4 grid size-[46px] place-items-center rounded-full bg-white text-lg transition group-hover:rotate-[5deg] group-hover:bg-coral"
+              className="absolute top-3.5 right-3.5 grid size-[42px] place-items-center rounded-full bg-sky font-mono text-xs font-medium"
             >
-              ↗
+              {badge}
             </span>
           </div>
-          <div className="px-1 py-[22px]">
-            <p className="mb-2.5 text-xs tracking-[0.16em] text-muted uppercase">{place}</p>
-            <h3 className="mb-2 font-serif text-[25px] font-normal">{title}</h3>
-            <p className="text-sm text-muted">{copy}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Chip key={tag}>{tag}</Chip>
-              ))}
-            </div>
-          </div>
+          <p className="m-0 font-mono text-xs font-medium tracking-[0.12em] uppercase">{place}</p>
+          <h3 className="mt-1.5 mb-2.5 font-serif text-[30px] leading-[1.04] font-extrabold tracking-[-0.025em] lowercase md:text-[34px]">
+            {title}
+          </h3>
+          <p className="m-0 text-sm text-muted">{copy}</p>
         </>,
       )}
     </article>

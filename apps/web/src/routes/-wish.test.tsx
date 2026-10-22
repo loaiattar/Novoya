@@ -284,6 +284,46 @@ describe('sending a wish', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('couldn\'t be sent')
     expect(screen.getByLabelText('Your travel wish')).toHaveValue('La Crète en mai')
   })
+
+  it('says how long to wait when the wish is rate limited', async () => {
+    wishAnswer = () =>
+      Response.json(
+        { code: 'too_many_requests', detail: 'try again in 720 seconds' },
+        { status: 429, headers: { 'Retry-After': '720' } },
+      )
+    renderAt('/wish')
+
+    await writeAndSend('La Crète en mai')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Try again in 12 minutes')
+    expect(screen.getByLabelText('Your travel wish')).toHaveValue('La Crète en mai')
+  })
+
+  it('keeps the usual wait message when Retry-After is missing', async () => {
+    wishAnswer = () => Response.json({ code: 'too_many_requests', detail: 'slow down' }, { status: 429 })
+    renderAt('/wish')
+
+    await writeAndSend('La Crète en mai')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please wait a moment and try again')
+    expect(screen.getByLabelText('Your travel wish')).toHaveValue('La Crète en mai')
+  })
+
+  it('says how long to wait in French', async () => {
+    signedIn = { ...CAMILLE, locale: 'fr' }
+    wishAnswer = () =>
+      Response.json(
+        { code: 'too_many_requests', detail: 'try again in 12 seconds' },
+        { status: 429, headers: { 'Retry-After': '12' } },
+      )
+    renderAt('/wish')
+
+    fireEvent.change(await screen.findByLabelText('Votre envie de voyage'), { target: { value: 'La Crète en mai' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Réessayez dans 12 secondes')
+    expect(screen.getByLabelText('Votre envie de voyage')).toHaveValue('La Crète en mai')
+  })
 })
 
 describe('the preferences panel', () => {
@@ -361,6 +401,24 @@ describe('the preferences panel', () => {
     answersAnswer = () => Response.json(PLAN, { status: 201 })
     fireEvent.click(screen.getByRole('button', { name: /Compose my preview/ }))
     await waitFor(() => expect(posts(`/wishes/${WISH_ID}/answers`)).toHaveLength(2))
+  })
+
+  it('says how long to wait when the answers are rate limited, with the form still filled in', async () => {
+    answersAnswer = () =>
+      Response.json(
+        { code: 'too_many_requests', detail: 'try again in 720 seconds' },
+        { status: 429, headers: { 'Retry-After': '720' } },
+      )
+    renderAt(`/wish/${WISH_ID}/preferences`, withWish)
+    await screen.findByRole('heading', { name: /What matters/ })
+    fireEvent.click(screen.getByRole('button', { name: 'Culture' }))
+    fillConstraints()
+
+    fireEvent.click(screen.getByRole('button', { name: /Compose my preview/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Try again in 12 minutes')
+    expect(screen.getByRole('button', { name: 'Culture' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText(/Maximum budget/)).toHaveValue('3 500 €')
   })
 
   it('says so when no offer fits, with the answers still filled in', async () => {
@@ -454,7 +512,7 @@ describe('the landing page', () => {
     signedIn = null
     renderAt('/')
 
-    expect(await screen.findByRole('heading', { name: /Your wish/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /the best part of travel/i })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
     expect(screen.getByRole('link', { name: /Continue with Google/ })).toHaveAttribute(
       'href',
@@ -479,17 +537,14 @@ describe('the landing page', () => {
     )
     expect(screen.getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
     expect(screen.queryByText(/02 40 00 00 00/)).not.toBeInTheDocument()
-    expect(document.querySelector('img[src="/images/logo-1600.webp"]')).not.toBeNull()
   })
 
   it('names the client agency in the copy, not Novoya', async () => {
     signedIn = null
     renderAt('/')
 
-    expect(await screen.findByText('The DÉTOUR promise')).toBeInTheDocument()
+    expect(await screen.findByText(/then a DÉTOUR advisor makes it happen/)).toBeInTheDocument()
     expect(screen.queryByText(/Novoya/)).not.toBeInTheDocument()
-    // The seal is the agency's own symbol, not a typed letter.
-    expect(document.querySelector('img[src="/icon-192.png"]')).not.toBeNull()
   })
 
   it('credits the Novoya team in French on the legal notices', async () => {

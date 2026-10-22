@@ -356,7 +356,7 @@ async def test_two_stale_removals_keep_one_item(engine, wish_id, offer_ids):
     assert read.assigned_agent_id == agent_id
 
 
-async def test_list_by_status_returns_requested_plans_oldest_first(engine, wish_id, offer_ids):
+async def test_list_queue_returns_requested_plans_oldest_first(engine, wish_id, offer_ids):
     hotel, _boat = offer_ids
     first = Plan.propose(wish_id, True, "First", [DraftItem(hotel, 1, 7, None)], 8, NOW)
     second = Plan.propose(
@@ -373,14 +373,14 @@ async def test_list_by_status_returns_requested_plans_oldest_first(engine, wish_
     await add_plan(engine, first)
 
     async with new_session(engine) as session:
-        listed = await SqlPlanRepository(session).list_by_status(PlanStatus.REQUESTED)
+        listed = await SqlPlanRepository(session).list_queue([PlanStatus.REQUESTED], uuid4())
 
     assert [plan.id for plan in listed] == [first.id, second.id]
     assert all(plan.status is PlanStatus.REQUESTED for plan in listed)
     assert all(plan.items == () for plan in listed)
 
 
-async def test_list_by_status_pages(engine, wish_id, offer_ids):
+async def test_list_queue_pages(engine, wish_id, offer_ids):
     hotel, _boat = offer_ids
     plans = []
     for hour in (8, 9, 10):
@@ -398,11 +398,77 @@ async def test_list_by_status_pages(engine, wish_id, offer_ids):
 
     async with new_session(engine) as session:
         repo = SqlPlanRepository(session)
-        first_page = await repo.list_by_status(PlanStatus.REQUESTED, limit=2, offset=0)
-        second_page = await repo.list_by_status(PlanStatus.REQUESTED, limit=2, offset=2)
+        agent_id = uuid4()
+        first_page = await repo.list_queue([PlanStatus.REQUESTED], agent_id, limit=2, offset=0)
+        second_page = await repo.list_queue([PlanStatus.REQUESTED], agent_id, limit=2, offset=2)
 
     assert [plan.id for plan in first_page] == [plans[0].id, plans[1].id]
     assert [plan.id for plan in second_page] == [plans[2].id]
+
+
+async def _queued_plan(
+    engine, wish_id, hotel: UUID, hour: int, status: PlanStatus, agent_id: UUID | None = None
+) -> Plan:
+    at = datetime(2026, 10, 19, hour, 0, tzinfo=UTC)
+    plan = Plan.propose(wish_id, True, f"Trip {hour}", [DraftItem(hotel, 1, 7, None)], 8, at)
+    plan.request_quote(at)
+    if agent_id is not None:
+        plan.take(agent_id, at)
+    plan.status = status
+    await add_plan(engine, plan)
+    return plan
+
+
+async def test_list_queue_lists_only_my_plans_for_other_statuses(engine, wish_id, offer_ids):
+    hotel, _boat = offer_ids
+    me, other = uuid4(), uuid4()
+    await _add_agent(engine, me)
+    await _add_agent(engine, other)
+    await _queued_plan(engine, wish_id, hotel, 8, PlanStatus.REQUESTED)
+    mine = await _queued_plan(engine, wish_id, hotel, 9, PlanStatus.NEGOTIATING, me)
+    await _queued_plan(engine, wish_id, hotel, 10, PlanStatus.NEGOTIATING, other)
+
+    async with new_session(engine) as session:
+        listed = await SqlPlanRepository(session).list_queue([PlanStatus.NEGOTIATING], me)
+
+    assert [plan.id for plan in listed] == [mine.id]
+
+
+async def test_list_queue_mixes_everyones_requested_with_my_other_statuses(
+    engine, wish_id, offer_ids
+):
+    hotel, _boat = offer_ids
+    me, other = uuid4(), uuid4()
+    await _add_agent(engine, me)
+    await _add_agent(engine, other)
+    my_quoted = await _queued_plan(engine, wish_id, hotel, 8, PlanStatus.QUOTED, me)
+    await _queued_plan(engine, wish_id, hotel, 9, PlanStatus.QUOTED, other)
+    requested = await _queued_plan(engine, wish_id, hotel, 10, PlanStatus.REQUESTED)
+    await _queued_plan(engine, wish_id, hotel, 11, PlanStatus.NEGOTIATING, me)
+    my_accepted = await _queued_plan(engine, wish_id, hotel, 12, PlanStatus.ACCEPTED, me)
+
+    async with new_session(engine) as session:
+        listed = await SqlPlanRepository(session).list_queue(
+            [PlanStatus.REQUESTED, PlanStatus.QUOTED, PlanStatus.ACCEPTED], me
+        )
+
+    assert [plan.id for plan in listed] == [my_quoted.id, requested.id, my_accepted.id]
+
+
+async def test_list_queue_pages_across_mixed_statuses(engine, wish_id, offer_ids):
+    hotel, _boat = offer_ids
+    me = uuid4()
+    await _add_agent(engine, me)
+    await _queued_plan(engine, wish_id, hotel, 8, PlanStatus.REQUESTED)
+    my_quoted = await _queued_plan(engine, wish_id, hotel, 9, PlanStatus.QUOTED, me)
+    late = await _queued_plan(engine, wish_id, hotel, 10, PlanStatus.REQUESTED)
+
+    async with new_session(engine) as session:
+        page = await SqlPlanRepository(session).list_queue(
+            [PlanStatus.REQUESTED, PlanStatus.QUOTED], me, limit=2, offset=1
+        )
+
+    assert [plan.id for plan in page] == [my_quoted.id, late.id]
 
 
 async def test_a_second_take_does_not_steal_the_plan(engine, wish_id, offer_ids):

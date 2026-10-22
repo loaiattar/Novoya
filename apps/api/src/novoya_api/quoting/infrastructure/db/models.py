@@ -30,6 +30,12 @@ class QuoteModel(Base):
     __table_args__ = (
         CheckConstraint("total_price > 0", name="ck_quotes_total_price"),
         CheckConstraint("locale IN ('en', 'fr')", name="ck_quotes_locale"),
+        CheckConstraint(
+            "answer IS NULL OR answer IN ('accepted', 'rejected')", name="ck_quotes_answer"
+        ),
+        CheckConstraint(
+            "(answer IS NULL) = (decided_at IS NULL)", name="ck_quotes_answer_decided_at"
+        ),
         UniqueConstraint("number", name="uq_quotes_number"),
         UniqueConstraint("plan_id", name="uq_quotes_plan_id"),
         Index("ix_quotes_client_id", "client_id"),
@@ -47,5 +53,7 @@ class QuoteModel(Base):
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     pdf: Mapped[bytes] = mapped_column(LargeBinary)
+    # The client's answer (accepted or rejected) and when; both empty until they answer.
+    answer: Mapped[str | None] = mapped_column(String(8))
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     client_comment: Mapped[str | None] = mapped_column(Text)

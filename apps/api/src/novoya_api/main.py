@@ -7,6 +7,7 @@ from novoya_api.config import get_settings
 from novoya_api.health.presentation.http.router import router as health_router
 from novoya_api.planning.presentation.http.router import agent_router as planning_agent_router
 from novoya_api.planning.presentation.http.router import router as planning_router
+from novoya_api.quoting.presentation.http.router import agent_quotes_router
 from novoya_api.quoting.presentation.http.router import agent_router as quoting_agent_router
 from novoya_api.quoting.presentation.http.router import router as quoting_router
 from novoya_api.shared.presentation.http.errors import register_error_handlers
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(planning_agent_router)
     app.include_router(quoting_router)
     app.include_router(quoting_agent_router)
+    app.include_router(agent_quotes_router)
     return app
 
 

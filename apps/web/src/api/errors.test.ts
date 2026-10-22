@@ -1,9 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import './client'
-import { ApiError, isUnauthenticated } from './errors'
+import { ApiError, isUnauthenticated, retryAfterSeconds } from './errors'
 import { getMe } from './generated/sdk.gen'
 import { client } from './generated/client.gen'
+
+describe('retryAfterSeconds', () => {
+  it('reads delay-seconds and ignores anything else', () => {
+    expect(retryAfterSeconds('720')).toBe(720)
+    expect(retryAfterSeconds(' 12 ')).toBe(12)
+    expect(retryAfterSeconds('0')).toBeUndefined()
+    expect(retryAfterSeconds('Wed, 21 Oct 2015 07:28:00 GMT')).toBeUndefined()
+    expect(retryAfterSeconds(null)).toBeUndefined()
+  })
+})
 
 describe('isUnauthenticated', () => {
   it('is true only for a 401 with the unauthenticated code', () => {
@@ -36,6 +46,19 @@ describe('the API client', () => {
     const error = await getMe({ throwOnError: true }).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 502, code: 'unknown', message: 'Bad gateway' })
+  })
+
+  it('keeps Retry-After seconds on a 429', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json(
+        { code: 'too_many_requests', detail: 'try again in 720 seconds' },
+        { status: 429, headers: { 'Retry-After': '720' } },
+      ),
+    )
+
+    const error = await getMe({ throwOnError: true }).catch((e: unknown) => e)
+
+    expect(error).toMatchObject({ status: 429, code: 'too_many_requests', retryAfterSeconds: 720 })
   })
 
   it('keeps a network error as it is', async () => {

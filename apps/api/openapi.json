@@ -497,6 +497,25 @@
         "title": "AnswerPanelRequest",
         "type": "object"
       },
+      "AnswerQuoteRequest": {
+        "description": "An optional comment for the agent with the answer.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "title": "AnswerQuoteRequest",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "properties": {
           "current_password": {
@@ -1943,11 +1962,15 @@
         "type": "object"
       },
       "Quote": {
-        "description": "A sent quote. total is in currency (always EUR); the PDF is at GET /quotes/{id}/pdf.",
+        "description": "A sent quote. total is in currency (always EUR); the PDF is at GET /quotes/{id}/pdf.\nemail_sent is false when the client's email did not go out: POST\n/agent/quotes/{id}/email sends it again.",
         "properties": {
           "currency": {
             "title": "Currency",
             "type": "string"
+          },
+          "email_sent": {
+            "title": "Email Sent",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -1994,10 +2017,301 @@
           "currency",
           "locale",
           "sent_at",
-          "valid_until"
+          "valid_until",
+          "email_sent"
         ],
         "title": "Quote",
         "type": "object"
+      },
+      "QuoteDetail": {
+        "description": "A quote and where it stands: open, expired once the validity day is over in Paris, or\nthe client's answer (accepted, rejected) with decided_at and client_comment. With the\ntrip and its priced lines, as the PDF shows them; those are null or empty when the plan\nis gone. Unlike the quote just sent, it has no email_sent: that only matters when it is\nsent.",
+        "properties": {
+          "agent_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Name"
+          },
+          "budget_max": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Max"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "client_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Comment"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "extras": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteExtra"
+            },
+            "title": "Extras",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "persons": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QuoteStatus"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date-time",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "plan_id",
+          "total",
+          "currency",
+          "locale",
+          "sent_at",
+          "valid_until",
+          "status",
+          "decided_at",
+          "client_comment",
+          "agent_name",
+          "country",
+          "city",
+          "start_date",
+          "end_date",
+          "persons",
+          "budget_max",
+          "items",
+          "extras"
+        ],
+        "title": "QuoteDetail",
+        "type": "object"
+      },
+      "QuoteExtra": {
+        "description": "An extra the client chose. price is null for an included extra.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "unit",
+          "price"
+        ],
+        "title": "QuoteExtra",
+        "type": "object"
+      },
+      "QuoteItem": {
+        "description": "A kept item on its day. title is null when the offer left the catalog. price is the\nline's price in EUR.",
+        "properties": {
+          "day": {
+            "title": "Day",
+            "type": "integer"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "price": {
+            "title": "Price",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "day",
+          "kind",
+          "title",
+          "description",
+          "quantity",
+          "price"
+        ],
+        "title": "QuoteItem",
+        "type": "object"
+      },
+      "QuoteStatus": {
+        "description": "Where a quote stands: open until the client answers or its validity ends.",
+        "enum": [
+          "open",
+          "expired",
+          "accepted",
+          "rejected"
+        ],
+        "title": "QuoteStatus",
+        "type": "string"
       },
       "RegisterRequest": {
         "properties": {
@@ -4223,7 +4537,7 @@
     },
     "/agent/plans": {
       "get": {
-        "description": "Plans waiting for a quote, oldest first. Wish text, destination, dates, travellers, budget.\nNever a price and never a partner name: take the plan to see those.",
+        "description": "The agent's queue, oldest first. Wish text, destination, dates, travellers, budget.\nstatus repeats: requested lists the plans waiting for anyone; negotiating, quoted,\naccepted and rejected list only the caller's own plans. Never a price and never a\npartner name: open the plan to see those.",
         "operationId": "listQuoteQueue",
         "parameters": [
           {
@@ -4231,10 +4545,21 @@
             "name": "status",
             "required": false,
             "schema": {
-              "const": "requested",
-              "default": "requested",
+              "default": [
+                "requested"
+              ],
+              "items": {
+                "enum": [
+                  "requested",
+                  "negotiating",
+                  "quoted",
+                  "accepted",
+                  "rejected"
+                ],
+                "type": "string"
+              },
               "title": "Status",
-              "type": "string"
+              "type": "array"
             }
           },
           {
@@ -4606,8 +4931,80 @@
       }
     },
     "/agent/plans/{plan_id}/quote": {
+      "get": {
+        "description": "The quote sent for this plan, with the id of its PDF. Only the agent who sent it\n(403). 404 before the quote is sent.",
+        "operationId": "getPlanQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plan Quote",
+        "tags": [
+          "agent"
+        ]
+      },
       "post": {
-        "description": "Send the quote: the total of the priced items and extras, valid 7 days, rendered as a\nPDF in the language the agent chose (en or fr; the client's language without a body).\nThe plan becomes quoted. Only the assigned agent (403).\n409 if the plan is not negotiating (a second click too). 422 plan_not_ready while a kept\nitem or an on_quote extra has no price, or a supplement is not confirmed.",
+        "description": "Send the quote: the total of the priced items and extras, valid 7 days, rendered as a\nPDF in the language the agent chose (en or fr; the client's language without a body).\nThe plan becomes quoted and the client gets an email that leads to the quote; email_sent\nis false if it did not go out (the quote is saved anyway). Only the assigned agent (403).\n409 if the plan is not negotiating (a second click too). 422 plan_not_ready while a kept\nitem or an on_quote extra has no price, or a supplement is not confirmed.",
         "operationId": "sendQuote",
         "parameters": [
           {
@@ -4785,6 +5182,93 @@
           }
         },
         "summary": "Take Plan",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/agent/quotes/{quote_id}/email": {
+      "post": {
+        "description": "Send the client's \"your quote is ready\" email again. Only the agent who sent the quote,\nor an admin (403). At most 3 times an hour per quote: 429 too_many_requests after that,\nwith Retry-After. 503 email_not_sent if the email server did not take it.",
+        "operationId": "resendQuoteEmail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Resend Quote Email",
         "tags": [
           "agent"
         ]
@@ -6414,6 +6898,174 @@
         ]
       }
     },
+    "/quotes/{quote_id}": {
+      "get": {
+        "description": "The quote and where it stands (open, expired after its validity date, accepted or\nrejected), for its client or staff (agents, admins). 404 for anyone else, so the id\nstays hidden.",
+        "operationId": "getQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Quote",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/quotes/{quote_id}/accept": {
+      "post": {
+        "description": "The client accepts their quote, with an optional comment for the agent. The plan\nbecomes accepted. 409 quote_expired after the validity day, 409 quote_answered when it\nis answered already; 403 for staff, 404 for anyone else.",
+        "operationId": "acceptQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AnswerQuoteRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept Quote",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
     "/quotes/{quote_id}/pdf": {
       "get": {
         "description": "The quote as a PDF, for its client or an agent. 404 for anyone else, so the id stays\nhidden.",
@@ -6479,6 +7131,100 @@
           }
         },
         "summary": "Get Quote Pdf",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/quotes/{quote_id}/reject": {
+      "post": {
+        "description": "The client rejects their quote, with an optional comment for the agent. The plan\nbecomes rejected, and the client can start a new wish. Same errors as accept.",
+        "operationId": "rejectQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AnswerQuoteRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Quote",
         "tags": [
           "quoting"
         ]

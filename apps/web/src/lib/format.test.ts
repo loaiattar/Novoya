@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDay, formatDayRange, formatEuros, formatHoursAgo, formatMonth, formatMonthName } from './format'
+import { formatAgencyDay, formatDay, formatDayRange, formatEuros, formatHoursAgo, formatMonth, formatMonthName } from './format'
 
 // Intl puts narrow no-break spaces in some languages: compare with plain spaces.
 const plain = (text: string) => text.replace(/[\u00a0\u2009\u202f]/g, ' ')
@@ -30,6 +30,17 @@ describe('format', () => {
   it('writes whole euros', () => {
     expect(plain(formatEuros('fr', 1860))).toBe('1 860 €')
     expect(formatEuros('en', 1860)).toBe('€1,860')
+  })
+
+  it('shows cents only when a price has some', () => {
+    expect(formatEuros('en', 1234.5)).toBe('€1,234.50')
+    expect(plain(formatEuros('fr', 1234.5))).toBe('1 234,50 €')
+  })
+
+  it('writes the agency day in Paris, whatever the browser zone', () => {
+    // 23:30 UTC on 28 October is already 29 October in Paris (UTC+1 in winter).
+    expect(formatAgencyDay('en', '2026-10-28T23:30:00Z')).toBe('October 29, 2026')
+    expect(formatAgencyDay('fr', '2026-10-28T23:30:00Z')).toBe('29 octobre 2026')
   })
 
   it('writes a time in the past', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { destinationLabel, destinationPhoto, destinationPlace, FALLBACK_PHOTO } from './destination'
-import { sendWishErrorKey, WISH_MAX_LENGTH, wishTextError } from './wish'
+import { sendWishError, sendWishErrorKey, WISH_MAX_LENGTH, wishTextError } from './wish'
 
 describe('wishTextError', () => {
   it('accepts a sentence', () => {
@@ -24,6 +24,14 @@ describe('sendWishErrorKey', () => {
     expect(sendWishErrorKey('invalid_wish')).toBe('wish.invalid')
     expect(sendWishErrorKey('too_many_requests')).toBe('wish.tooManyRequests')
     expect(sendWishErrorKey(undefined)).toBe('wish.unknown')
+  })
+})
+
+describe('sendWishError', () => {
+  it('keeps the usual message without Retry-After, and names the wait when it is there', () => {
+    expect(sendWishError('too_many_requests')).toEqual({ key: 'wish.tooManyRequests' })
+    expect(sendWishError('too_many_requests', 720)).toEqual({ key: 'rateLimit.waitMinutes', count: 12 })
+    expect(sendWishError('invalid_wish', 720)).toEqual({ key: 'wish.invalid' })
   })
 })
 

@@ -1,26 +1,22 @@
 {
-  "titleStart": "Your wish,",
-  "titleEnd": "our itinerary.",
-  "describeTrip": "Describe my trip",
-  "heroImageAlt": "Rocky coast of Crete bathed in turquoise water",
-  "heroEyebrow": "Human agency · AI assistant",
-  "heroIntro": "Tailor-made trips, imagined with you and put together only with partners we know.",
+  "titleStart": "The best part of travel",
+  "titleEnd": "is the détour.",
+  "describeTrip": "Plan my weekend",
+  "heroImageAlt": "A traveller reading on a train",
+  "heroEyebrow": "Trips put together by people, guided by AI",
+  "heroIntro": "A wish is enough. We give it a shape, then a DÉTOUR advisor makes it happen with the right places.",
   "continueWithGoogle": "Continue with Google",
-  "heroFoot": "Set sail",
+  "heroFoot": "Take a step aside.",
   "manifesto": {
-    "eyebrow": "The {{agency}} promise",
-    "titleStart": "Search less.",
-    "titleEnd": "Travel better.",
-    "lead": "You describe a wish. Our AI gives it a first shape. Then a {{agency}} agent makes it happen, with care and judgement.",
-    "honestyTitle": "Our stance: honesty.",
-    "honestyText": "We only offer destinations where our partners are active. If we can't take you there, we'll tell you."
+    "eyebrow": "How we work",
+    "titleStart": "less noise.",
+    "titleEnd": "more care.",
+    "lead": "You tell us. The AI sketches a preview without prices. An advisor checks it, prices it and sends you the agency’s offer."
   },
   "popular": {
-    "eyebrow": "Inspiration notebook",
-    "title": "Most wanted",
-    "intro": "Three getaways our travellers often imagine, to reinvent as you like.",
-    "badgePopular": "Popular",
-    "badgeSelection": "Selection"
+    "eyebrow": "Off the beaten track",
+    "title": "three ideas to branch off.",
+    "all": "All destinations"
   },
   "trips": {
     "elounda": {
@@ -39,61 +35,34 @@
       "copy": "A house around a hidden courtyard, 2 nights minimum."
     }
   },
-  "tags": {
-    "sea": "sea",
-    "calm": "calm",
-    "beach": "beach",
-    "sport": "sport",
-    "culture": "culture",
-    "riad": "riad"
-  },
   "method": {
-    "eyebrow": "A simple method",
-    "titleStart": "From the wish",
-    "titleEnd": "to departure.",
-    "intro": "Technology to clarify your wishes. People to negotiate, check and take care of the rest.",
+    "eyebrow": "The right détour, in three steps",
+    "titleStart": "simple,",
+    "titleEnd": "unhurried.",
     "steps": {
-      "describe": {
-        "title": "I describe",
-        "copy": "One sentence is enough. Your words stay with {{agency}}."
+      "wish": {
+        "title": "A wish",
+        "copy": "A few words, your dates, your pace. Nothing is imported from elsewhere."
       },
-      "refine": {
-        "title": "I refine",
-        "copy": "A few preferences, only if you want to."
+      "preview": {
+        "title": "A preview",
+        "copy": "A day-by-day itinerary, without prices and without false promises."
       },
-      "discover": {
-        "title": "I discover",
-        "copy": "A day-by-day preview, always open to changes."
-      },
-      "exchange": {
-        "title": "I talk it over",
-        "copy": "An advisor takes over and sends a quote."
-      }
-    }
-  },
-  "trust": {
-    "eyebrow": "A real trip, from the first word",
-    "titleStart": "Nothing made up.",
-    "titleEnd": "Nothing intrusive.",
-    "promises": {
-      "realOffers": {
-        "title": "Real offers",
-        "copy": "Every proposal matches an active offer from one of our partners."
-      },
-      "noPrice": {
-        "title": "A preview without prices",
-        "copy": "The AI composes and adjusts the trip with you, without ever making up an amount."
-      },
-      "yourWords": {
-        "title": "Your words, only",
-        "copy": "Never any import of e-mails or social networks. You stay in control."
+      "offer": {
+        "title": "A human offer",
+        "copy": "Your advisor negotiates, checks and prices it before sending it to you."
       }
     }
   },
   "closing": {
-    "eyebrow": "Your next trip starts here",
-    "titleStart": "Where would you",
-    "titleEnd": "like to be?",
-    "start": "Get started"
+    "eyebrow": "A wish is a great start",
+    "titleStart": "where would you like",
+    "titleEnd": "to step aside?",
+    "start": "Plan my weekend"
+  },
+  "reviews": {
+    "eyebrow": "Travellers’ words",
+    "title": "they took the time to write to us.",
+    "rating": "Rated {{rating}} out of 5"
   }
 }

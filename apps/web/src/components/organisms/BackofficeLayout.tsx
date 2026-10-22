@@ -7,7 +7,8 @@ export type BackofficeItem = {
   label: string
   /** For a section without a page yet: shown as the current one. */
   active?: boolean
-  count?: number
+  /** null: still loading; the badge keeps its place so the links beside it do not move. */
+  count?: number | null
   /** The section's page. The link is the current one (aria-current) while it is open. */
   to?: LinkProps['to']
   /** Current only on that exact page, not on the pages under it. */
@@ -45,7 +46,7 @@ export function BackofficeLayout({ area, items, children }: Props) {
         <ul className="flex gap-1 overflow-x-auto px-5 py-2 md:flex-col md:overflow-visible md:p-0">
           {items.map((item) => {
             const count = item.count !== undefined && (
-              <b className="rounded-full bg-coral px-1.5 text-xs">{item.count}</b>
+              <b className={cn('rounded-full bg-coral px-1.5 text-xs', item.count === null && 'invisible')}>{item.count ?? 0}</b>
             )
             if (item.to) {
               return (

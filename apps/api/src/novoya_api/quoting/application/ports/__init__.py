@@ -1,3 +1,3 @@
-"""Ports: QuoteRepository, PlanQuoting (marks the plan quoted, reads its prices), People
-(name, email and language), QuoteRenderer (PDF). Planned: QuoteNotifier (email, #53).
+"""Ports: QuoteRepository, PlanQuoting (marks the plan quoted, reads its prices and its trip),
+People (name, email and language), QuoteRenderer (PDF), QuoteNotifier (the client's email).
 """

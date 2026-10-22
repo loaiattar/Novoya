@@ -1,13 +1,10 @@
 """The quote PDF: a Jinja2 HTML template rendered with WeasyPrint, in English or French."""
 
 import base64
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
-from babel import Locale as BabelLocale
-from babel.dates import format_date
 from babel.numbers import format_currency
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup
@@ -15,7 +12,8 @@ from weasyprint import HTML
 from weasyprint.urls import URLFetcher
 
 from novoya_api.quoting.application.dto import QuoteDocument
-from novoya_api.quoting.domain.quote import AGENCY_TIMEZONE
+from novoya_api.quoting.infrastructure.formats import country as _country
+from novoya_api.quoting.infrastructure.formats import day as _day
 from novoya_api.shared.domain.value_objects import Locale
 
 TEMPLATES = Path(__file__).parent / "templates"
@@ -174,25 +172,6 @@ class WeasyPrintRenderer:
 
 def _money(amount: Decimal, locale: Locale) -> str:
     return format_currency(amount, "EUR", locale=locale.value)
-
-
-def _day(value: date | datetime, locale: Locale) -> str:
-    plain = value.astimezone(AGENCY_TIMEZONE).date() if isinstance(value, datetime) else value
-    return format_date(plain, format="long", locale=locale.value)
-
-
-@cache
-def _territory_codes() -> dict[str, str]:
-    """English country name -> CLDR code. Novoya stores countries by their English name."""
-    return {name: code for code, name in BabelLocale("en").territories.items()}
-
-
-def _country(name: str | None, locale: Locale) -> str | None:
-    """The country in the quote's language: "Greece" -> "Grèce". An unknown name as stored."""
-    code = _territory_codes().get(name) if name else None
-    if code is None:
-        return name
-    return BabelLocale(locale.value).territories.get(code, name)
 
 
 def _date_of_day(start: date | None, day: int) -> date | None:

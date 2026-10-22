@@ -116,8 +116,8 @@ describe('destinations and reviews page', () => {
   it('is linked from the footer of the public pages', async () => {
     renderAt('/')
 
-    const link = await screen.findByRole('link', { name: /destinations/i })
-    expect(link).toHaveAttribute('href', '/destinations')
+    const footer = await screen.findByRole('contentinfo')
+    expect(within(footer).getByRole('link', { name: /destinations/i })).toHaveAttribute('href', '/destinations')
   })
 
   it('names the destinations and dates in French for a French visitor, authors untouched', async () => {
