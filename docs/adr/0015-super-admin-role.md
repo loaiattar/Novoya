@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-22
-- **Issue / PR:** #35, after #128
+- **Issue / PR:** #135, after #128
 
 ## Context
 
