@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.shared.domain.errors import InvalidTransition
@@ -112,3 +112,11 @@ class SqlWishRepository:
         if result.rowcount != 1:
             raise InvalidTransition("the wish changed meanwhile, reload it")
         self._read_status[wish.id] = wish.status.value
+
+    async def delete_for_user(self, user_id: UUID) -> None:
+        """Erase every wish of this user. The caller commits."""
+        await self._session.execute(
+            delete(WishModel)
+            .where(WishModel.user_id == user_id)
+            .execution_options(synchronize_session=False)
+        )

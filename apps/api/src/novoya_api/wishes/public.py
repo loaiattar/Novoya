@@ -58,3 +58,8 @@ async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID
             end_date=answers.end_date if answers else None,
         )
     return found
+
+
+async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:
+    """Erase every wish of this user. Plans must be erased first. The caller commits."""
+    await SqlWishRepository(session).delete_for_user(user_id)
