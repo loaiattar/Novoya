@@ -5,9 +5,9 @@ import { BackofficeLayout } from '../../../components/organisms/BackofficeLayout
 import { AppShell } from '../../../components/templates/AppShell'
 import { canOpen } from '../../../domain/auth/roles'
 
-// The admin area:the overview, users, partners and their offers, the extras, the reviews, the agency's
-// activity and the import of a new DÉTOUR export. Admins only, like /admin/users in the API;
-// the others go back to /wish before anything is requested.
+// The admin area: the overview, users, partners and their offers, the extras, the reviews,
+// the agency's activity and the import of a new DÉTOUR export. Admins only, like /admin/users
+// in the API; the others go back to /wish before anything is requested.
 export const Route = createFileRoute('/_authenticated/admin')({
   beforeLoad: ({ context }) => {
     if (!canOpen(context.me.role, 'admin')) throw redirect({ to: '/wish' })
