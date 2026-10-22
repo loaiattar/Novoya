@@ -26,6 +26,7 @@ const COUNTS = { partners: 396, offers: 792, reviews: 54, extras: 104 }
 
 let me: MeResponse
 let importAnswer: () => Response | Promise<Response>
+let limitsAnswer: () => Response | Promise<Response>
 let requests: { method: string; path: string; type: string | null; size: number }[]
 
 function mockApi() {
@@ -35,12 +36,14 @@ function mockApi() {
     const size = request.method === 'GET' ? 0 : (await request.clone().arrayBuffer()).byteLength
     requests.push({ method: request.method, path: url.pathname, type: request.headers.get('Content-Type'), size })
     if (url.pathname === '/me') return Response.json(me)
+    if (url.pathname === '/admin/catalog/import' && request.method === 'GET') return limitsAnswer()
     if (url.pathname === '/admin/catalog/import' && request.method === 'POST') return importAnswer()
     return Response.json({ code: 'not_found', detail: 'no route' }, { status: 404 })
   })
 }
 
-const imports = () => requests.filter((request) => request.path === '/admin/catalog/import')
+const imports = () =>
+  requests.filter((request) => request.method === 'POST' && request.path === '/admin/catalog/import')
 
 function renderAt(url: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -67,6 +70,7 @@ describe('admin import', () => {
     client.setConfig({ baseUrl: 'http://api.test' })
     me = ADMIN
     importAnswer = () => Response.json(COUNTS)
+    limitsAnswer = () => Response.json({ max_bytes: 20_000_000 })
     requests = []
     mockApi()
   })
@@ -101,15 +105,41 @@ describe('admin import', () => {
     expect(imports()).toHaveLength(0)
   })
 
-  it('refuses a file over the size limit without sending it', async () => {
+  it.each(['export.sqlite3', 'EXPORT.DB'])('also takes a sqlite file named %s', async (name) => {
     renderAt('/admin/import')
+
+    await choose(exportFile(name))
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Export imported.')
+  })
+
+  it("refuses a file over the API's limit without sending it", async () => {
+    limitsAnswer = () => Response.json({ max_bytes: 5_000_000 })
+    renderAt('/admin/import')
+    expect(await screen.findByText('The .sqlite file DÉTOUR sends, 5 MB at most.', {}, { timeout: 3000 })).toBeInTheDocument()
     const big = exportFile()
-    Object.defineProperty(big, 'size', { value: 20_000_001 })
+    Object.defineProperty(big, 'size', { value: 5_000_001 })
 
     await choose(big)
 
-    expect(await screen.findByText('This file is larger than 20 MB.')).toBeInTheDocument()
+    expect(await screen.findByText('This file is larger than 5 MB.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled()
+    expect(imports()).toHaveLength(0)
+  })
+
+  it('leaves the size to the API when the limit could not be read', async () => {
+    limitsAnswer = () => Response.json({ code: 'unknown', detail: 'boom' }, { status: 500 })
+    importAnswer = () => Response.json({ code: 'detour_export_too_large', detail: 'too large' }, { status: 413 })
+    renderAt('/admin/import')
+    const big = exportFile()
+    Object.defineProperty(big, 'size', { value: 50_000_000 })
+
+    await choose(big)
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This file is too large.')
+    expect(screen.getByText('The .sqlite file DÉTOUR sends.')).toBeInTheDocument()
   })
 
   it.each([

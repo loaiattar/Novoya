@@ -32,6 +32,7 @@ from novoya_api.catalog.domain import OfferKind, PartnerKind, PriceUnit
 from novoya_api.catalog.presentation.http.dependencies import (
     get_create_offer,
     get_create_partner,
+    get_detour_max_bytes,
     get_get_offer_detail,
     get_import_catalog,
     get_list_all_extras,
@@ -54,6 +55,7 @@ from novoya_api.catalog.presentation.http.schemas import (
     DestinationResponse,
     ExtraResponse,
     ImportCountsResponse,
+    ImportLimitsResponse,
     OfferDetailResponse,
     OfferResponse,
     PartnerResponse,
@@ -320,6 +322,14 @@ async def update_review(
     return AdminReviewResponse.of(
         await use_case(UpdateReviewCommand(review_id, hidden=body.hidden))
     )
+
+
+@import_router.get("/import", operation_id="getImportLimits")
+async def get_import_limits(
+    max_bytes: Annotated[int, Depends(get_detour_max_bytes)],
+) -> ImportLimitsResponse:
+    """The largest export POST /admin/catalog/import accepts, in bytes. Admins only."""
+    return ImportLimitsResponse(max_bytes=max_bytes)
 
 
 @import_router.post(

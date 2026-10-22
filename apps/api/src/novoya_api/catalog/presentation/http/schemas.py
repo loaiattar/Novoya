@@ -350,6 +350,12 @@ class UpdateExtraRequest(BaseModel):
     hidden: bool
 
 
+class ImportLimitsResponse(BaseModel):
+    """What the import accepts, so the page refuses a file before sending it."""
+
+    max_bytes: int
+
+
 class ImportCountsResponse(BaseModel):
     """What the DÉTOUR import wrote: rows in the export, imported or updated."""
 

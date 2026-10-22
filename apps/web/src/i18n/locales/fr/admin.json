@@ -366,6 +366,7 @@
     "intro": "Envoyez le dernier export {{agency}} pour mettre à jour les partenaires, les offres, les avis et les options. Tout le fichier est importé, ou rien. Le fichier est lu une fois puis supprimé : il n’est jamais conservé.",
     "file": "Export {{agency}} (.sqlite)",
     "fileHint": "Le fichier .sqlite envoyé par {{agency}}, {{max}} Mo au plus.",
+    "fileHintNoLimit": "Le fichier .sqlite envoyé par {{agency}}.",
     "submit": "Importer",
     "importing": "Import en cours…",
     "done": "Export importé.",
@@ -378,6 +379,7 @@
     "errors": {
       "notSqlite": "Ce n’est pas un export {{agency}} : choisissez le fichier .sqlite.",
       "tooLarge": "Ce fichier dépasse {{max}} Mo.",
+      "tooLargeNoLimit": "Ce fichier est trop volumineux.",
       "failed": "Rien n’a été importé : une ligne de l’export a été refusée ({{detail}}). Corrigez-la dans {{agency}}, puis importez un nouvel export.",
       "running": "Un autre import est en cours. Réessayez dans un instant.",
       "unknown": "L’export n’a pas pu être importé. Veuillez réessayer."

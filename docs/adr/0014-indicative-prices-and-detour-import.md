@@ -77,7 +77,8 @@ An admin can run the same import from the back office (#132): see below.
     worked or not. Nothing is kept or committed, and nothing relies on Render's disk (ADR 0013);
   - it must start with the sqlite header (`not_a_detour_export`, 422), and stay under
     `NOVOYA_DETOUR_MAX_BYTES`, 20 MB by default: the upload stops as soon as it passes it
-    (413);
+    (413). The page reads the same limit from `GET /admin/catalog/import`, so it refuses a
+    bigger file before sending it;
   - sqlite opens it read-only, with `query_only` on and `trusted_schema` off; extensions
     stay off;
   - one import at a time: the import's transaction takes a PostgreSQL advisory lock, so a

@@ -27,7 +27,10 @@ from novoya_api.catalog.infrastructure.detour import upload
 from novoya_api.catalog.infrastructure.detour.mapping import DetourImportError
 from novoya_api.catalog.infrastructure.detour.run import DetourImportBusy
 from novoya_api.catalog.infrastructure.detour.upload import SQLITE_HEADER, DetourUploadImporter
-from novoya_api.catalog.presentation.http.dependencies import get_import_catalog
+from novoya_api.catalog.presentation.http.dependencies import (
+    get_detour_max_bytes,
+    get_import_catalog,
+)
 from novoya_api.main import create_app
 from novoya_api.shared.domain.value_objects import Locale
 from tests.detour_fixture import leftover_folders, sample_detour
@@ -187,6 +190,29 @@ async def test_an_admin_imports_an_export_and_gets_the_counts(app, client):
     assert importer.received == EXPORT
 
 
+async def test_the_page_reads_the_limit_from_the_settings(app, client):
+    _as(app, Role.ADMIN, FakeImporter())
+    app.dependency_overrides[get_detour_max_bytes] = lambda: 5_000_000
+
+    response = await client.get("/admin/catalog/import")
+
+    assert response.status_code == 200
+    assert response.json() == {"max_bytes": 5_000_000}
+
+
+async def test_the_limit_is_the_default_without_a_setting(app, client):
+    app.dependency_overrides[current_user] = lambda: signed_in_as(Role.ADMIN)
+
+    assert (await client.get("/admin/catalog/import")).json() == {"max_bytes": 20_000_000}
+
+
+async def test_the_import_uses_the_same_limit(monkeypatch):
+    monkeypatch.setattr(upload, "import_detour", FakeImport())
+
+    with pytest.raises(DetourExportTooLarge, match="larger than 2 MB"):
+        await get_import_catalog(max_bytes=2_000_000)(chunks_of(EXPORT + bytes(2_000_000), 500_000))
+
+
 async def test_a_super_admin_may_import(app, client):
     _as(app, Role.SUPER_ADMIN, FakeImporter())
 
@@ -206,6 +232,7 @@ async def test_only_admins_may_import(app, client, role):
 
     assert response.status_code == 403
     assert importer.received == b""
+    assert (await client.get("/admin/catalog/import")).status_code == 403
 
 
 @pytest.mark.parametrize(

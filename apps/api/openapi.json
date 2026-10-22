@@ -1475,6 +1475,20 @@
         "title": "ImportCountsResponse",
         "type": "object"
       },
+      "ImportLimitsResponse": {
+        "description": "What the import accepts, so the page refuses a file before sending it.",
+        "properties": {
+          "max_bytes": {
+            "title": "Max Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_bytes"
+        ],
+        "title": "ImportLimitsResponse",
+        "type": "object"
+      },
       "MeResponse": {
         "properties": {
           "created_at": {
@@ -3984,6 +3998,76 @@
   "openapi": "3.1.0",
   "paths": {
     "/admin/catalog/import": {
+      "get": {
+        "description": "The largest export POST /admin/catalog/import accepts, in bytes. Admins only.",
+        "operationId": "getImportLimits",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportLimitsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Import Limits",
+        "tags": [
+          "admin"
+        ]
+      },
       "post": {
         "description": "Import a D\u00c9TOUR sqlite export, sent as the raw body: the same import as the command\nline, all of it or nothing. The file is read once and deleted, never kept. 413 over the\nsize limit, 422 not_a_detour_export or detour_import_failed (the message names the D\u00c9TOUR\ntable and id), 409 import_running while another import runs. Admins only.",
         "operationId": "importDetour",

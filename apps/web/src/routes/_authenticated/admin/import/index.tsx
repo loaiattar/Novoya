@@ -1,18 +1,20 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import type { TFunction } from 'i18next'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError } from '../../../../api/errors'
-import { importDetourMutation } from '../../../../api/generated/@tanstack/react-query.gen'
+import {
+  getImportLimitsOptions,
+  importDetourMutation,
+} from '../../../../api/generated/@tanstack/react-query.gen'
 import { Button } from '../../../../components/atoms/Button'
 import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { Field } from '../../../../components/molecules/Field'
 
-// The API's limit (NOVOYA_DETOUR_MAX_BYTES). Checked here only to answer at once: the API
-// refuses a bigger file anyway.
-export const MAX_EXPORT_BYTES = 20_000_000
+// The names a sqlite file goes by. The API checks the file's header, not its name.
+const EXTENSIONS = ['.sqlite', '.sqlite3', '.db']
 
 export const Route = createFileRoute('/_authenticated/admin/import/')({
   component: ImportPage,
@@ -24,6 +26,11 @@ function ImportPage() {
   const queryClient = useQueryClient()
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState<string>()
+  // The API's own limit (NOVOYA_DETOUR_MAX_BYTES), checked here to answer at once. Until it
+  // is known, the API's 413 is the only check.
+  const limits = useQuery(getImportLimitsOptions())
+  const maxBytes = limits.data?.max_bytes
+  const maxMb = maxBytes === undefined ? undefined : Math.floor(maxBytes / 1_000_000)
   const importing = useMutation({
     ...importDetourMutation(),
     // Partners, offers, reviews, extras and destinations may all have changed.
@@ -35,8 +42,9 @@ function ImportPage() {
     setFile(null)
     setFileError(undefined)
     if (!chosen) return
-    if (!chosen.name.toLowerCase().endsWith('.sqlite')) setFileError(t('import.errors.notSqlite'))
-    else if (chosen.size > MAX_EXPORT_BYTES) setFileError(t('import.errors.tooLarge', { max: MAX_EXPORT_BYTES / 1_000_000 }))
+    const name = chosen.name.toLowerCase()
+    if (!EXTENSIONS.some((extension) => name.endsWith(extension))) setFileError(t('import.errors.notSqlite'))
+    else if (maxBytes !== undefined && chosen.size > maxBytes) setFileError(tooLarge(t, maxMb))
     else setFile(chosen)
   }
 
@@ -51,12 +59,16 @@ function ImportPage() {
       <h1 className="m-0 text-[39px] md:text-[50px]">{t('import.title')}</h1>
       <p className="mt-4 max-w-2xl text-muted">{t('import.intro')}</p>
       <form onSubmit={submit} className="mt-8 max-w-xl">
-        <Field label={t('import.file')} hint={t('import.fileHint', { max: MAX_EXPORT_BYTES / 1_000_000 })} error={fileError}>
+        <Field
+          label={t('import.file')}
+          hint={maxMb === undefined ? t('import.fileHintNoLimit') : t('import.fileHint', { max: maxMb })}
+          error={fileError}
+        >
           {({ id, describedBy, invalid }) => (
             <input
               id={id}
               type="file"
-              accept=".sqlite"
+              accept={EXTENSIONS.join(',')}
               aria-describedby={describedBy}
               aria-invalid={invalid || undefined}
               disabled={importing.isPending}
@@ -84,17 +96,21 @@ function ImportPage() {
       )}
       {importing.isError && (
         <p role="alert" className="mt-8 max-w-xl text-danger">
-          {errorMessage(importing.error, t)}
+          {errorMessage(importing.error, t, maxMb)}
         </p>
       )}
     </>
   )
 }
 
-function errorMessage(error: unknown, t: TFunction<'admin'>): string {
+function tooLarge(t: TFunction<'admin'>, maxMb: number | undefined): string {
+  return maxMb === undefined ? t('import.errors.tooLargeNoLimit') : t('import.errors.tooLarge', { max: maxMb })
+}
+
+function errorMessage(error: unknown, t: TFunction<'admin'>, maxMb: number | undefined): string {
   if (!(error instanceof ApiError)) return t('import.errors.unknown')
   // A proxy in front of the API may answer 413 itself, without our error body.
-  if (error.status === 413) return t('import.errors.tooLarge', { max: MAX_EXPORT_BYTES / 1_000_000 })
+  if (error.status === 413) return tooLarge(t, maxMb)
   if (error.code === 'not_a_detour_export') return t('import.errors.notSqlite')
   if (error.code === 'detour_import_failed') return t('import.errors.failed', { detail: error.message })
   if (error.code === 'import_running') return t('import.errors.running')

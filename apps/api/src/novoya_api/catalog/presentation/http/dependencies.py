@@ -104,6 +104,13 @@ def get_update_extra(session: Annotated[AsyncSession, Depends(get_session)]) -> 
     return UpdateExtra(SqlExtraRepository(session), SqlAlchemyUnitOfWork(session))
 
 
-def get_import_catalog() -> ImportCatalog:
+def get_detour_max_bytes() -> int:
+    """The upload limit, NOVOYA_DETOUR_MAX_BYTES. The web page reads it from the API too."""
+    return get_settings().detour_max_bytes
+
+
+def get_import_catalog(
+    max_bytes: Annotated[int, Depends(get_detour_max_bytes)],
+) -> ImportCatalog:
     # import_detour opens its own transaction: it holds the import lock until it commits.
-    return ImportCatalog(DetourUploadImporter(get_settings().detour_max_bytes))
+    return ImportCatalog(DetourUploadImporter(max_bytes))
