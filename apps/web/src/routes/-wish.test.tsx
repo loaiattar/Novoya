@@ -454,7 +454,7 @@ describe('the landing page', () => {
     signedIn = null
     renderAt('/')
 
-    expect(await screen.findByRole('heading', { name: /Your wish/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /the best part of travel/i })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
     expect(screen.getByRole('link', { name: /Continue with Google/ })).toHaveAttribute(
       'href',
@@ -479,17 +479,14 @@ describe('the landing page', () => {
     )
     expect(screen.getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
     expect(screen.queryByText(/02 40 00 00 00/)).not.toBeInTheDocument()
-    expect(document.querySelector('img[src="/images/logo-1600.webp"]')).not.toBeNull()
   })
 
   it('names the client agency in the copy, not Novoya', async () => {
     signedIn = null
     renderAt('/')
 
-    expect(await screen.findByText('The DÉTOUR promise')).toBeInTheDocument()
+    expect(await screen.findByText(/then a DÉTOUR advisor makes it happen/)).toBeInTheDocument()
     expect(screen.queryByText(/Novoya/)).not.toBeInTheDocument()
-    // The seal is the agency's own symbol, not a typed letter.
-    expect(document.querySelector('img[src="/icon-192.png"]')).not.toBeNull()
   })
 
   it('credits the Novoya team in French on the legal notices', async () => {

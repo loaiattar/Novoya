@@ -8,7 +8,7 @@ import { Button } from '../components/atoms/Button'
 import { GoogleLogo } from '../components/atoms/GoogleLogo'
 import { TripCard } from '../components/molecules/TripCard'
 import { LandingHero } from '../components/organisms/LandingHero'
-import { Closing, Manifesto, Method, PopularTrips, Trust } from '../components/organisms/LandingSections'
+import { Closing, Manifesto, Method, PopularTrips, Reviews } from '../components/organisms/LandingSections'
 import { SiteFooter } from '../components/organisms/SiteFooter'
 
 export const Route = createFileRoute('/')({
@@ -17,9 +17,9 @@ export const Route = createFileRoute('/')({
 
 // Three partner offers from the seed catalogue, shown as inspirations. Texts in home.json, trips.<id>.
 const TRIPS = [
-  { id: 'elounda', image: '/images/elounda-sea-view', tags: ['sea', 'calm', 'beach'] },
-  { id: 'biarritz', image: '/images/biarritz-surf', tags: ['beach', 'sport', 'sea'] },
-  { id: 'marrakech', image: '/images/marrakech-riad', tags: ['culture', 'calm', 'riad'] },
+  { id: 'elounda', image: '/images/elounda-sea-view' },
+  { id: 'biarritz', image: '/images/biarritz-surf' },
+  { id: 'marrakech', image: '/images/marrakech-riad' },
 ] as const
 
 function LandingPage() {
@@ -32,7 +32,7 @@ function LandingPage() {
     <>
       <main>
         <LandingHero
-          image="/images/crete-coast"
+          image="/images/train-reader"
           imageAlt={t('heroImageAlt')}
           signedIn={signedIn}
           actions={
@@ -63,9 +63,7 @@ function LandingPage() {
               place={t(`trips.${trip.id}.place`)}
               title={t(`trips.${trip.id}.title`)}
               copy={t(`trips.${trip.id}.copy`)}
-              tags={trip.tags.map((tag) => t(`tags.${tag}`))}
-              badge={index === 0 ? t('popular.badgePopular') : t('popular.badgeSelection')}
-              tall={index === 0}
+              badge={String(index + 1).padStart(2, '0')}
               renderLink={(content) => (
                 <Link to="/wish" className="block text-ink no-underline">
                   {content}
@@ -75,11 +73,10 @@ function LandingPage() {
           ))}
         </PopularTrips>
         <Method />
-        <Trust />
+        <Reviews />
         <Closing
-          image="/images/elounda-sea-view"
           action={
-            <Button asChild variant="coral" size="lg">
+            <Button asChild variant="ink" size="lg">
               <Link to="/wish">
                 {t('closing.start')} <span aria-hidden="true">↗</span>
               </Link>

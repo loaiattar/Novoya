@@ -394,7 +394,9 @@ describe('sign-in and sign-out', () => {
       browserLanguages(['fr-FR'])
       renderAt('/')
 
-      expect(await screen.findByRole('link', { name: 'Décrire mon voyage' })).toHaveAttribute('href', '/wish')
+      // The hero and the closing section both lead to the wish.
+      const links = await screen.findAllByRole('link', { name: 'Composer mon week-end' })
+      for (const link of links) expect(link).toHaveAttribute('href', '/wish')
     })
 
     it('translates the sign-in error sent by the API', async () => {

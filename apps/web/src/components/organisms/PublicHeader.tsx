@@ -11,11 +11,11 @@ export function PublicHeader({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <header className="absolute inset-x-0 top-0 z-10 flex h-18 items-center justify-between px-5 md:h-22 md:px-[5vw]">
       <HomeLink light />
-      <nav aria-label={t('mainNav')} className="flex items-center gap-4 text-sm text-white md:gap-7">
-        <a href="#voyages" className="hidden min-h-11 items-center text-white no-underline md:inline-flex">
+      <nav aria-label={t('mainNav')} className="flex items-center gap-3 text-sm text-ivory md:gap-3">
+        <a href="#voyages" className="hidden min-h-11 items-center rounded-full border border-ivory/45 px-5 text-ivory no-underline transition-colors hover:bg-ivory/10 md:inline-flex">
           {t('inspirations')}
         </a>
-        <a href="#methode" className="hidden min-h-11 items-center text-white no-underline md:inline-flex">
+        <a href="#methode" className="hidden min-h-11 items-center rounded-full border border-ivory/45 px-5 text-ivory no-underline transition-colors hover:bg-ivory/10 md:inline-flex">
           {t('ourMethod')}
         </a>
         <LanguageChoice light />

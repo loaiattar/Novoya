@@ -1,15 +1,16 @@
 import { cn } from '@/lib/utils'
 
 const tones = {
-  // Coral ring on a light background.
-  coral: 'border border-coral',
-  // Ink ring on a light background.
-  ink: 'border border-ink',
-  // White ring on a dark background.
-  light: 'border border-white/30',
+  // Yellow ring on a light background.
+  coral: 'ring-1 ring-coral ring-offset-2 ring-offset-paper',
+  // Navy ring on a light background.
+  ink: 'ring-1 ring-ink ring-offset-2 ring-offset-paper',
+  // Light ring on a dark background.
+  light: 'ring-1 ring-ivory/30',
 }
 
-/** The agency's round "D" symbol, in several sizes. Decorative. */
+/** The agency's round symbol: a "D" on navy, its "o" stepping up in yellow. Also the site
+ * icon (public/icon-*.png). Decorative. */
 export function Seal({
   tone = 'coral',
   className,
@@ -20,10 +21,15 @@ export function Seal({
   return (
     <span
       aria-hidden="true"
-      className={cn('grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white', tones[tone], className)}
+      className={cn(
+        'grid size-8 shrink-0 place-items-center rounded-full bg-ink font-serif font-extrabold leading-none text-ivory [container-type:inline-size]',
+        tones[tone],
+        className,
+      )}
     >
-      {/* The agency's symbol (brand/images/favicon.png), also the site icon. 192 px is sharp up to 64 px on 3× screens. */}
-      <img src="/icon-192.png" alt="" width={192} height={192} className="size-[70%] object-contain" />
+      <span className="translate-y-[6%] text-[48cqi] tracking-[-0.04em]">
+        D<span className="inline-block -translate-y-[0.32em] text-[0.62em] text-coral">o</span>
+      </span>
     </span>
   )
 }
