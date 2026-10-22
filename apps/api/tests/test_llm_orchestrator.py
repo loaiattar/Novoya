@@ -3,14 +3,19 @@
 import asyncio
 import copy
 import json
+import logging
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
 from types import SimpleNamespace
 
 import httpx2
 import openai
 import pytest
 
+from novoya_api.shared.infrastructure.llm import orchestrator
 from novoya_api.shared.infrastructure.llm.errors import LLMError, ToolError
 from novoya_api.shared.infrastructure.llm.orchestrator import Orchestrator, Tool
+from novoya_api.shared.infrastructure.llm.pause import ModelPause
 
 MODELS = ["model-a", "model-b", "model-c"]
 USER_MESSAGES = [{"role": "user", "content": "Plan a weekend in Lisbon."}]
@@ -574,3 +579,118 @@ def test_default_limits_allow_a_normal_plan_and_stop_a_flood():
 
     assert orchestrator.max_tool_calls_per_step == 5
     assert orchestrator.max_tool_calls == 15
+
+
+# A 429 from OpenRouter pauses every model call for a while (#106)
+
+
+class ManualClock:
+    """Monotonic seconds that only move when the test says so."""
+
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+def rate_limited(retry_after: str | None = None):
+    request = httpx2.Request("POST", "https://openrouter.ai/api/v1/chat/completions")
+    headers = {"Retry-After": retry_after} if retry_after is not None else {}
+    response = httpx2.Response(429, headers=headers, request=request)
+    return openai.RateLimitError("rate limited", response=response, body=None)
+
+
+def server_error():
+    request = httpx2.Request("POST", "https://openrouter.ai/api/v1/chat/completions")
+    response = httpx2.Response(503, request=request)
+    return openai.InternalServerError("unavailable", response=response, body=None)
+
+
+async def test_a_429_pauses_the_model_and_falls_back_at_once():
+    pause = ModelPause(ManualClock())
+    client = FakeClient(rate_limited("42"), answer("never asked"))
+
+    with pytest.raises(LLMError, match="paused"):
+        await Orchestrator(client, MODELS, pause=pause).run(USER_MESSAGES)
+
+    # The key is out of quota: the other models share it, so none is tried.
+    assert [call["model"] for call in client.completions.calls] == ["model-a"]
+    assert pause.remaining() == 42
+
+
+async def test_calls_during_the_pause_fail_without_a_network_call():
+    pause = ModelPause(ManualClock())
+    pause.start(60)
+    client = FakeClient(answer("never asked"))
+
+    with pytest.raises(LLMError, match="paused"):
+        await Orchestrator(client, MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert client.completions.calls == []
+
+
+async def test_the_model_is_called_again_after_the_pause():
+    clock = ManualClock()
+    pause = ModelPause(clock)
+    pause.start(60)
+    clock.now += 60
+    client = FakeClient(answer("Back again."))
+
+    result = await Orchestrator(client, MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert result == "Back again."
+    assert pause.remaining() == 0
+
+
+async def test_a_429_without_retry_after_pauses_five_minutes():
+    pause = ModelPause(ManualClock())
+
+    with pytest.raises(LLMError):
+        await Orchestrator(FakeClient(rate_limited()), MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert pause.remaining() == 300
+
+
+async def test_a_retry_after_date_pauses_until_that_date():
+    pause = ModelPause(ManualClock())
+    when = format_datetime(datetime.now(UTC) + timedelta(seconds=120), usegmt=True)
+
+    with pytest.raises(LLMError):
+        await Orchestrator(FakeClient(rate_limited(when)), MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert 110 <= pause.remaining() <= 120
+
+
+@pytest.mark.parametrize("retry_after", ["86400", "-5", "soon"])
+async def test_an_odd_retry_after_stays_within_bounds(retry_after):
+    pause = ModelPause(ManualClock())
+
+    with pytest.raises(LLMError):
+        client = FakeClient(rate_limited(retry_after))
+        await Orchestrator(client, MODELS, pause=pause).run(USER_MESSAGES)
+
+    # Over an hour is capped; a negative or unreadable value takes the default.
+    assert pause.remaining() == {"86400": 3600, "-5": 300, "soon": 300}[retry_after]
+
+
+@pytest.mark.parametrize("error", [connection_error, server_error], ids=["outage", "503"])
+async def test_other_errors_try_the_next_model_without_a_pause(error):
+    pause = ModelPause(ManualClock())
+    client = FakeClient(error(), answer("From model b."))
+
+    result = await Orchestrator(client, MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert result == "From model b."
+    assert pause.remaining() == 0
+
+
+async def test_the_pause_is_logged_with_its_length(caplog, monkeypatch):
+    pause = ModelPause(ManualClock())
+    # Alembic's fileConfig, run by the SQL tests, disables the loggers that exist already.
+    monkeypatch.setattr(orchestrator.logger, "disabled", False)
+
+    with caplog.at_level(logging.WARNING), pytest.raises(LLMError):
+        await Orchestrator(FakeClient(rate_limited("90")), MODELS, pause=pause).run(USER_MESSAGES)
+
+    assert "LLM calls paused for 90 seconds after a 429 from model-a" in caplog.text

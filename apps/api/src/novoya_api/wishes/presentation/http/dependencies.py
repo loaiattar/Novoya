@@ -23,9 +23,11 @@ from novoya_api.shared.infrastructure.system_clock import SystemClock
 from novoya_api.wishes.application.ports.destination_reader import DestinationReader
 from novoya_api.wishes.application.ports.panel_builder import PanelBuilder
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel
+from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.send_wish import SendWish
 from novoya_api.wishes.infrastructure.answers_in_progress import InMemoryAnswersInProgress
 from novoya_api.wishes.infrastructure.catalog import PartnerCatalog
+from novoya_api.wishes.infrastructure.clients import AccountClients
 from novoya_api.wishes.infrastructure.db.repository import SqlWishRepository
 from novoya_api.wishes.infrastructure.llm.destination_reader import (
     LlmDestinationReader,
@@ -108,3 +110,9 @@ def get_answer_panel(
         uow=SqlAlchemyUnitOfWork(session),
         clock=SystemClock(),
     )
+
+
+def get_list_admin_wishes(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ListAdminWishes:
+    return ListAdminWishes(SqlWishRepository(session), AccountClients(session))

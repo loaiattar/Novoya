@@ -527,7 +527,7 @@ describe('the landing page', () => {
     expect(screen.queryByRole('link', { name: /Continue with Google/ })).not.toBeInTheDocument()
   })
 
-  it('shows the agency e-mail in the footer, not the unchecked phone', async () => {
+  it('shows the agency e-mail and phone in the footer', async () => {
     signedIn = null
     renderAt('/')
 
@@ -536,7 +536,7 @@ describe('the landing page', () => {
       'mailto:contact@detour-voyages.fr',
     )
     expect(screen.getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
-    expect(screen.queryByText(/02 40 00 00 00/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '02 40 00 00 00' })).toHaveAttribute('href', 'tel:+33240000000')
   })
 
   it('names the client agency in the copy, not Novoya', async () => {
@@ -573,7 +573,7 @@ describe('the landing page', () => {
       'This website is the website of DÉTOUR Voyages. It was designed and developed by the Novoya team.',
     )
     expect(notices.queryByText('Publication director')).not.toBeInTheDocument()
+    expect(notices.getByText('12 rue des Écluses, 44000 Nantes')).toBeInTheDocument()
     expect(screen.queryByText(/IM044120000/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Écluses/)).not.toBeInTheDocument()
   })
 })

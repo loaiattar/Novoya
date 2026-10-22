@@ -242,8 +242,9 @@ async def test_the_agent_who_sent_the_quote_resends_its_email():
     assert response.status_code == 204
 
 
-async def test_an_admin_resends_any_quote_email():
-    app = app_with(FakePlanQuoting(), Role.ADMIN, ADMIN_ID)
+@pytest.mark.parametrize(("role", "user_id"), [(Role.ADMIN, ADMIN_ID), (Role.SUPER_ADMIN, uuid4())])
+async def test_an_admin_resends_any_quote_email(role, user_id):
+    app = app_with(FakePlanQuoting(), role, user_id)
 
     response = await call(app, "POST", f"/agent/quotes/{QUOTE.id}/email")
 

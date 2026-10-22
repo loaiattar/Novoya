@@ -19,6 +19,10 @@ class ExtraNotFound(NotFound):
     code = "extra_not_found"
 
 
+class ReviewNotFound(NotFound):
+    code = "review_not_found"
+
+
 class ImportedRow(Conflict):
     """The row comes from the DÉTOUR export, which owns its content: the change is made in
     DÉTOUR and arrives with the next import. Novoya only decides featured and hidden."""

@@ -101,6 +101,7 @@ class TripBrief:
     start_date: date | None
     end_date: date | None
     tags: tuple[str, ...] = ()  # "section:tag", what the client clicked on the panel
+    user_id: UUID | None = None  # the client who sent the wish
 
 
 @dataclass(frozen=True)
@@ -230,3 +231,41 @@ class PricedPlan:
     budget_max: Decimal | None
     currency: str | None
     tags: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class Person:
+    """A client or an agent in the admin overview: name and email, as on the users page."""
+
+    user_id: UUID
+    name: str | None
+    email: str
+
+
+@dataclass(frozen=True)
+class AdminPlanEntryView:
+    """One plan in the admin overview. No prices and no partner: open the plan to see those.
+    client or agent is None when the account is gone or nobody took the plan yet."""
+
+    id: UUID
+    wish_id: UUID
+    status: str
+    summary: str
+    created_at: datetime
+    updated_at: datetime
+    country: str | None
+    city: str | None
+    persons: int | None
+    start_date: date | None
+    end_date: date | None
+    client: Person | None
+    agent: Person | None
+
+
+@dataclass(frozen=True)
+class AdminPlanView:
+    """One plan as the admin reads it: exactly what the agent sees, and who is involved."""
+
+    plan: AgentPlanView
+    client: Person | None
+    agent: Person | None

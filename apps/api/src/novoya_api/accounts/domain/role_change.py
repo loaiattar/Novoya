@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from novoya_api.accounts.domain.actor import AdminActor, RoleActor
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.value_objects import UserId
 
@@ -27,8 +28,9 @@ class RoleChange:
         user_id: UserId,
         old_role: Role,
         new_role: Role,
-        changed_by: UserId | None,
+        by: RoleActor,
         now: datetime,
     ) -> "RoleChange":
-        source = ADMIN_API if changed_by is not None else CMD_GRANT_ROLE
-        return cls(uuid4(), user_id, old_role, new_role, source, changed_by, now)
+        if isinstance(by, AdminActor):
+            return cls(uuid4(), user_id, old_role, new_role, ADMIN_API, by.user_id, now)
+        return cls(uuid4(), user_id, old_role, new_role, CMD_GRANT_ROLE, None, now)

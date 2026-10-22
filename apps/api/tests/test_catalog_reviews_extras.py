@@ -60,6 +60,11 @@ def test_review_keeps_the_author_as_given():
     assert _review(author="Voyageur anonyme").author == "Voyageur anonyme"
 
 
+def test_a_review_is_visible_until_an_admin_hides_it():
+    assert _review().hidden is False
+    assert _review(hidden=True).hidden is True
+
+
 @pytest.mark.parametrize("field", ["author", "text"])
 def test_review_with_an_empty_author_or_text_is_rejected(field):
     with pytest.raises(InvalidReview):

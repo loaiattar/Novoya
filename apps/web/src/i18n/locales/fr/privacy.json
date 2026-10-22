@@ -1,0 +1,62 @@
+{
+  "title": "Politique de confidentialité",
+  "updated": "Mise à jour le 22 octobre 2026.",
+  "intro": "Cette page dit ce que {{name}} conserve sur vous sur ce site, pourquoi, qui d’autre le traite, combien de temps nous le gardons et comment le faire supprimer.",
+  "controller": {
+    "title": "Qui est responsable",
+    "body": "{{name}}, l’agence de voyage derrière ce site, est responsable de vos données. Pour toute question ou demande à leur sujet, écrivez à {{email}}."
+  },
+  "data": {
+    "title": "Ce que nous conservons, et pourquoi",
+    "items": [
+      "Votre compte : votre adresse e-mail, votre nom, votre prénom, votre rôle (client, conseiller ou administrateur) et votre langue. Pour vous connecter, vous écrire et préparer votre devis.",
+      "Si vous créez un mot de passe : une version brouillée de celui-ci (une empreinte). Nous ne conservons ni ne voyons jamais le mot de passe lui-même.",
+      "Si vous vous connectez avec Google : Google nous transmet votre adresse e-mail, votre nom et un identifiant de votre compte Google. Nous ne gardons aucun jeton Google ni photo de profil.",
+      "Vos sessions : une clé de connexion aléatoire et une courte description de votre navigateur (son user agent), pour que vous restiez connecté. Jamais votre adresse IP.",
+      "Ce que vous écrivez : votre envie de voyage, vos réponses dans le panneau de préférences, votre budget, le nombre de voyageurs et vos dates. Pour trouver les offres qui conviennent et construire votre programme.",
+      "Vos programmes et devis : le voyage proposé, les prix négociés par notre conseillère, le devis en PDF, et votre réponse au devis avec votre commentaire. Pour vous envoyer l’offre et réserver le voyage si vous l’acceptez.",
+      "Les liens que nous vous envoyons par e-mail pour confirmer votre adresse ou réinitialiser votre mot de passe."
+    ]
+  },
+  "never": {
+    "title": "Ce que nous ne faisons jamais",
+    "body": "Nous ne lisons jamais votre messagerie, vos documents, vos contacts ni vos réseaux sociaux, et nous ne demandons jamais à y accéder. Il n’y a ni publicité, ni mesure d’audience, ni pistage sur ce site, et nous ne vendons jamais vos données."
+  },
+  "processors": {
+    "title": "Qui d’autre les traite",
+    "items": [
+      "Nos conseillers : un conseiller voit votre envie, votre programme et votre devis uniquement pour les programmes de sa file.",
+      "Render héberge le site et sa base de données à Francfort, dans l’Union européenne.",
+      "Brevo, en France, envoie nos e-mails : la confirmation d’adresse, la réinitialisation du mot de passe et l’e-mail qui annonce votre devis.",
+      "Mistral AI, en France, fait fonctionner le modèle d’IA qui lit votre envie et construit votre programme. Il reçoit la description de votre voyage, le nombre de voyageurs et vos dates, jamais votre nom ni votre adresse e-mail.",
+      "Google, uniquement si vous choisissez de vous connecter avec Google."
+    ]
+  },
+  "retention": {
+    "title": "Combien de temps nous les gardons",
+    "items": [
+      "Votre compte et tout ce qui y est lié (envies, réponses, programmes, devis et leur PDF) : jusqu’à ce que vous supprimiez votre compte.",
+      "Une session : 30 jours au plus. Elle se termine après 7 jours sans utilisation et est supprimée 30 jours après votre connexion.",
+      "Un lien de confirmation d’adresse : 24 heures. Un lien de réinitialisation du mot de passe : 30 minutes. Chacun est supprimé une fois expiré.",
+      "Pendant une connexion avec Google, un enregistrement temporaire de 10 minutes au plus.",
+      "Pour freiner les tentatives de connexion répétées, votre adresse IP est gardée dans la mémoire du serveur une heure au plus. Elle n’est jamais écrite dans la base de données."
+    ]
+  },
+  "reviews": {
+    "title": "Les avis des voyageurs",
+    "body": "Les avis affichés sur les destinations viennent de voyageurs de {{name}} qui ont accepté leur publication. Ils sont signés d’un prénom et d’une initiale, ou affichés de façon anonyme. Si un voyageur retire son accord, son avis est retiré à la prochaine mise à jour du catalogue, et l’agence peut retirer un avis immédiatement sur demande."
+  },
+  "cookies": {
+    "title": "Cookies et stockage du navigateur",
+    "body": "Nous utilisons uniquement ce dont le site a besoin pour fonctionner, il n’y a donc rien à accepter : un cookie qui vous garde connecté, un cookie de courte durée pendant une connexion avec Google, et votre choix de langue enregistré dans votre navigateur."
+  },
+  "basis": {
+    "title": "Pourquoi nous pouvons les utiliser",
+    "body": "Nous utilisons vos données pour répondre à votre demande de voyage et préparer votre devis, c’est-à-dire les étapes qui précèdent un contrat avec vous. Nous utilisons vos sessions et la limite des tentatives de connexion pour protéger votre compte, ce qui relève de notre intérêt légitime."
+  },
+  "rights": {
+    "title": "Vos droits",
+    "body": "Vous pouvez consulter, corriger ou supprimer vos données, en obtenir une copie, et vous opposer à leur utilisation. Pour supprimer votre compte et tout ce qui y est lié en une fois, ouvrez les réglages de votre compte et choisissez « Supprimer mon compte ». Pour toute autre demande, écrivez à {{email}} ; nous répondons sous un mois. Vous pouvez aussi adresser une réclamation à la CNIL (cnil.fr).",
+    "settings": "Ouvrir les réglages de mon compte"
+  }
+}

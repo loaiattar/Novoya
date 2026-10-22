@@ -92,15 +92,15 @@
         "country": "FR"
       },
       "source": "site/*.html (footer, column « Contact »)",
-      "status": "to_check",
-      "note": "Taken from a 2013 site; confirm the agency still operates at this address."
+      "status": "confirmed",
+      "note": "Taken from a 2013 site; confirmed by the team on 2026-10-22."
     },
     "phone": {
       "value": "+33240000000",
       "display": "02 40 00 00 00",
       "source": "site/*.html (header « Appelez-nous ! » and footer)",
-      "status": "to_check",
-      "note": "Looks like a placeholder number (00 00 00). The old site also says « Appel non surtaxé »."
+      "status": "confirmed",
+      "note": "Confirmed by the team on 2026-10-22. The old site also says « Appel non surtaxé »."
     },
     "email": {
       "value": "contact@detour-voyages.fr",

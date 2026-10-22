@@ -2,7 +2,8 @@
 indicative price), Review (published, pseudonymised), Extra (an option on a plan). Pure Python.
 
 Rules: inactive or hidden partners hide their offers; an offer fits a group size and dates or
-not. DÉTOUR owns the content of imported rows; Novoya owns featured and hidden.
+not. DÉTOUR owns the content of imported rows; Novoya owns featured and hidden (including
+on reviews).
 """
 
 from novoya_api.catalog.domain.errors import (
@@ -11,6 +12,7 @@ from novoya_api.catalog.domain.errors import (
     InvalidPartner,
     OfferNotFound,
     PartnerNotFound,
+    ReviewNotFound,
 )
 from novoya_api.catalog.domain.extra import Extra, ExtraPricing, InvalidExtra
 from novoya_api.catalog.domain.kinds import OfferKind, PartnerKind
@@ -35,6 +37,7 @@ __all__ = [
     "PartnerNotFound",
     "PriceUnit",
     "Review",
+    "ReviewNotFound",
     "normalize_place",
     "normalize_tags",
 ]

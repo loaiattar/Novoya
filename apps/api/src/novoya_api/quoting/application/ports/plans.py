@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
@@ -23,3 +24,10 @@ class PlanQuoting(Protocol):
     async def record_answer(self, plan_id: UUID, accepted: bool) -> None:
         """Moves the plan to accepted or rejected in the current transaction."""
         ...
+
+    async def find_ids(self, query: str, user_ids: Sequence[UUID]) -> list[UUID]:
+        """The plans whose destination contains `query`, or whose client is one of
+        `user_ids`. At most planning's search cap."""
+        ...
+
+    async def trips(self, plan_ids: Sequence[UUID]) -> dict[UUID, QuoteTrip]: ...

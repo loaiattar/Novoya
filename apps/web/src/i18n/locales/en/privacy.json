@@ -1,0 +1,62 @@
+{
+  "title": "Privacy policy",
+  "updated": "Last updated on 22 October 2026.",
+  "intro": "This page says what {{name}} stores about you on this website, why, who else handles it, how long we keep it, and how to have it deleted.",
+  "controller": {
+    "title": "Who is responsible",
+    "body": "{{name}}, the travel agency behind this website, is responsible for your data. For any question or request about it, write to {{email}}."
+  },
+  "data": {
+    "title": "What we store, and why",
+    "items": [
+      "Your account: your email address, your name, first name and last name, your role (client, agent or admin) and your language. To sign you in, write to you and prepare your quote.",
+      "If you sign up with a password: a scrambled version of it (a hash). We never store or see the password itself.",
+      "If you sign in with Google: Google gives us your email address, your name and an identifier for your Google account. We keep no Google token and no profile photo.",
+      "Your sessions: a random sign-in key and a short description of your browser (its user agent), so you stay signed in. Never your IP address.",
+      "What you type: your trip wish, your answers in the preference panel, your budget, the number of travellers and your dates. To find the offers that fit and build your plan.",
+      "Your plans and quotes: the proposed trip, the prices our advisor negotiated, the quote PDF, and your answer to the quote with your comment. To send you the offer and book the trip if you accept it.",
+      "The links we email you to confirm your address or reset your password."
+    ]
+  },
+  "never": {
+    "title": "What we never do",
+    "body": "We never read your mailbox, your documents, your contacts or your social media accounts, and we never ask for access to them. There is no advertising, no analytics and no tracking on this website, and we never sell your data."
+  },
+  "processors": {
+    "title": "Who else handles it",
+    "items": [
+      "Our advisors: an agent sees your wish, plan and quote only for the plans in their queue.",
+      "Render hosts the website and its database in Frankfurt, in the European Union.",
+      "Brevo, in France, sends our emails: the address confirmation, the password reset and the email that says your quote is ready.",
+      "Mistral AI, in France, runs the AI model that reads your wish and builds your plan. It receives your trip description, the number of travellers and your dates, never your name or email address.",
+      "Google, only if you choose to sign in with Google."
+    ]
+  },
+  "retention": {
+    "title": "How long we keep it",
+    "items": [
+      "Your account and everything linked to it (wishes, answers, plans, quotes and their PDF): until you delete your account.",
+      "A session: 30 days at most. It ends after 7 days without use, and is deleted 30 days after you signed in.",
+      "An email confirmation link: 24 hours. A password reset link: 30 minutes. Each is deleted once it has expired.",
+      "During a Google sign-in, a temporary record of 10 minutes at most.",
+      "To slow down repeated sign-in attempts, your IP address is kept in the server's memory for an hour at most. It is never written to the database."
+    ]
+  },
+  "reviews": {
+    "title": "Travellers' reviews",
+    "body": "The reviews shown on the destinations come from travellers of {{name}} who agreed to their publication. They are signed with a first name and an initial, or shown as anonymous. If a traveller withdraws their consent, their review is removed at the next update of the catalogue, and the agency can take a review down at once on request."
+  },
+  "cookies": {
+    "title": "Cookies and browser storage",
+    "body": "We use only what the website needs to work, so there is nothing to accept: one cookie that keeps you signed in, one short-lived cookie during a Google sign-in, and your language choice saved in your browser."
+  },
+  "basis": {
+    "title": "Why we may use it",
+    "body": "We use your data to answer your request for a trip and prepare your quote, which is the steps before a contract with you. We use your sessions and the limit on sign-in attempts to protect your account, which is our legitimate interest."
+  },
+  "rights": {
+    "title": "Your rights",
+    "body": "You can see, correct or delete your data, get a copy of it, and object to its use. To delete your account and everything linked to it at once, open your account settings and choose “Delete my account”. For anything else, write to {{email}}; we answer within one month. You can also complain to the CNIL, the French data protection authority (cnil.fr).",
+    "settings": "Open my account settings"
+  }
+}

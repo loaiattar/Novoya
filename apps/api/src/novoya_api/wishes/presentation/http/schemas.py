@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from novoya_api.wishes.application.dto import AdminWishView
 from novoya_api.wishes.application.ports.planner import ProposedPlan
 from novoya_api.wishes.application.use_cases.send_wish import SendWishResult
 from novoya_api.wishes.domain.answers import Answers, SelectedTag
@@ -145,4 +146,50 @@ class PlanResponse(BaseModel):
             based_on_preferences=plan.based_on_preferences,
             summary=plan.summary,
             items=[PlanItemOut.model_validate(item, from_attributes=True) for item in plan.items],
+        )
+
+
+WishStatusName = Literal["draft", "not_covered", "panel_shown", "answered", "planned"]
+
+
+class WishClient(BaseModel):
+    """Who sent it: name and email, as on the admin users page."""
+
+    id: UUID
+    name: str | None
+    email: str
+
+
+class AdminWish(BaseModel):
+    """One wish in the admin overview. client is null when the account is gone."""
+
+    id: UUID
+    status: WishStatusName
+    text: str
+    country: str | None
+    city: str | None
+    persons: int | None
+    start_date: date | None
+    end_date: date | None
+    created_at: datetime
+    updated_at: datetime
+    client: WishClient | None
+
+    @classmethod
+    def of(cls, view: AdminWishView) -> "AdminWish":
+        client = view.client
+        return cls(
+            id=view.id,
+            status=view.status,
+            text=view.text,
+            country=view.country,
+            city=view.city,
+            persons=view.persons,
+            start_date=view.start_date,
+            end_date=view.end_date,
+            created_at=view.created_at,
+            updated_at=view.updated_at,
+            client=WishClient(id=client.user_id, name=client.name, email=client.email)
+            if client
+            else None,
         )

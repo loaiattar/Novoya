@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from novoya_api.accounts.public import current_user, require_agent
+from novoya_api.accounts.public import current_user, require_admin
 from novoya_api.catalog.application.use_cases.create_offer import CreateOffer, CreateOfferCommand
 from novoya_api.catalog.application.use_cases.create_partner import (
     CreatePartner,
@@ -11,6 +11,7 @@ from novoya_api.catalog.application.use_cases.create_partner import (
 )
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
 from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtras
+from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
 from novoya_api.catalog.application.use_cases.list_extras import ListExtras
 from novoya_api.catalog.application.use_cases.list_offers import ListOffers
@@ -22,12 +23,17 @@ from novoya_api.catalog.application.use_cases.update_partner import (
     UpdatePartner,
     UpdatePartnerCommand,
 )
+from novoya_api.catalog.application.use_cases.update_review import (
+    UpdateReview,
+    UpdateReviewCommand,
+)
 from novoya_api.catalog.domain import OfferKind, PartnerKind, PriceUnit
 from novoya_api.catalog.presentation.http.dependencies import (
     get_create_offer,
     get_create_partner,
     get_get_offer_detail,
     get_list_all_extras,
+    get_list_all_reviews,
     get_list_destinations,
     get_list_extras,
     get_list_offers,
@@ -36,9 +42,11 @@ from novoya_api.catalog.presentation.http.dependencies import (
     get_update_extra,
     get_update_offer,
     get_update_partner,
+    get_update_review,
 )
 from novoya_api.catalog.presentation.http.schemas import (
     AdminExtraResponse,
+    AdminReviewResponse,
     CreateOfferRequest,
     CreatePartnerRequest,
     DestinationResponse,
@@ -51,6 +59,7 @@ from novoya_api.catalog.presentation.http.schemas import (
     UpdateExtraRequest,
     UpdateOfferRequest,
     UpdatePartnerRequest,
+    UpdateReviewRequest,
 )
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 
@@ -66,20 +75,26 @@ partners_router = APIRouter(
     prefix="/admin/partners",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
 )
 offers_router = APIRouter(
     prefix="/admin/offers",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
 )
 
 extras_router = APIRouter(
     prefix="/admin/extras",
     tags=["admin"],
     responses=ERRORS,
-    dependencies=[Depends(require_agent)],
+    dependencies=[Depends(require_admin)],
+)
+reviews_router = APIRouter(
+    prefix="/admin/reviews",
+    tags=["admin"],
+    responses=ERRORS,
+    dependencies=[Depends(require_admin)],
 )
 
 
@@ -98,7 +113,8 @@ async def list_reviews(
     city: Annotated[PlaceName | None, Query()] = None,
 ) -> list[ReviewResponse]:
     """Published reviews, newest first, at most 100. Public: only reviews the travellers agreed
-    to publish, under "First name I." or "Voyageur anonyme". Filter by country and city."""
+    to publish, under "First name I." or "Voyageur anonyme". Hidden reviews are omitted.
+    Filter by country and city."""
     return [ReviewResponse.of(review) for review in await use_case(country, city)]
 
 
@@ -275,9 +291,32 @@ async def update_extra(
     return AdminExtraResponse.of(await use_case(UpdateExtraCommand(extra_id, hidden=body.hidden)))
 
 
+@reviews_router.get("", operation_id="listAllReviews")
+async def list_all_reviews(
+    use_case: Annotated[ListAllReviews, Depends(get_list_all_reviews)],
+) -> list[AdminReviewResponse]:
+    """All published reviews, hidden ones too, newest first. No paging: there are few
+    enough. Admins only."""
+    return [AdminReviewResponse.of(review) for review in await use_case()]
+
+
+@reviews_router.patch("/{review_id}", operation_id="updateReview")
+async def update_review(
+    review_id: UUID,
+    body: UpdateReviewRequest,
+    use_case: Annotated[UpdateReview, Depends(get_update_review)],
+) -> AdminReviewResponse:
+    """Hide a review from GET /reviews, or show it again. The import never changes hidden.
+    Admins only."""
+    return AdminReviewResponse.of(
+        await use_case(UpdateReviewCommand(review_id, hidden=body.hidden))
+    )
+
+
 router = APIRouter()
 router.include_router(destinations_router)
 router.include_router(signed_in_router)
 router.include_router(partners_router)
 router.include_router(offers_router)
 router.include_router(extras_router)
+router.include_router(reviews_router)

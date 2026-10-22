@@ -11,8 +11,10 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.accounts.public import CurrentUserView, require_agent, require_client
+from novoya_api.planning.application.use_cases.get_admin_plan import GetAdminPlan
 from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPlan
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
+from novoya_api.planning.application.use_cases.list_admin_plans import ListAdminPlans
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.application.use_cases.set_extra_price import SetExtraPrice
@@ -20,7 +22,9 @@ from novoya_api.planning.application.use_cases.set_item_price import SetItemPric
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
+from novoya_api.planning.infrastructure.people import AccountPeople
 from novoya_api.planning.infrastructure.wish_owners import WishOwners
+from novoya_api.planning.infrastructure.wish_search import WishesSearch
 from novoya_api.planning.infrastructure.wish_trips import WishTrips
 from novoya_api.shared.infrastructure.db.session import get_session
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
@@ -94,4 +98,22 @@ def get_set_extra_price(session: Annotated[AsyncSession, Depends(get_session)]) 
         trips=WishTrips(session),
         uow=SqlAlchemyUnitOfWork(session),
         clock=SystemClock(),
+    )
+
+
+def get_list_admin_plans(session: Annotated[AsyncSession, Depends(get_session)]) -> ListAdminPlans:
+    return ListAdminPlans(
+        plans=SqlPlanRepository(session),
+        trips=WishTrips(session),
+        wishes=WishesSearch(session),
+        people=AccountPeople(session),
+    )
+
+
+def get_get_admin_plan(session: Annotated[AsyncSession, Depends(get_session)]) -> GetAdminPlan:
+    return GetAdminPlan(
+        plans=SqlPlanRepository(session),
+        catalog=PartnerOffers(session),
+        trips=WishTrips(session),
+        people=AccountPeople(session),
     )

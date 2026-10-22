@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from novoya_api.quoting.application.dto import QuoteDetailView, QuoteView
+from novoya_api.quoting.application.dto import AdminQuoteView, QuoteDetailView, QuoteView
 from novoya_api.quoting.domain.quote import COMMENT_MAX_LENGTH, QuoteStatus
 
 
@@ -89,3 +89,45 @@ class AnswerQuoteRequest(BaseModel):
     """An optional comment for the agent with the answer."""
 
     comment: str | None = Field(default=None, max_length=COMMENT_MAX_LENGTH)
+
+
+class QuoteClient(BaseModel):
+    """Who the quote is for: name and email, as on the admin users page."""
+
+    id: UUID
+    name: str | None
+    email: str
+
+
+class AdminQuote(QuoteFields):
+    """One quote in the admin overview, with the status GET /quotes/{id} gives it. The PDF
+    is at GET /quotes/{id}/pdf."""
+
+    status: QuoteStatus
+    country: str | None
+    city: str | None
+    start_date: date | None
+    end_date: date | None
+    client: QuoteClient | None
+
+    @classmethod
+    def of(cls, view: AdminQuoteView) -> "AdminQuote":
+        client = view.client
+        return cls(
+            id=view.id,
+            number=view.number,
+            plan_id=view.plan_id,
+            status=view.status,
+            total=view.total,
+            currency=view.currency,
+            locale=view.locale,
+            sent_at=view.sent_at,
+            valid_until=view.valid_until,
+            country=view.trip.country,
+            city=view.trip.city,
+            start_date=view.trip.start_date,
+            end_date=view.trip.end_date,
+            client=QuoteClient(id=client.user_id, name=client.name, email=client.email)
+            if client
+            else None,
+        )

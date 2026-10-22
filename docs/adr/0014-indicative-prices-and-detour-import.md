@@ -34,6 +34,9 @@ We import partners, offers, publishable reviews and extras with
   A name that is not a country stops the import. Cities are kept as given.
 - Partners have no phone in the export: `contact_phone` is optional. Imported partners are
   marked `source = 'detour'`, and the development seed refuses to run after an import.
+- An admin can hide a published review in Novoya (`hidden` on `reviews`). The import never
+  writes that column, so a hidden review stays hidden after the next export. A review that
+  left `avis_diffusables` is still deleted.
 - Extras (`included`, `supplement`, `on_quote`) can be added when the client asks for a
   quote. A supplement is counted once, at its amount then; the agent prices `on_quote`
   extras and can adjust a supplement. A supplement whose unit is per person, per night or
@@ -42,7 +45,7 @@ We import partners, offers, publishable reviews and extras with
   ready to quote until the assigned agent confirms it by setting its price, even the same.
 - **DÉTOUR owns imported rows.** A partner with `source = 'detour'`, its offers and every
   extra are written by the import and changed in DÉTOUR. Novoya owns only `featured`
-  (offers) and `hidden` (partners, offers, extras), which the import never writes.
+  (offers) and `hidden` (partners, offers, extras, reviews), which the import never writes.
 
 ## Consequences
 
@@ -52,12 +55,15 @@ We import partners, offers, publishable reviews and extras with
 - The admin API refuses to change an imported row's content with 409 `imported_row`, whose
   message says to change it in DÉTOUR: name, kind, place, contact and `active` of a
   partner; anything but `featured` and `hidden` of its offers; adding an offer to it. An
-  extra only takes `hidden` (`PATCH /admin/extras/{id}`). There is no delete. Sending a
+  extra only takes `hidden` (`PATCH /admin/extras/{id}`). A review only takes `hidden`
+  (`PATCH /admin/reviews/{id}`). There is no delete. Sending a
   row its own values is not a change. Hand-made partners and offers stay fully editable.
-- An agent hides a row with `hidden`; it is left out everywhere an inactive one is (search,
-  coverage, tags, `GET /offers/{id}`, `GET /extras`, the extras of a quote request) and
-  stays hidden after every import. A phone added in Novoya can no longer be erased by the
-  import, since an imported partner's phone cannot be edited.
+- An admin hides a partner, offer or extra with `hidden` (the catalog routes are admin
+  only, #127); it is left out everywhere an inactive one is (search, coverage, tags,
+  `GET /offers/{id}`, `GET /extras`, the extras of a quote request) and stays hidden after
+  every import. An admin hides a review the same way: it leaves `GET /reviews` at once. A
+  phone added in Novoya can no longer be erased by the import, since an imported partner's
+  phone cannot be edited.
 - The import is idempotent (ids are uuid5 of the DÉTOUR ids), runs in one transaction, opens
   the file read-only, prints counts only, and its errors name DÉTOUR ids, never a name or
   an email. The export itself is never committed (`*.sqlite`, `livraison/` in `.gitignore`).

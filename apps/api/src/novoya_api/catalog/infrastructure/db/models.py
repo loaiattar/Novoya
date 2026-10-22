@@ -108,7 +108,8 @@ class OfferRow(Base):
 
 class ReviewRow(Base):
     """A published review from DÉTOUR's avis_diffusables: consented and pseudonymised (ADR 0014).
-    The import deletes a row as soon as it leaves that view."""
+    The import deletes a row as soon as it leaves that view. hidden is the admin's switch
+    in Novoya; the import never writes it."""
 
     __tablename__ = "reviews"
 
@@ -119,6 +120,9 @@ class ReviewRow(Base):
     reviewed_on: Mapped[date] = mapped_column(Date, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     author: Mapped[str] = mapped_column(String(64), nullable=False)
+    hidden: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

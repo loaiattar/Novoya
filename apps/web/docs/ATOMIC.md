@@ -167,7 +167,7 @@ Un organisme est une **région** que tu poses dans un template. Toujours aliment
 | `EmailForm` | TextField e-mail + Button | mot de passe oublié, renvoyer l’e-mail de vérification |
 | `ResetPasswordForm` | TextField mot de passe + Button | nouveau mot de passe |
 | `ChangePasswordForm` | TextField × 2 + Button | réglages du compte |
-| `PartnersTable` / `OffersTable` | tableau, liens, cases mise en avant / masquée | admin des partenaires et des offres |
+| `PartnersTable` / `OffersTable` / `ReviewsTable` | tableau, liens, cases mise en avant / masquée | admin des partenaires, des offres et des avis |
 | `PartnerForm` / `OfferForm` | champs, note « à modifier dans DÉTOUR » si la ligne est importée | création et modification |
 | `QuoteSummary` | lignes du devis, Price total, lien PDF, Button accepter / refuser | le devis |
 | `SavedTripCard` | titre, dates, Badge (statut du devis) | liste “mes voyages” |

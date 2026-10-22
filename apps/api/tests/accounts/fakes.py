@@ -177,6 +177,11 @@ class InMemorySessionRepository:
             if session.user_id == user_id and session.id != except_session_id:
                 session.revoke(now)
 
+    async def delete_expired(self, now: datetime) -> None:
+        self.rows = {
+            key: session for key, session in self.rows.items() if session.absolute_expires_at > now
+        }
+
 
 class InMemoryOneTimeTokenRepository:
     def __init__(self) -> None:
@@ -202,6 +207,9 @@ class InMemoryOneTimeTokenRepository:
         for token in self.rows.values():
             if token.user_id == user_id and token.purpose is purpose and token.used_at is None:
                 token.used_at = now
+
+    async def delete_expired(self, now: datetime) -> None:
+        self.rows = {key: token for key, token in self.rows.items() if token.expires_at > now}
 
 
 @dataclass

@@ -76,6 +76,457 @@
         "title": "AdminExtraResponse",
         "type": "object"
       },
+      "AdminPlan": {
+        "description": "One plan, read-only, for an admin: the agent's view, the client and the agent.",
+        "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "client": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan": {
+            "$ref": "#/components/schemas/AgentPlan"
+          }
+        },
+        "required": [
+          "plan",
+          "client",
+          "agent"
+        ],
+        "title": "AdminPlan",
+        "type": "object"
+      },
+      "AdminPlanEntry": {
+        "description": "One plan in the admin overview. No prices and no partner: GET /admin/plans/{id}.\nclient or agent is null when the account is gone or nobody took the plan yet.",
+        "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "persons": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlanStatus"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "wish_id": {
+            "format": "uuid",
+            "title": "Wish Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "wish_id",
+          "status",
+          "summary",
+          "created_at",
+          "updated_at",
+          "country",
+          "city",
+          "persons",
+          "start_date",
+          "end_date",
+          "client",
+          "agent"
+        ],
+        "title": "AdminPlanEntry",
+        "type": "object"
+      },
+      "AdminQuote": {
+        "description": "One quote in the admin overview, with the status GET /quotes/{id} gives it. The PDF\nis at GET /quotes/{id}/pdf.",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuoteClient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QuoteStatus"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date-time",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "plan_id",
+          "total",
+          "currency",
+          "locale",
+          "sent_at",
+          "valid_until",
+          "status",
+          "country",
+          "city",
+          "start_date",
+          "end_date",
+          "client"
+        ],
+        "title": "AdminQuote",
+        "type": "object"
+      },
+      "AdminReviewResponse": {
+        "description": "A review for admins: hidden ones too. hidden is the only field an admin changes;\nD\u00c9TOUR owns the rest.",
+        "properties": {
+          "author": {
+            "title": "Author",
+            "type": "string"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewed_on": {
+            "format": "date",
+            "title": "Reviewed On",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "country",
+          "city",
+          "rating",
+          "reviewed_on",
+          "text",
+          "author",
+          "hidden"
+        ],
+        "title": "AdminReviewResponse",
+        "type": "object"
+      },
+      "AdminWish": {
+        "description": "One wish in the admin overview. client is null when the account is gone.",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WishClient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "persons": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "not_covered",
+              "panel_shown",
+              "answered",
+              "planned"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "text",
+          "country",
+          "city",
+          "persons",
+          "start_date",
+          "end_date",
+          "created_at",
+          "updated_at",
+          "client"
+        ],
+        "title": "AdminWish",
+        "type": "object"
+      },
       "AgentPlan": {
         "description": "The plan as the assigned agent sees it. Prices, partners, running total and budget.\ntotal counts priced items and priced extras; ready_to_quote is false while a kept item or\nan on_quote extra has no price, or a supplement that needs a quantity check is not\nconfirmed.",
         "properties": {
@@ -544,7 +995,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -1059,7 +1511,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -1593,6 +2046,38 @@
         "title": "PartnerResponse",
         "type": "object"
       },
+      "PersonOut": {
+        "description": "A client or an agent: name and email, as on the admin users page.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "PersonOut",
+        "type": "object"
+      },
       "Plan": {
         "description": "The plan day by day. Never a price: the quote has it. Never a partner name.",
         "properties": {
@@ -2019,6 +2504,38 @@
           "email_sent"
         ],
         "title": "Quote",
+        "type": "object"
+      },
+      "QuoteClient": {
+        "description": "Who the quote is for: name and email, as on the admin users page.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "QuoteClient",
         "type": "object"
       },
       "QuoteDetail": {
@@ -3177,6 +3694,21 @@
         "title": "UpdatePartnerRequest",
         "type": "object"
       },
+      "UpdateReviewRequest": {
+        "additionalProperties": false,
+        "description": "true hides the review from GET /reviews, false shows it again. The import never\nchanges it.",
+        "properties": {
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hidden"
+        ],
+        "title": "UpdateReviewRequest",
+        "type": "object"
+      },
       "UserDetailResponse": {
         "description": "One user for an admin: with their sign-in methods.",
         "properties": {
@@ -3243,7 +3775,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -3376,7 +3909,8 @@
             "enum": [
               "client",
               "agent",
-              "admin"
+              "admin",
+              "super_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -3469,6 +4003,38 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WishClient": {
+        "description": "Who sent it: name and email, as on the admin users page.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "WishClient",
         "type": "object"
       },
       "WishResponse": {
@@ -4223,6 +4789,536 @@
         ]
       }
     },
+    "/admin/plans": {
+      "get": {
+        "description": "Every client's plans, last changed first: client, destination, dates, status and agent.\nNo prices and no partner names: open the plan for those. Admin only.",
+        "operationId": "listAdminPlans",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PlanStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Part of the client's email or name, or of the place",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 254,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of the client's email or name, or of the place",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "wish_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Wish Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminPlanEntry"
+                  },
+                  "title": "Response Listadminplans",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Admin Plans",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/plans/{plan_id}": {
+      "get": {
+        "description": "One plan, read-only: what its agent sees (prices, partners, total and budget), with the\nclient and the agent. Admin only.",
+        "operationId": "getAdminPlan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Admin Plan",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/quotes": {
+      "get": {
+        "description": "Every client's quotes, newest first: number, client, trip, total, validity and status.\nplan_id gives the quote of one plan. Admin only.",
+        "operationId": "listAdminQuotes",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/QuoteStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Part of the client's email or name, or of the place",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 254,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of the client's email or name, or of the place",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "plan_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plan Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminQuote"
+                  },
+                  "title": "Response Listadminquotes",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Admin Quotes",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/reviews": {
+      "get": {
+        "description": "All published reviews, hidden ones too, newest first. No paging: there are few\nenough. Admins only.",
+        "operationId": "listAllReviews",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminReviewResponse"
+                  },
+                  "title": "Response Listallreviews",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List All Reviews",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/reviews/{review_id}": {
+      "patch": {
+        "description": "Hide a review from GET /reviews, or show it again. The import never changes hidden.\nAdmins only.",
+        "operationId": "updateReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Review",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/users": {
       "get": {
         "description": "The users, newest first. Admin only.",
@@ -4257,7 +5353,8 @@
                   "enum": [
                     "client",
                     "agent",
-                    "admin"
+                    "admin",
+                    "super_admin"
                   ],
                   "type": "string"
                 },
@@ -4470,7 +5567,7 @@
     },
     "/admin/users/{user_id}/role": {
       "patch": {
-        "description": "Give a user another role. Admin only, never on their own account. The change is logged.",
+        "description": "Give a user another role. Admin only, never on their own account (409). Only a super\nadmin gives or takes the admin role (403). The super admin role is never given nor taken\nhere: only the grant-role command does (403). The change is logged.",
         "operationId": "changeUserRole",
         "parameters": [
           {
@@ -4574,7 +5671,7 @@
     },
     "/admin/users/{user_id}/status": {
       "patch": {
-        "description": "Disable or enable a user's account. Admin only, never on their own account (409) nor\non another admin's (403). Disabling ends the user's sessions; who and when are kept.",
+        "description": "Disable or enable a user's account. Admin only, never on their own account (409), only\na super admin on an admin's (403), and never on a super admin's: that is done on the server\n(403). Disabling ends the user's sessions; who and when are kept.",
         "operationId": "changeUserStatus",
         "parameters": [
           {
@@ -4676,9 +5773,132 @@
         ]
       }
     },
+    "/admin/wishes": {
+      "get": {
+        "description": "Every client's wishes, last changed first, with who sent them. Admin only.",
+        "operationId": "listAdminWishes",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "not_covered",
+                    "panel_shown",
+                    "answered",
+                    "planned"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Part of the client's email or name, or of the country or city",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 254,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of the client's email or name, or of the country or city",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminWish"
+                  },
+                  "title": "Response Listadminwishes",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Admin Wishes",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/agent/plans": {
       "get": {
-        "description": "Plans waiting for a quote, oldest first. Wish text, destination, dates, travellers, budget.\nNever a price and never a partner name: take the plan to see those.",
+        "description": "The agent's queue, oldest first. Wish text, destination, dates, travellers, budget.\nstatus repeats: requested lists the plans waiting for anyone; negotiating, quoted,\naccepted and rejected list only the caller's own plans. Never a price and never a\npartner name: open the plan to see those.",
         "operationId": "listQuoteQueue",
         "parameters": [
           {
@@ -4686,10 +5906,21 @@
             "name": "status",
             "required": false,
             "schema": {
-              "const": "requested",
-              "default": "requested",
+              "default": [
+                "requested"
+              ],
+              "items": {
+                "enum": [
+                  "requested",
+                  "negotiating",
+                  "quoted",
+                  "accepted",
+                  "rejected"
+                ],
+                "type": "string"
+              },
               "title": "Status",
-              "type": "string"
+              "type": "array"
             }
           },
           {
@@ -5061,6 +6292,78 @@
       }
     },
     "/agent/plans/{plan_id}/quote": {
+      "get": {
+        "description": "The quote sent for this plan, with the id of its PDF. Only the agent who sent it\n(403). 404 before the quote is sent.",
+        "operationId": "getPlanQuote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plan Quote",
+        "tags": [
+          "agent"
+        ]
+      },
       "post": {
         "description": "Send the quote: the total of the priced items and extras, valid 7 days, rendered as a\nPDF in the language the agent chose (en or fr; the client's language without a body).\nThe plan becomes quoted and the client gets an email that leads to the quote; email_sent\nis false if it did not go out (the quote is saved anyway). Only the assigned agent (403).\n409 if the plan is not negotiating (a second click too). 422 plan_not_ready while a kept\nitem or an on_quote extra has no price, or a supplement is not confirmed.",
         "operationId": "sendQuote",
@@ -7336,7 +8639,7 @@
     },
     "/reviews": {
       "get": {
-        "description": "Published reviews, newest first, at most 100. Public: only reviews the travellers agreed\nto publish, under \"First name I.\" or \"Voyageur anonyme\". Filter by country and city.",
+        "description": "Published reviews, newest first, at most 100. Public: only reviews the travellers agreed\nto publish, under \"First name I.\" or \"Voyageur anonyme\". Hidden reviews are omitted.\nFilter by country and city.",
         "operationId": "listReviews",
         "parameters": [
           {

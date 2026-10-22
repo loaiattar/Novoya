@@ -13,6 +13,7 @@ from novoya_api.catalog.application.use_cases.create_offer import CreateOffer
 from novoya_api.catalog.application.use_cases.create_partner import CreatePartner
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
 from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtras
+from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
 from novoya_api.catalog.application.use_cases.list_extras import ListExtras
 from novoya_api.catalog.application.use_cases.list_offers import ListOffers
@@ -21,6 +22,7 @@ from novoya_api.catalog.application.use_cases.list_reviews import ListReviews
 from novoya_api.catalog.application.use_cases.update_extra import UpdateExtra
 from novoya_api.catalog.application.use_cases.update_offer import UpdateOffer
 from novoya_api.catalog.application.use_cases.update_partner import UpdatePartner
+from novoya_api.catalog.application.use_cases.update_review import UpdateReview
 from novoya_api.catalog.infrastructure.db.repositories import (
     SqlExtraRepository,
     SqlOfferRepository,
@@ -75,6 +77,16 @@ def get_get_offer_detail(
 
 def get_list_reviews(session: Annotated[AsyncSession, Depends(get_session)]) -> ListReviews:
     return ListReviews(SqlReviewRepository(session))
+
+
+def get_list_all_reviews(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ListAllReviews:
+    return ListAllReviews(SqlReviewRepository(session))
+
+
+def get_update_review(session: Annotated[AsyncSession, Depends(get_session)]) -> UpdateReview:
+    return UpdateReview(SqlReviewRepository(session), SqlAlchemyUnitOfWork(session))
 
 
 def get_list_extras(session: Annotated[AsyncSession, Depends(get_session)]) -> ListExtras:

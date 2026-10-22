@@ -30,6 +30,7 @@ from novoya_api.accounts.application.use_cases.sign_in_with_password import (
     SignInWithPasswordCommand,
 )
 from novoya_api.accounts.application.use_cases.verify_email import VerifyEmail
+from novoya_api.accounts.domain.actor import GRANT_ROLE_COMMAND, AdminActor
 from novoya_api.accounts.domain.errors import (
     AccountDisabled,
     CannotChangeAdminRole,
@@ -39,8 +40,9 @@ from novoya_api.accounts.domain.errors import (
     EmailNotVerified,
     InvalidCredentials,
     InvalidOrExpiredToken,
-    LastAdminRequired,
+    LastSuperAdminRequired,
     SessionInvalid,
+    SuperAdminServerOnly,
     TooManyAttempts,
     UserNotFound,
     WeakPassword,
@@ -244,7 +246,7 @@ async def test_sign_in_opens_a_session_with_the_current_role(accounts):
 async def test_role_change_applies_to_the_next_request_without_signing_in_again(accounts):
     user = await accounts.signed_up()
     token = await accounts.signed_in()
-    await accounts.change_role(ChangeUserRoleCommand(user.id, Role.AGENT, changed_by=None))
+    await accounts.change_role(ChangeUserRoleCommand(user.id, Role.AGENT, by=GRANT_ROLE_COMMAND))
     assert (await accounts.authenticate(token)).role is Role.AGENT
 
 
@@ -280,10 +282,44 @@ async def test_expired_session_is_refused(accounts):
         await accounts.authenticate(token)
 
 
+async def test_a_sign_in_deletes_the_sessions_past_their_30_days(accounts):
+    await accounts.signed_up()
+    await accounts.signed_in()
+    old = set(accounts.store.sessions.rows)
+    accounts.clock.advance(timedelta(days=30))
+
+    await accounts.signed_in()
+
+    assert len(accounts.store.sessions.rows) == 1
+    assert not old & set(accounts.store.sessions.rows)
+
+
+async def test_a_sign_in_keeps_the_sessions_still_within_their_30_days(accounts):
+    await accounts.signed_up()
+    await accounts.signed_in()
+    accounts.clock.advance(timedelta(days=29))
+
+    await accounts.signed_in()
+
+    assert len(accounts.store.sessions.rows) == 2
+
+
+async def test_a_new_link_deletes_the_expired_ones(accounts):
+    await accounts.signed_up(verified=False)
+    accounts.clock.advance(timedelta(hours=24))
+
+    await accounts.resend("alice@example.com")
+
+    assert len(accounts.store.tokens.rows) == 1
+    await accounts.verify_email(
+        accounts.mailer.last_token("alice@example.com", "email_verification")
+    )
+
+
 async def test_grant_role_by_email_is_logged_as_the_command(accounts):
     await accounts.signed_up()
     user = await accounts.change_role(
-        ChangeUserRoleCommand(Email("alice@example.com"), Role.ADMIN, changed_by=None)
+        ChangeUserRoleCommand(Email("alice@example.com"), Role.ADMIN, by=GRANT_ROLE_COMMAND)
     )
     assert user.role is Role.ADMIN
     [change] = accounts.store.role_changes.rows
@@ -293,24 +329,49 @@ async def test_grant_role_by_email_is_logged_as_the_command(accounts):
 async def test_grant_role_to_an_unknown_email_fails(accounts):
     with pytest.raises(UserNotFound):
         await accounts.change_role(
-            ChangeUserRoleCommand(Email("nobody@example.com"), Role.ADMIN, changed_by=None)
+            ChangeUserRoleCommand(Email("nobody@example.com"), Role.ADMIN, by=GRANT_ROLE_COMMAND)
         )
 
 
-async def test_the_last_admin_keeps_the_role(accounts):
-    admin = make_user("admin@example.com", role=Role.ADMIN)
-    await accounts.store.users.add(admin)
-    with pytest.raises(LastAdminRequired):
-        await accounts.change_role(ChangeUserRoleCommand(admin.id, Role.CLIENT, changed_by=None))
+async def test_grant_role_names_a_super_admin(accounts):
+    await accounts.signed_up()
+    user = await accounts.change_role(
+        ChangeUserRoleCommand(Email("alice@example.com"), Role.SUPER_ADMIN, by=GRANT_ROLE_COMMAND)
+    )
+    assert user.role is Role.SUPER_ADMIN
+    [change] = accounts.store.role_changes.rows
+    assert (change.old_role, change.new_role) == (Role.CLIENT, Role.SUPER_ADMIN)
+    assert change.source == "cmd_grant_role"
 
 
-async def test_the_command_demotes_an_admin_when_another_one_exists(accounts):
-    first = make_user("first@example.com", role=Role.ADMIN)
-    second = make_user("second@example.com", role=Role.ADMIN)
+async def test_the_last_super_admin_keeps_the_role(accounts):
+    super_admin = make_user("super@example.com", role=Role.SUPER_ADMIN)
+    await accounts.store.users.add(super_admin)
+    with pytest.raises(LastSuperAdminRequired):
+        await accounts.change_role(
+            ChangeUserRoleCommand(super_admin.id, Role.ADMIN, by=GRANT_ROLE_COMMAND)
+        )
+
+
+async def test_the_command_demotes_a_super_admin_when_another_one_exists(accounts):
+    first = make_user("first@example.com", role=Role.SUPER_ADMIN)
+    second = make_user("second@example.com", role=Role.SUPER_ADMIN)
     await accounts.store.users.add(first)
     await accounts.store.users.add(second)
-    user = await accounts.change_role(ChangeUserRoleCommand(second.id, Role.AGENT, changed_by=None))
+    user = await accounts.change_role(
+        ChangeUserRoleCommand(second.id, Role.AGENT, by=GRANT_ROLE_COMMAND)
+    )
     assert user.role is Role.AGENT
+
+
+async def test_the_last_plain_admin_can_lose_the_role(accounts):
+    """Only the super admins must stay: they are the ones who act on admins."""
+    admin = make_user("admin@example.com", role=Role.ADMIN)
+    await accounts.store.users.add(admin)
+    user = await accounts.change_role(
+        ChangeUserRoleCommand(admin.id, Role.CLIENT, by=GRANT_ROLE_COMMAND)
+    )
+    assert user.role is Role.CLIENT
 
 
 async def test_an_admin_cannot_demote_then_disable_another_admin(accounts):
@@ -320,36 +381,74 @@ async def test_an_admin_cannot_demote_then_disable_another_admin(accounts):
     await accounts.store.users.add(second)
     with pytest.raises(CannotChangeAdminRole):
         await accounts.change_role(
-            ChangeUserRoleCommand(second.id, Role.CLIENT, changed_by=first.id)
+            ChangeUserRoleCommand(second.id, Role.CLIENT, by=AdminActor(first.id, Role.ADMIN))
         )
     with pytest.raises(CannotChangeAdminStatus):
         await accounts.change_status(
-            ChangeUserStatusCommand(second.id, UserStatus.DISABLED, changed_by=first.id)
+            ChangeUserStatusCommand(
+                second.id, UserStatus.DISABLED, by=AdminActor(first.id, Role.ADMIN)
+            )
         )
     stored = accounts.store.users.rows[second.id]
     assert stored.role is Role.ADMIN and stored.is_active
 
 
 async def test_a_disabled_account_is_not_promoted(accounts):
-    admin = make_user("admin@example.com", role=Role.ADMIN)
+    admin = make_user("admin@example.com", role=Role.SUPER_ADMIN)
     disabled = make_user("bob@example.com", status=UserStatus.DISABLED)
     await accounts.store.users.add(admin)
     await accounts.store.users.add(disabled)
     for role in (Role.AGENT, Role.ADMIN):
         with pytest.raises(CannotPromoteDisabled):
             await accounts.change_role(
-                ChangeUserRoleCommand(disabled.id, role, changed_by=admin.id)
+                ChangeUserRoleCommand(disabled.id, role, by=AdminActor(admin.id, Role.SUPER_ADMIN))
             )
     assert accounts.store.users.rows[disabled.id].role is Role.CLIENT
 
 
-async def test_a_disabled_admin_is_demoted_even_with_one_active_admin(accounts):
-    """Data from before the rule: the command can still put it right."""
+async def test_a_super_admin_demotes_and_disables_an_admin(accounts):
+    super_admin = make_user("super@example.com", role=Role.SUPER_ADMIN)
     admin = make_user("admin@example.com", role=Role.ADMIN)
-    stuck = make_user("stuck@example.com", role=Role.ADMIN, status=UserStatus.DISABLED)
+    await accounts.store.users.add(super_admin)
     await accounts.store.users.add(admin)
+    await accounts.change_role(
+        ChangeUserRoleCommand(admin.id, Role.AGENT, by=AdminActor(super_admin.id, Role.SUPER_ADMIN))
+    )
+    await accounts.change_status(
+        ChangeUserStatusCommand(
+            admin.id, UserStatus.DISABLED, by=AdminActor(super_admin.id, Role.SUPER_ADMIN)
+        )
+    )
+    stored = accounts.store.users.rows[admin.id]
+    assert stored.role is Role.AGENT and not stored.is_active
+    [change] = accounts.store.role_changes.rows
+    assert (change.changed_by, change.source) == (super_admin.id, "admin_api")
+
+
+async def test_a_super_admin_cannot_demote_nor_disable_another_super_admin(accounts):
+    first = make_user("first@example.com", role=Role.SUPER_ADMIN)
+    second = make_user("second@example.com", role=Role.SUPER_ADMIN)
+    await accounts.store.users.add(first)
+    await accounts.store.users.add(second)
+    by = AdminActor(first.id, Role.SUPER_ADMIN)
+    with pytest.raises(SuperAdminServerOnly):
+        await accounts.change_role(ChangeUserRoleCommand(second.id, Role.ADMIN, by=by))
+    with pytest.raises(SuperAdminServerOnly):
+        await accounts.change_status(ChangeUserStatusCommand(second.id, UserStatus.DISABLED, by=by))
+    stored = accounts.store.users.rows[second.id]
+    assert stored.role is Role.SUPER_ADMIN and stored.is_active
+    assert accounts.store.role_changes.rows == []
+
+
+async def test_a_disabled_super_admin_is_demoted_even_with_one_active_super_admin(accounts):
+    """A disabled super admin does not count: the active one stays."""
+    super_admin = make_user("super@example.com", role=Role.SUPER_ADMIN)
+    stuck = make_user("stuck@example.com", role=Role.SUPER_ADMIN, status=UserStatus.DISABLED)
+    await accounts.store.users.add(super_admin)
     await accounts.store.users.add(stuck)
-    user = await accounts.change_role(ChangeUserRoleCommand(stuck.id, Role.CLIENT, changed_by=None))
+    user = await accounts.change_role(
+        ChangeUserRoleCommand(stuck.id, Role.CLIENT, by=GRANT_ROLE_COMMAND)
+    )
     assert user.role is Role.CLIENT
 
 
@@ -439,7 +538,7 @@ async def test_disabling_ends_the_sessions_and_enabling_does_not_bring_them_back
     token = await accounts.signed_in()
 
     disabled = await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, changed_by=admin.id)
+        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, by=AdminActor(admin.id, Role.ADMIN))
     )
     assert disabled.status_changed_by == admin.id
     assert disabled.status_changed_at == accounts.clock.now()
@@ -449,7 +548,7 @@ async def test_disabling_ends_the_sessions_and_enabling_does_not_bring_them_back
         await accounts.signed_in()
 
     await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, changed_by=admin.id)
+        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, by=AdminActor(admin.id, Role.ADMIN))
     )
     with pytest.raises(SessionInvalid):
         await accounts.authenticate(token)  # the old session stays closed
@@ -463,7 +562,7 @@ async def test_enabling_closes_a_session_opened_during_the_disable(accounts):
     await accounts.store.users.add(admin)
     user = await accounts.signed_up()
     await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, changed_by=admin.id)
+        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, by=AdminActor(admin.id, Role.ADMIN))
     )
     stored = accounts.store.users.rows[user.id]
     stored.status = UserStatus.ACTIVE  # as the racing sign-in read it
@@ -471,7 +570,7 @@ async def test_enabling_closes_a_session_opened_during_the_disable(accounts):
     stored.status = UserStatus.DISABLED
 
     await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, changed_by=admin.id)
+        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, by=AdminActor(admin.id, Role.ADMIN))
     )
     with pytest.raises(SessionInvalid):
         await accounts.authenticate(raced)
@@ -484,7 +583,7 @@ async def test_a_reset_link_does_not_work_on_a_disabled_account(accounts):
     await accounts.forgot("alice@example.com")
     token = accounts.mailer.last_token("alice@example.com", "password_reset")
     await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, changed_by=admin.id)
+        ChangeUserStatusCommand(user.id, UserStatus.DISABLED, by=AdminActor(admin.id, Role.ADMIN))
     )
     with pytest.raises(InvalidOrExpiredToken):
         await accounts.reset(token, "a brand new passphrase")
@@ -494,7 +593,7 @@ async def test_same_status_writes_nothing(accounts):
     user = await accounts.signed_up()
     commits = accounts.store.uow.commits
     await accounts.change_status(
-        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, changed_by=UserId.new())
+        ChangeUserStatusCommand(user.id, UserStatus.ACTIVE, by=AdminActor(UserId.new(), Role.ADMIN))
     )
     assert accounts.store.uow.commits == commits
 
@@ -502,5 +601,7 @@ async def test_same_status_writes_nothing(accounts):
 async def test_status_of_an_unknown_user_fails(accounts):
     with pytest.raises(UserNotFound):
         await accounts.change_status(
-            ChangeUserStatusCommand(UserId.new(), UserStatus.DISABLED, changed_by=UserId.new())
+            ChangeUserStatusCommand(
+                UserId.new(), UserStatus.DISABLED, by=AdminActor(UserId.new(), Role.ADMIN)
+            )
         )

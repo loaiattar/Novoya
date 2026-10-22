@@ -23,6 +23,7 @@ import {
   partnerFormValues,
   toPatchPartnerBody,
 } from '../../../../../domain/catalog/catalog'
+import { withId, withoutId } from '../../../../../lib/idSet'
 import { RefusedByChecks, useCatalogErrors } from '../../../../-catalogErrors'
 
 export const Route = createFileRoute('/_authenticated/admin/partners/$partnerId/')({
@@ -161,14 +162,4 @@ function PartnerOffers({ partner }: { partner: PartnerResponse }) {
       )}
     </section>
   )
-}
-
-function withId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
-  return new Set(ids).add(id)
-}
-
-function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
-  const next = new Set(ids)
-  next.delete(id)
-  return next
 }

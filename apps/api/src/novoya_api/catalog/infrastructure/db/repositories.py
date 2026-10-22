@@ -76,6 +76,7 @@ def review_to_entity(row: ReviewRow) -> Review:
         reviewed_on=row.reviewed_on,
         text=row.text,
         author=row.author,
+        hidden=row.hidden,
     )
 
 
@@ -226,12 +227,33 @@ class SqlReviewRepository:
         self._session = session
 
     async def list_at(self, country: str | None, city: str | None, limit: int) -> list[Review]:
-        stmt = select(ReviewRow).order_by(ReviewRow.reviewed_on.desc(), ReviewRow.id).limit(limit)
+        stmt = (
+            select(ReviewRow)
+            .where(ReviewRow.hidden.is_(False))
+            .order_by(ReviewRow.reviewed_on.desc(), ReviewRow.id)
+            .limit(limit)
+        )
         if country is not None:
             stmt = stmt.where(func.lower(ReviewRow.country) == country.lower())
         if city is not None:
             stmt = stmt.where(func.lower(ReviewRow.city) == city.lower())
         return [review_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
+    async def list_all(self) -> list[Review]:
+        """Every review, with no limit on purpose: DÉTOUR publishes a few hundred at most, and
+        the admin needs all of them to find one. Add paging if that grows."""
+        stmt = select(ReviewRow).order_by(ReviewRow.reviewed_on.desc(), ReviewRow.id)
+        return [review_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
+    async def get(self, review_id: UUID) -> Review | None:
+        row = await self._session.get(ReviewRow, review_id)
+        return review_to_entity(row) if row is not None else None
+
+    async def save(self, review: Review) -> None:
+        """Only hidden changes in Novoya: the DÉTOUR import owns the rest of a review."""
+        row = await self._session.get(ReviewRow, review.id)
+        assert row is not None
+        row.hidden = review.hidden
 
 
 class SqlExtraRepository:

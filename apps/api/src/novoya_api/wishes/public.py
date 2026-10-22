@@ -3,6 +3,9 @@
 - owner_id(wish_id) -> the user who sent the wish, or None when there is none
 - trips(wish_ids) -> text, destination, dates, travellers, budget and tags for those wishes
 - ids_for_user(user_id) -> the ids of this user's wishes
+- search_ids(query, user_ids) -> the ids of the wishes whose country or city contains `query`,
+  or that one of `user_ids` sent (accounts.public.search_user_ids finds them), for the admin
+  overview of plans and quotes
 - delete_for_user(user_id) -> erases every wish of this user. Erase their plans first
   (plans.wish_id has no cascade).
 - wishes_for_user(user_id) -> this user's wishes, newest first, with their status, place and
@@ -22,12 +25,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.wishes.infrastructure.db.repository import SqlWishRepository
 
+# The wishes a search may match, newest first: past it the query is too broad to filter, and
+# the rest is dropped without a sign. Fine at the agency's size; a page would say "refine".
+SEARCH_CAP = 1000
+
 
 @dataclass(frozen=True)
 class WishTrip:
     """The wish as another module shows it on the agent's queue. Missing answers stay None."""
 
     wish_id: UUID
+    user_id: UUID  # the client who sent it
     text: str
     country: str | None
     city: str | None
@@ -69,6 +77,7 @@ async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID
         destination = wish.destination
         found[wish.id] = WishTrip(
             wish_id=wish.id,
+            user_id=wish.user_id,
             text=wish.text,
             country=destination.country if destination else None,
             city=destination.city if destination else None,
@@ -89,6 +98,14 @@ async def trips(wish_ids: Sequence[UUID], *, session: AsyncSession) -> dict[UUID
 async def ids_for_user(user_id: UUID, *, session: AsyncSession) -> list[UUID]:
     """The ids of this user's wishes, for example to erase their plans first."""
     return await SqlWishRepository(session).ids_for_user(user_id)
+
+
+async def search_ids(query: str, user_ids: Sequence[UUID], *, session: AsyncSession) -> list[UUID]:
+    """The ids of the wishes whose country or city contains `query`, or that one of `user_ids`
+    sent. The caller finds the users: importing accounts here would loop, since accounts
+    erases wishes. For admins only: the caller's router must require the admin role."""
+    wishes = await SqlWishRepository(session).search(None, query, user_ids, limit=SEARCH_CAP)
+    return [wish.id for wish in wishes]
 
 
 async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:

@@ -497,6 +497,7 @@ describe('admin partners and offers', () => {
   it.each([
     ['/admin', 'Users', 'Partners'],
     [`/admin/partners/${RIAD.id}`, 'Partners', 'Users'],
+    ['/admin/partners', 'Partners', 'Reviews'],
   ])('marks the open section in the admin nav on %s', async (url, current, other) => {
     renderAt(url)
 

@@ -6,7 +6,14 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from novoya_api.catalog.public import OfferKind
-from novoya_api.planning.application.dto import AgentPlanView, PlanView, QueueEntryView
+from novoya_api.planning.application.dto import (
+    AdminPlanEntryView,
+    AdminPlanView,
+    AgentPlanView,
+    Person,
+    PlanView,
+    QueueEntryView,
+)
 from novoya_api.planning.domain.plan import PlanStatus
 
 
@@ -180,3 +187,68 @@ class SetPlanExtraRequest(BaseModel):
     """The price in EUR of an on_quote extra, or an adjusted supplement."""
 
     price_eur: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
+
+
+class PersonOut(BaseModel):
+    """A client or an agent: name and email, as on the admin users page."""
+
+    id: UUID
+    name: str | None
+    email: str
+
+    @classmethod
+    def of(cls, person: Person | None) -> "PersonOut | None":
+        return cls(id=person.user_id, name=person.name, email=person.email) if person else None
+
+
+class AdminPlanEntry(BaseModel):
+    """One plan in the admin overview. No prices and no partner: GET /admin/plans/{id}.
+    client or agent is null when the account is gone or nobody took the plan yet."""
+
+    id: UUID
+    wish_id: UUID
+    status: PlanStatus
+    summary: str
+    created_at: datetime
+    updated_at: datetime
+    country: str | None
+    city: str | None
+    persons: int | None
+    start_date: date | None
+    end_date: date | None
+    client: PersonOut | None
+    agent: PersonOut | None
+
+    @classmethod
+    def of(cls, entry: AdminPlanEntryView) -> "AdminPlanEntry":
+        return cls(
+            id=entry.id,
+            wish_id=entry.wish_id,
+            status=PlanStatus(entry.status),
+            summary=entry.summary,
+            created_at=entry.created_at,
+            updated_at=entry.updated_at,
+            country=entry.country,
+            city=entry.city,
+            persons=entry.persons,
+            start_date=entry.start_date,
+            end_date=entry.end_date,
+            client=PersonOut.of(entry.client),
+            agent=PersonOut.of(entry.agent),
+        )
+
+
+class AdminPlan(BaseModel):
+    """One plan, read-only, for an admin: the agent's view, the client and the agent."""
+
+    plan: AgentPlan
+    client: PersonOut | None
+    agent: PersonOut | None
+
+    @classmethod
+    def of(cls, view: AdminPlanView) -> "AdminPlan":
+        return cls(
+            plan=AgentPlan.of(view.plan),
+            client=PersonOut.of(view.client),
+            agent=PersonOut.of(view.agent),
+        )

@@ -36,15 +36,15 @@ This document is the starting proposal. Change it by pull request, like code.
 5. The agent generates the quote: Novoya computes the total, renders the PDF, makes it visible to the client and emails them.
 6. The agent sees when the client accepts or rejects.
 
-Agents also manage partners and offers in the admin pages.
+Admins manage partners, offers, extras and reviews in the admin pages.
 
 ### Admin
 
-1. The admin signs in like everyone else. Their account has the `admin` role, which can do everything an agent can.
-2. The admin lists the users and changes their role (`client`, `agent` or `admin`). They cannot change their own role, and there is always at least one admin.
-3. `agent` and `admin` are only given to accounts with a verified email. Every change is logged.
+1. The admin signs in like everyone else. Their account has the `admin` or `super_admin` role, which can do everything an agent can.
+2. The admin lists the users, changes their role and disables or enables their account. A plain admin manages clients and agents; only a super admin gives the `admin` role and acts on admins, and super admins are managed with the `grant-role` command only: the API never gives or takes that role, nor disables a super admin ([ADR 0015](adr/0015-super-admin-role.md)). Nobody changes their own role or account, and there is always at least one active super admin.
+3. `agent`, `admin` and `super_admin` are only given to accounts with a verified email. Every role change is logged.
 
-The first admin is created with a server command (`grant-role`), because no one can call the admin API before an admin exists.
+Super admins are named and demoted with a server command only (`grant-role`).
 
 ## 2. System overview
 
@@ -74,7 +74,7 @@ flowchart LR
 
 | Part | Tech | Job |
 |---|---|---|
-| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing, partners and offers) |
+| `apps/web` | React, TypeScript, Vite, TanStack Router, TanStack Query, TanStack Form | Client pages (wish, panel, plan, quote) and agent pages (quote queue, pricing) and admin pages (users, partners and offers, extras, reviews, activity) |
 | `apps/api` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | Modular monolith with Clean Architecture: accounts, catalog, wishes, planning, quoting and trips modules, each with domain, use cases, adapters and REST endpoints |
 | Database | PostgreSQL | Users, partners and offers, wishes, plans, quotes |
 | LLM | OpenRouter, called with the OpenAI Python SDK | Check coverage, build the panel, write the plan |
@@ -135,6 +135,7 @@ client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=settings.o
 - The model is a setting, `NOVOYA_LLM_MODEL`, so we can switch models without changing code. It must support tool calling (OpenRouter lists this as `tools` in the model's supported parameters).
 - The API key is `NOVOYA_OPENROUTER_API_KEY`. It stays on the server and never reaches the browser.
 - Not every model follows a JSON schema reliably, so the backend validates every answer with Pydantic, retries once, then falls back (see section 3).
+- The key is shared by every client. When OpenRouter answers `429`, model calls pause for its `Retry-After` (5 minutes without one, an hour at most), in memory for the whole process. During the pause each step goes straight to its fallback instead of waiting for every model to fail. Other errors still try the next model. The SDK does not retry: the orchestrator falls back itself.
 - Tests use a fake client. CI makes no live LLM calls.
 
 ## 3. The dynamic panel
@@ -164,7 +165,7 @@ The backend validates this JSON. If validation fails, it retries once, then fall
 
 ## 4. Partners, coverage and the no-preference case
 
-Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it. The catalog comes from the client's DÉTOUR export, imported with `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite` ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)): partners, offers, publishable reviews and extras. DÉTOUR owns what it exports: an agent changes it there, and in Novoya only hides a row or features an offer. Countries are stored in English; a wish may name them in English or French.
+Novoya works with a limited list of partners. The `partners` and `offers` tables are the catalog, and the travel tools are the AI's only way to read it. The catalog comes from the client's DÉTOUR export, imported with `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite` ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)): partners, offers, publishable reviews and extras. DÉTOUR owns what it exports: the agency changes it there, and in Novoya an admin only hides a row or features an offer. Countries are stored in English; a wish may name them in English or French.
 
 | Case | What happens |
 |---|---|
@@ -228,7 +229,7 @@ The PDF exists in English and French, in the client's language (`users.locale`).
 | `role_changes` | id, user_id, old_role, new_role, source (`admin_api`, `cmd_grant_role`), changed_by, changed_at |
 | `partners` | id, name, kind (hotel, guide, transport, activity, agency), country, city, contact_email, contact_phone (optional), active, hidden (the agent's switch, kept by the import), source (`detour` when imported), created_at |
 | `offers` | id, partner_id, kind, title, description, country, city, min_persons, max_persons, available_from, available_to, tags, featured, active, hidden, price_eur and price_unit (indicative, per person per night, trip or activity), opening_months, conditions, restrictions, cancellation, confirmation_delay_hours |
-| `reviews` | id, country, city, rating (1 to 5), reviewed_on, text, author ("First name I." or "Voyageur anonyme"), imported_at. Only published, consented reviews |
+| `reviews` | id, country, city, rating (1 to 5), reviewed_on, text, author ("First name I." or "Voyageur anonyme"), hidden, imported_at. Only published, consented reviews |
 | `extras` | id, category, label, description, pricing (`included`, `supplement`, `on_quote`), supplement_eur, unit, constraints, active, hidden |
 | `wishes` | id, user_id, text, destination_country, destination_city, status (`draft`, `not_covered`, `panel_shown`, `answered`, `planned`), panel_json (the panel we showed), selected_tags (what the client clicked, for example `[{"section": "style", "tag": "beach"}]`), budget_max, currency, persons, start_date, end_date, created_at, updated_at |
 | `plans` | id, wish_id, status (`proposed`, `requested`, `negotiating`, `quoted`, `accepted`, `rejected`), based_on_preferences, summary, assigned_agent_id, created_at, updated_at |
@@ -238,7 +239,7 @@ The PDF exists in English and French, in the client's language (`users.locale`).
 
 `wishes` holds the whole request: the text, the panel we showed, the tags the client clicked, the budget, the number of travellers and the dates. `panel_json` and `selected_tags` are JSONB columns.
 
-Roles live in the database (`users.role`). A new account is `client`, and signing in never changes a role. Only an admin changes it, through `/admin/users`, and each change is written to `role_changes`. The first admin is set with the `grant-role` command.
+Roles live in the database (`users.role`). A new account is `client`, and signing in never changes a role. Only an admin changes it, through `/admin/users`, and only a super admin when the admin roles are involved; each change is written to `role_changes`. The first super admin is set with the `grant-role` command.
 
 An account can have Google, a password, or both: `oauth_identities` and `password_credentials` hold one sign-in method each. Sessions are opaque tokens stored hashed in `sessions`, so signing out, resetting a password or changing a role takes effect at the next request. Sessions expire after 7 days without use and 30 days at most.
 
@@ -265,7 +266,7 @@ Client:
 | PATCH | `/me` | Change the signed-in user's language (`{"locale": "en"}` or `"fr"`); answers like `GET /me` |
 | GET | `/me/trips` | The signed-in client's wishes, newest first: destination, dates, travellers, status, and the ids and status of its plan and quote when they exist. Own wishes only: 401 without a session, 403 for an agent or an admin. Not cached (`private, no-store`) |
 | GET | `/destinations` | Destinations with at least one listed offer (active offer of an active partner) |
-| GET | `/reviews?country=&city=` | Published reviews, newest first. Public |
+| GET | `/reviews?country=&city=` | Published reviews, newest first. Public. Hidden reviews are omitted |
 | GET | `/offers/{id}` | A listed offer: indicative price, opening months, terms. Never the partner |
 | GET | `/extras` | The extras a client can add to a plan |
 | POST | `/wishes` | Send the wish. Returns the panel, or `not_covered` with suggested destinations |
@@ -287,8 +288,6 @@ Agent (roles `agent` and `admin`):
 | PATCH | `/agent/plans/{id}/extras/{extra_id}` | Price an `on_quote` extra, or adjust or confirm a supplement |
 | POST | `/agent/plans/{id}/quote` | Compute the total, render the PDF, status `quoted`, email the client |
 | POST | `/agent/quotes/{id}/email` | Send the client's quote email again (the agent who sent the quote, or an admin) |
-| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
-| GET, PATCH | `/admin/extras` | List extras, hide or show one |
 
 Admin (role `admin` only; an admin can also use every agent route):
 
@@ -296,6 +295,14 @@ Admin (role `admin` only; an admin can also use every agent route):
 |---|---|---|
 | GET | `/admin/users` | List users, filtered by email or role |
 | PATCH | `/admin/users/{id}/role` | Change a user's role |
+| GET, PATCH | `/admin/reviews` | List published reviews, hide or show one |
+| GET | `/admin/wishes` | Every client's wishes with their status, searched by client or destination |
+| GET | `/admin/plans`, `/admin/plans/{id}` | Every plan with its client, status and agent; one plan read-only, as its agent sees it |
+| GET | `/admin/quotes` | Every quote with its client, total and status (`open`, `expired`, `accepted`, `rejected`, as `GET /quotes/{id}` gives it) |
+| GET, POST, PATCH | `/admin/partners`, `/admin/offers` | Manage partners and their offers (`GET /admin/offers?partner_id=` lists one partner's). Imported rows only change `hidden` (and `featured` for offers): 409 `imported_row` |
+| GET, PATCH | `/admin/extras` | List extras, hide or show one |
+
+The three lists live in their own module (wishes, planning, quoting). A search by client goes through `accounts.public.search_user_ids`, called from the module's adapters: a `public.py` never imports accounts, because accounts imports them to erase an account's data.
 
 FastAPI generates the OpenAPI file. The frontend generates its TypeScript client and types from it with `@hey-api/openapi-ts`, so both sides agree on types without writing them twice.
 
@@ -329,8 +336,10 @@ novoya/
 ## 9. Privacy (GDPR)
 
 - We store only the account (email, name, first name, last name, role, language), a hash of the password if the user has one, the sessions (with the browser's user agent, never the IP address, kept 30 days at most), what the client types (wishes, panel answers, budget, travellers, dates), the plans and the quotes. No mailbox, document or social media data, no avatar and no Google token.
-- Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). The privacy page (#45) must say so.
-- A privacy page says what we store, why, and for how long.
+- Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). An admin can hide a review at once (`PATCH /admin/reviews/{id}`); the import never shows it again. The privacy page says so.
+- The privacy page (`/privacy`, public, English and French) says what we store, why, who else handles it, and for how long. It is linked from every account page (sign-in, sign-up...), from the footer and from the Google consent screen.
+- Sessions and one-time links are deleted once expired: each sign-in deletes the sessions past their absolute expiry (30 days), each new link deletes the expired links (24 hours at most), and the API's startup deletes both, which covers a quiet spell. No worker is needed; `sessions.absolute_expires_at` and `one_time_tokens.expires_at` are indexed for it.
+- The privacy page describes production, where the AI model is Mistral AI, hosted in France. Development and the demo use OpenRouter instead, which can route the wish text to providers outside the EU: never put real client data in them.
 - The client can delete their account and everything linked to it (`DELETE /me`).
 - Agents see client data only for the plans in their queue.
 

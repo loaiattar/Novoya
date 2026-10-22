@@ -8,6 +8,7 @@ from novoya_api.shared.infrastructure.llm.client import (
     OPENROUTER_BASE_URL,
     create_llm_client,
     get_llm_client,
+    get_model_pause,
     get_orchestrator,
 )
 from novoya_api.shared.infrastructure.llm.errors import LLMError
@@ -28,11 +29,12 @@ def test_client_uses_the_given_api_key():
     assert create_llm_client("sk-or-test").api_key == "sk-or-test"
 
 
-def test_client_retries_once_and_times_out_after_30_seconds():
-    # The orchestrator falls back to other models, so long retries per model only add delay.
+def test_client_never_retries_and_times_out_after_30_seconds():
+    # The orchestrator falls back to other models and pauses on a 429: SDK retries only add
+    # delay (on a 429 the SDK would sleep for Retry-After first).
     client = create_llm_client("sk-or-test")
 
-    assert client.max_retries == 1
+    assert client.max_retries == 0
     assert client.timeout == 30
 
 
@@ -91,6 +93,19 @@ def test_orchestrator_tries_the_model_then_the_fallbacks(monkeypatch):
     get_llm_client.cache_clear()
     try:
         assert get_orchestrator()._models == ["main/model", "backup/model"]
+    finally:
+        get_settings.cache_clear()
+        get_llm_client.cache_clear()
+
+
+def test_every_orchestrator_shares_one_pause(monkeypatch):
+    monkeypatch.setenv("NOVOYA_OPENROUTER_API_KEY", "sk-or-test")
+    get_settings.cache_clear()
+    get_llm_client.cache_clear()
+    try:
+        first, second = get_orchestrator(), get_orchestrator()
+
+        assert first._pause is second._pause is get_model_pause()
     finally:
         get_settings.cache_clear()
         get_llm_client.cache_clear()

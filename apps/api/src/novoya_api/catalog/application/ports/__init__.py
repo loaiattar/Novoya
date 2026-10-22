@@ -46,8 +46,17 @@ class OfferRepository(Protocol):
 
 class ReviewRepository(Protocol):
     async def list_at(self, country: str | None, city: str | None, limit: int) -> list[Review]:
-        """Newest first, at most `limit`. None for country or city means any."""
+        """Published reviews, newest first, at most `limit`. Hidden ones are omitted.
+        None for country or city means any."""
         ...
+
+    async def list_all(self) -> list[Review]:
+        """Every review still in the database, hidden ones too, newest first."""
+        ...
+
+    async def get(self, review_id: UUID) -> Review | None: ...
+
+    async def save(self, review: Review) -> None: ...
 
 
 class ExtraRepository(Protocol):

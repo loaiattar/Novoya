@@ -3,9 +3,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Query
 
+from novoya_api.accounts.public import require_admin
 from novoya_api.planning.application.ports.plan_repository import QUEUE_CAP, QUEUE_PAGE
+from novoya_api.planning.application.use_cases.get_admin_plan import GetAdminPlan
 from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPlan
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
+from novoya_api.planning.application.use_cases.list_admin_plans import ListAdminPlans
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.application.use_cases.set_extra_price import (
@@ -18,8 +21,10 @@ from novoya_api.planning.domain.plan import PlanStatus
 from novoya_api.planning.presentation.http.dependencies import (
     get_current_agent_id,
     get_current_user_id,
+    get_get_admin_plan,
     get_get_agent_plan,
     get_get_plan,
+    get_list_admin_plans,
     get_list_quote_queue,
     get_request_quote,
     get_set_extra_price,
@@ -27,6 +32,8 @@ from novoya_api.planning.presentation.http.dependencies import (
     get_take_plan,
 )
 from novoya_api.planning.presentation.http.schemas import (
+    AdminPlan,
+    AdminPlanEntry,
     AgentPlan,
     Plan,
     QueueEntry,
@@ -70,6 +77,8 @@ async def request_quote(
     return Plan.of(await use_case(plan_id, client_id, extra_ids))
 
 
+QueueStatus = Literal["requested", "negotiating", "quoted", "accepted", "rejected"]
+
 agent_router = APIRouter(
     prefix="/agent/plans",
     tags=["agent"],
@@ -80,16 +89,19 @@ agent_router = APIRouter(
 @agent_router.get("", operation_id="listQuoteQueue")
 async def list_quote_queue(
     use_case: Annotated[ListQuoteQueue, Depends(get_list_quote_queue)],
-    _: Annotated[UUID, Depends(get_current_agent_id)],
-    status: Literal["requested"] = "requested",
+    agent_id: Annotated[UUID, Depends(get_current_agent_id)],
+    status: Annotated[list[QueueStatus], Query()] = ["requested"],  # noqa: B006
     limit: Annotated[int, Query(ge=1, le=QUEUE_CAP)] = QUEUE_PAGE,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[QueueEntry]:
-    """Plans waiting for a quote, oldest first. Wish text, destination, dates, travellers, budget.
-    Never a price and never a partner name: take the plan to see those."""
+    """The agent's queue, oldest first. Wish text, destination, dates, travellers, budget.
+    status repeats: requested lists the plans waiting for anyone; negotiating, quoted,
+    accepted and rejected list only the caller's own plans. Never a price and never a
+    partner name: open the plan to see those."""
+    statuses = [PlanStatus(value) for value in dict.fromkeys(status)]
     return [
         QueueEntry.of(entry)
-        for entry in await use_case(PlanStatus(status), limit=limit, offset=offset)
+        for entry in await use_case(agent_id, statuses, limit=limit, offset=offset)
     ]
 
 
@@ -166,3 +178,39 @@ async def set_plan_extra(
             )
         )
     )
+
+
+admin_router = APIRouter(
+    prefix="/admin/plans",
+    tags=["admin"],
+    responses=ERRORS,
+    dependencies=[Depends(require_admin)],
+)
+
+
+@admin_router.get("", operation_id="listAdminPlans")
+async def list_admin_plans(
+    use_case: Annotated[ListAdminPlans, Depends(get_list_admin_plans)],
+    status: PlanStatus | None = None,
+    q: Annotated[
+        str | None,
+        Query(max_length=254, description="Part of the client's email or name, or of the place"),
+    ] = None,
+    wish_id: UUID | None = None,
+    limit: Annotated[int, Query(ge=1, le=QUEUE_CAP)] = QUEUE_PAGE,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[AdminPlanEntry]:
+    """Every client's plans, last changed first: client, destination, dates, status and agent.
+    No prices and no partner names: open the plan for those. Admin only."""
+    entries = await use_case(status, q, wish_id, limit=limit, offset=offset)
+    return [AdminPlanEntry.of(entry) for entry in entries]
+
+
+@admin_router.get("/{plan_id}", operation_id="getAdminPlan")
+async def get_admin_plan(
+    plan_id: UUID,
+    use_case: Annotated[GetAdminPlan, Depends(get_get_admin_plan)],
+) -> AdminPlan:
+    """One plan, read-only: what its agent sees (prices, partners, total and budget), with the
+    client and the agent. Admin only."""
+    return AdminPlan.of(await use_case(plan_id))

@@ -1,5 +1,6 @@
 """ListQuoteQueue, TakePlan and SetItemPrice are tested with fake ports: no database."""
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -53,20 +54,29 @@ def stored_plan() -> Plan:
 
 
 class FakePlans:
-    def __init__(self, plan: Plan | None = None) -> None:
+    def __init__(self, plan: Plan | None = None, *others: Plan) -> None:
         self.plan = plan
+        self.others = others
+        self.queue_calls: list[tuple[set[PlanStatus], UUID, int, int]] = []
 
     async def get(self, plan_id: UUID) -> Plan | None:
         if self.plan is None or self.plan.id != plan_id:
             return None
         return self.plan
 
-    async def list_by_status(
-        self, status: PlanStatus, *, limit: int = 50, offset: int = 0
+    async def list_queue(
+        self, statuses: Sequence[PlanStatus], agent_id: UUID, *, limit: int = 50, offset: int = 0
     ) -> list[Plan]:
-        if self.plan is None or self.plan.status is not status:
-            return []
-        return [self.plan][offset : offset + limit]
+        """Requested plans of everyone, the other statuses only when assigned to agent_id."""
+        self.queue_calls.append((set(statuses), agent_id, limit, offset))
+        stored = [plan for plan in (self.plan, *self.others) if plan is not None]
+        found = [
+            plan
+            for plan in stored
+            if plan.status in statuses
+            and (plan.status is PlanStatus.REQUESTED or plan.assigned_agent_id == agent_id)
+        ]
+        return sorted(found, key=lambda plan: (plan.updated_at, plan.id))[offset : offset + limit]
 
     async def save(self, plan: Plan) -> None:
         self.plan = plan
@@ -113,7 +123,7 @@ def take_plan(plan: Plan | None) -> tuple[TakePlan, FakeUow]:
 
 async def test_the_queue_lists_requested_plans_with_the_wish():
     plan = stored_plan()
-    entries = await ListQuoteQueue(FakePlans(plan), FakeTrips())(PlanStatus.REQUESTED)
+    entries = await ListQuoteQueue(FakePlans(plan), FakeTrips())(AGENT_ID, [PlanStatus.REQUESTED])
 
     assert len(entries) == 1
     assert entries[0].id == plan.id
@@ -128,7 +138,47 @@ async def test_the_queue_lists_requested_plans_with_the_wish():
 async def test_the_queue_is_empty_when_nothing_is_requested():
     plan = stored_plan()
     plan.take(AGENT_ID, LATER)
-    assert await ListQuoteQueue(FakePlans(plan), FakeTrips())() == []
+    assert await ListQuoteQueue(FakePlans(plan), FakeTrips())(AGENT_ID) == []
+
+
+async def test_the_queue_asks_for_requested_plans_by_default():
+    plans = FakePlans(stored_plan())
+
+    await ListQuoteQueue(plans, FakeTrips())(AGENT_ID)
+
+    assert plans.queue_calls == [({PlanStatus.REQUESTED}, AGENT_ID, 50, 0)]
+
+
+async def test_the_queue_passes_the_statuses_and_the_caller_to_the_repository():
+    plans = FakePlans(stored_plan())
+
+    await ListQuoteQueue(plans, FakeTrips())(
+        AGENT_ID, [PlanStatus.QUOTED, PlanStatus.ACCEPTED], limit=10, offset=20
+    )
+
+    assert plans.queue_calls == [({PlanStatus.QUOTED, PlanStatus.ACCEPTED}, AGENT_ID, 10, 20)]
+
+
+async def test_the_queue_lists_my_negotiating_plans_with_the_wish():
+    plan = stored_plan()
+    plan.take(AGENT_ID, LATER)
+
+    entries = await ListQuoteQueue(FakePlans(plan), FakeTrips())(AGENT_ID, [PlanStatus.NEGOTIATING])
+
+    assert [entry.id for entry in entries] == [plan.id]
+    assert entries[0].status == PlanStatus.NEGOTIATING
+    assert entries[0].wish_text == "A week in Chania"
+
+
+async def test_the_queue_never_lists_another_agents_negotiating_plan():
+    plan = stored_plan()
+    plan.take(OTHER_AGENT, LATER)
+
+    entries = await ListQuoteQueue(FakePlans(plan), FakeTrips())(
+        AGENT_ID, [PlanStatus.REQUESTED, PlanStatus.NEGOTIATING]
+    )
+
+    assert entries == []
 
 
 async def test_an_agent_takes_a_requested_plan():

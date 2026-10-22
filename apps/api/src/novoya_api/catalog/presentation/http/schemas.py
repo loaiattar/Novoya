@@ -281,6 +281,26 @@ class ReviewResponse(BaseModel):
         return cls.model_validate(review, from_attributes=True)
 
 
+class AdminReviewResponse(ReviewResponse):
+    """A review for admins: hidden ones too. hidden is the only field an admin changes;
+    DÉTOUR owns the rest."""
+
+    hidden: bool
+
+    @classmethod
+    def of(cls, review: Review) -> "AdminReviewResponse":
+        return cls(**ReviewResponse.of(review).model_dump(), hidden=review.hidden)
+
+
+class UpdateReviewRequest(BaseModel):
+    """true hides the review from GET /reviews, false shows it again. The import never
+    changes it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    hidden: bool
+
+
 class ExtraResponse(BaseModel):
     """An option a client can add to a plan. supplement_eur only for a supplement."""
 

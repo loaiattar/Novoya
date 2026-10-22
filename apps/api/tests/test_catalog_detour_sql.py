@@ -25,6 +25,10 @@ from novoya_api.catalog.application.use_cases.update_partner import (
     UpdatePartner,
     UpdatePartnerCommand,
 )
+from novoya_api.catalog.application.use_cases.update_review import (
+    UpdateReview,
+    UpdateReviewCommand,
+)
 from novoya_api.catalog.domain import ImportedRow, OfferNotFound
 from novoya_api.catalog.infrastructure.db.models import ExtraRow, OfferRow, PartnerRow, ReviewRow
 from novoya_api.catalog.infrastructure.db.repositories import (
@@ -330,6 +334,19 @@ async def test_a_hidden_extra_is_not_offered(session, source):
     assert bag in {extra.id for extra in await SqlExtraRepository(session).list_all()}
 
 
+async def test_a_hidden_review_is_not_listed(session, source):
+    await import_detour(source)
+    avis = detour_id("avis", "A001")
+
+    await UpdateReview(SqlReviewRepository(session), SqlAlchemyUnitOfWork(session))(
+        UpdateReviewCommand(avis, hidden=True)
+    )
+
+    listed = await SqlReviewRepository(session).list_at("Greece", "Chania", 100)
+    assert avis not in {review.id for review in listed}
+    assert avis in {review.id for review in await SqlReviewRepository(session).list_all()}
+
+
 async def test_a_new_import_keeps_what_novoya_decided(session, source):
     await import_detour(source)
     stay = detour_id("offres", CHANIA_STAY)
@@ -342,6 +359,10 @@ async def test_a_new_import_keeps_what_novoya_decided(session, source):
     await UpdateExtra(SqlExtraRepository(session), SqlAlchemyUnitOfWork(session))(
         UpdateExtraCommand(extra_id=detour_id("preferences", "O001"), hidden=True)
     )
+    avis = detour_id("avis", "A001")
+    await UpdateReview(SqlReviewRepository(session), SqlAlchemyUnitOfWork(session))(
+        UpdateReviewCommand(avis, hidden=True)
+    )
 
     await import_detour(source)
 
@@ -350,9 +371,11 @@ async def test_a_new_import_keeps_what_novoya_decided(session, source):
         PartnerRow, detour_id("partenaires", "P002"), populate_existing=True
     )
     extra = await session.get(ExtraRow, detour_id("preferences", "O001"), populate_existing=True)
+    review = await session.get(ReviewRow, avis, populate_existing=True)
     assert (offer.featured, offer.hidden, offer.active) == (True, True, True)
     assert (partner.hidden, partner.active) == (True, True)
     assert (extra.hidden, extra.active) == (True, True)
+    assert review.hidden is True
 
 
 async def test_editing_an_imported_offer_is_refused_and_writes_nothing(session, source):

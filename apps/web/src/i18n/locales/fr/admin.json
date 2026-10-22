@@ -2,7 +2,10 @@
   "area": "Administration",
   "nav": {
     "users": "Utilisateurs",
-    "partners": "Partenaires"
+    "partners": "Partenaires",
+    "extras": "Extras",
+    "reviews": "Avis",
+    "activity": "Activité"
   },
   "eyebrow": "Administration",
   "title": "Utilisateurs",
@@ -13,7 +16,8 @@
   "roles": {
     "client": "Client",
     "agent": "Agent",
-    "admin": "Admin"
+    "admin": "Admin",
+    "super_admin": "Super admin"
   },
   "status": {
     "active": "Actif",
@@ -26,14 +30,15 @@
   "changeFailed": "Le rôle n’a pas pu être changé. Veuillez réessayer.",
   "statusChangeFailed": "Le compte n’a pas pu être modifié. Veuillez réessayer.",
   "changeRefused": {
-    "adminRole": "Cette personne est admin : vous ne pouvez pas changer son rôle.",
-    "adminStatus": "Cette personne est admin : vous ne pouvez pas désactiver ni réactiver son compte.",
+    "adminRole": "Seul un super admin peut donner ou retirer le rôle Admin.",
+    "adminStatus": "Cette personne est admin : seul un super admin peut désactiver ou réactiver son compte.",
+    "superAdmin": "Cette personne est super admin : son rôle et son compte se gèrent uniquement sur le serveur.",
     "disabledAccount": "Ce compte est désactivé : réactivez-le avant de lui donner le rôle Agent ou Admin."
   },
   "loading": "Chargement des utilisateurs…",
   "loadFailed": "Impossible de charger les utilisateurs.",
   "empty": "Aucun utilisateur ne correspond à cette recherche.",
-  "note": "Les rôles Agent et Admin sont disponibles uniquement pour les e-mails vérifiés. Un compte désactivé reste Client. Vous ne pouvez modifier ni votre propre rôle ou compte, ni le rôle ou le compte d’un autre admin.",
+  "note": "Les rôles Agent, Admin et Super admin sont disponibles uniquement pour les e-mails vérifiés. Un compte désactivé reste Client. Vous ne pouvez pas modifier votre propre rôle ou compte. Seul un super admin donne le rôle Admin et modifie le rôle ou le compte d’un admin. Les super admins se gèrent uniquement sur le serveur.",
   "table": {
     "caption": "Utilisateurs et rôles",
     "user": "Utilisateur",
@@ -208,5 +213,151 @@
     "invalid": "Certains champs ont été refusés. Vérifiez-les et réessayez.",
     "notFound": "Ce partenaire ou cette offre n’existe plus.",
     "unknown": "L’enregistrement n’a pas pu aboutir. Veuillez réessayer."
+  },
+  "extras": {
+    "title": "Extras",
+    "intro": "Les options qu’un client peut ajouter en demandant un devis. Elles viennent de {{agency}} : ici, vous pouvez seulement en masquer une pour que les clients ne la voient plus.",
+    "loading": "Chargement des extras…",
+    "loadFailed": "Les extras n’ont pas pu être chargés.",
+    "empty": "Aucun extra pour l’instant : ils arrivent avec l’import {{agency}}.",
+    "switchFailed": "La modification n’a pas pu être enregistrée. Veuillez réessayer.",
+    "pricing": {
+      "included": "Inclus",
+      "supplement": "Supplément",
+      "on_quote": "Sur devis"
+    },
+    "table": {
+      "caption": "Les extras et leur tarif",
+      "extra": "Extra",
+      "pricing": "Tarif",
+      "status": "Statut",
+      "hidden": "Masqué",
+      "hiddenOf": "Masqué : {{label}}",
+      "supplementOf": "{{price}} {{unit}}"
+    }
+  },
+  "activity": {
+    "title": "Activité",
+    "intro": "Tous les souhaits, plans et devis de tous les clients, pour suivre le travail de l’agence et repérer une demande bloquée.",
+    "tabs": {
+      "wishes": "Souhaits",
+      "plans": "Plans",
+      "quotes": "Devis"
+    },
+    "searchLabel": "Rechercher par client ou destination",
+    "searchPlaceholder": "Nom, e-mail, ville ou pays…",
+    "statusFilter": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "loading": "Chargement…",
+    "loadFailed": "Cette liste n’a pas pu être chargée.",
+    "empty": "Rien ne correspond à cette recherche.",
+    "wishStatus": {
+      "draft": "Brouillon",
+      "not_covered": "Non couvert",
+      "panel_shown": "En choix",
+      "answered": "Répondu",
+      "planned": "Planifié"
+    },
+    "planStatus": {
+      "proposed": "Proposé",
+      "requested": "Devis demandé",
+      "negotiating": "En négociation",
+      "quoted": "Devis envoyé",
+      "accepted": "Accepté",
+      "rejected": "Refusé"
+    },
+    "quoteStatus": {
+      "open": "En attente du client",
+      "expired": "Expiré",
+      "accepted": "Accepté",
+      "rejected": "Refusé"
+    },
+    "noClient": "Compte supprimé",
+    "noAgent": "Non pris",
+    "noPlace": "Pas encore de destination",
+    "noDates": "Pas encore de dates",
+    "travellers_one": "{{count}} voyageur",
+    "travellers_other": "{{count}} voyageurs",
+    "wishes": {
+      "caption": "Les souhaits de tous les clients",
+      "client": "Client",
+      "wish": "Souhait",
+      "dates": "Dates",
+      "status": "Statut",
+      "updated": "Mis à jour",
+      "seePlans": "Voir ses plans"
+    },
+    "plans": {
+      "caption": "Les plans de tous les clients",
+      "client": "Client",
+      "trip": "Voyage",
+      "status": "Statut",
+      "agent": "Agent",
+      "updated": "Mis à jour",
+      "open": "Ouvrir le plan pour {{place}}",
+      "ofWish": "Seulement les plans d’un souhait.",
+      "allPlans": "Voir tous les plans"
+    },
+    "quotes": {
+      "caption": "Les devis de tous les clients",
+      "quote": "Devis",
+      "trip": "Voyage",
+      "total": "Total",
+      "validUntil": "Valable jusqu’au",
+      "status": "Statut"
+    },
+    "plan": {
+      "back": "Activité",
+      "eyebrow": "Plan",
+      "loading": "Chargement du plan…",
+      "loadFailed": "Le plan n’a pas pu être chargé.",
+      "notFound": "Ce plan n’existe pas.",
+      "readOnly": "Lecture seule : c’est l’agent qui prend le plan qui saisit les prix.",
+      "client": "Client",
+      "agent": "Agent",
+      "dates": "Dates",
+      "travellers": "Voyageurs",
+      "budget": "Budget du client",
+      "total": "Total à ce stade",
+      "overBudget": "Au-dessus du budget du client",
+      "noBudget": "Non indiqué",
+      "items": "Jour par jour",
+      "itemsCaption": "Les étapes du plan, leurs partenaires et leurs prix",
+      "day": "Jour",
+      "item": "Quoi",
+      "partner": "Partenaire",
+      "quantity": "Qté",
+      "price": "Prix",
+      "noPrice": "Pas encore de prix",
+      "removed": "Retiré",
+      "unavailable": "Plus au catalogue",
+      "dayN": "Jour {{day}}",
+      "extras": "Extras",
+      "included": "Inclus",
+      "onQuote": "Sur devis",
+      "quote": "Devis",
+      "noQuote": "Aucun devis envoyé pour l’instant.",
+      "quoteLoadFailed": "Le devis n’a pas pu être chargé.",
+      "sentOn": "Envoyé le {{date}}",
+      "validUntil": "Valable jusqu’au {{date}}",
+      "pdf": "Télécharger le PDF"
+    }
+  },
+  "reviews": {
+    "title": "Avis",
+    "loading": "Chargement des avis…",
+    "loadFailed": "Les avis n’ont pas pu être chargés.",
+    "empty": "Aucun avis publié pour l’instant.",
+    "switchFailed": "La modification n’a pas pu être enregistrée. Veuillez réessayer.",
+    "table": {
+      "caption": "Avis publiés",
+      "review": "Avis",
+      "rating": "Note",
+      "date": "Date",
+      "text": "Texte",
+      "hidden": "Masqué",
+      "hiddenOf": "Masqué : {{author}}",
+      "ratingOf": "{{rating}} / 5"
+    }
   }
 }

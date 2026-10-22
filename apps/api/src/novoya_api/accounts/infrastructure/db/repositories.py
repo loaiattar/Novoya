@@ -4,6 +4,7 @@ They map rows to entities and back: no ORM object leaves this file. They never c
 use case does, through the UnitOfWork that shares their session.
 """
 
+from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
@@ -82,6 +83,12 @@ class SqlUserRepository:
     async def get(self, user_id: UserId) -> User | None:
         row = await self._session.get(UserModel, user_id.value)
         return self._entity(row) if row else None
+
+    async def list_by_ids(self, user_ids: Sequence[UUID]) -> list[User]:
+        if not user_ids:
+            return []
+        rows = await self._session.scalars(select(UserModel).where(UserModel.id.in_(user_ids)))
+        return [self._entity(row) for row in rows]
 
     async def get_by_email(self, email: Email) -> User | None:
         row = await self._session.scalar(select(UserModel).where(UserModel.email == email.value))
@@ -352,6 +359,13 @@ class SqlSessionRepository:
             statement = statement.where(SessionModel.id != except_session_id)
         await self._session.execute(statement)
 
+    async def delete_expired(self, now: datetime) -> None:
+        await self._session.execute(
+            delete(SessionModel)
+            .where(SessionModel.absolute_expires_at <= now)
+            .execution_options(synchronize_session=False)
+        )
+
 
 def token_to_entity(row: OneTimeTokenModel) -> OneTimeToken:
     return OneTimeToken(
@@ -408,4 +422,11 @@ class SqlOneTimeTokenRepository:
                 OneTimeTokenModel.used_at.is_(None),
             )
             .values(used_at=now)
+        )
+
+    async def delete_expired(self, now: datetime) -> None:
+        await self._session.execute(
+            delete(OneTimeTokenModel)
+            .where(OneTimeTokenModel.expires_at <= now)
+            .execution_options(synchronize_session=False)
         )

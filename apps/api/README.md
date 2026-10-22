@@ -76,17 +76,17 @@ To go back to the seed, `unset NOVOYA_DATABASE_URL`. To remove the client's data
 
 Sign-up is by email and password; the account is a `client` and must confirm its email before signing in. Locally, the emails land in Mailpit: http://localhost:8025 (`docker compose up mailpit`).
 
-Sign-in with Google needs `NOVOYA_GOOGLE_CLIENT_ID` and `NOVOYA_GOOGLE_CLIENT_SECRET` (ask the team; see #14). Without them, the rest of the app works and `/auth/google/login` sends the browser to `/login?error=unknown_provider`. The web app reaches the API through its own origin, at `/api` ([ADR 0011](../../docs/adr/0011-same-origin-api-proxy.md)): it links to `http://localhost:5173/api/auth/google/login?redirect_to=/wishes/new`, and Google comes back to `http://localhost:5173/api/auth/google/callback` (the redirect URI registered at Google), which sets the session cookie and goes to `redirect_to`. docker compose sets `NOVOYA_API_PUBLIC_URL` to `http://localhost:5173/api` for this. A first Google sign-in creates a `client`; an existing account with the same email is linked. While the Google app is in Testing, only its test users can sign in.
+Sign-in with Google needs `NOVOYA_GOOGLE_CLIENT_ID` and `NOVOYA_GOOGLE_CLIENT_SECRET` (ask the team; see #14). Without them, the rest of the app works and `/auth/google/login` sends the browser to `/login?error=unknown_provider`. The web app reaches the API through its own origin, at `/api` ([ADR 0011](../../docs/adr/0011-same-origin-api-proxy.md)): it links to `http://localhost:5173/api/auth/google/login?redirect_to=/wishes/new`, and Google comes back to `http://localhost:5173/api/auth/google/callback` (the redirect URI registered at Google), which sets the session cookie and goes to `redirect_to`. docker compose sets `NOVOYA_API_PUBLIC_URL` to `http://localhost:5173/api` for this. A first Google sign-in creates a `client`; an existing account with the same email is linked. While the Google app is in Testing, only its test users can sign in. On the Google consent screen (Branding), set the privacy policy link to the web app's `/privacy` page, for example `https://<web>.onrender.com/privacy`.
 
-Roles are `client`, `agent` and `admin`. The first admin is named with a command, on an account that already exists and has confirmed its email; after that, an admin changes roles with `PATCH /admin/users/{id}/role`.
+Roles are `client`, `agent`, `admin` and `super_admin` ([ADR 0015](../../docs/adr/0015-super-admin-role.md)). Super admins are named with a command only, on an account that already exists and has confirmed its email; after that, an admin changes the roles of clients and agents with `PATCH /admin/users/{id}/role`, only a super admin gives or takes the `admin` role, and only the command gives or takes `super_admin` (the API never acts on a super admin).
 
 ```bash
-uv run python -m novoya_api.accounts.presentation.cli grant-role --email you@example.com --role admin
+uv run python -m novoya_api.accounts.presentation.cli grant-role --email you@example.com --role super_admin
 # or, with docker compose:
-docker compose exec api python -m novoya_api.accounts.presentation.cli grant-role --email you@example.com --role admin
+docker compose exec api python -m novoya_api.accounts.presentation.cli grant-role --email you@example.com --role super_admin
 ```
 
-Other modules protect their routes with `require_client`, `require_agent` or `require_admin` from `accounts/public.py`, on the router (the admin passes all three), and read the signed-in user with `CurrentUser`.
+Other modules protect their routes with `require_client`, `require_agent` or `require_admin` from `accounts/public.py`, on the router (the admin and the super admin pass all three), and read the signed-in user with `CurrentUser`.
 
 ## Checks
 

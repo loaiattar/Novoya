@@ -8,6 +8,7 @@ from typing import Any
 import openai
 
 from novoya_api.shared.infrastructure.llm.errors import LLMError, ToolError
+from novoya_api.shared.infrastructure.llm.pause import ModelPause, pause_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,10 @@ class Orchestrator:
     model_timeout_seconds, a model that takes longer counts as failed, so a slow model does
     not use the whole deadline before the next one is tried. A prompt
     injection can make the model ask for hundreds of tool calls: only max_tool_calls_per_step
-    of them run per answer, and max_tool_calls in the whole loop; the others get an error."""
+    of them run per answer, and max_tool_calls in the whole loop; the others get an error.
+
+    A 429 means the shared key is out of quota, for every model: the call stops at once and
+    `pause` keeps the next calls from reaching OpenRouter until it ends."""
 
     def __init__(
         self,
@@ -56,8 +60,10 @@ class Orchestrator:
         model_timeout_seconds: float | None = None,
         max_tool_calls_per_step: int = 5,
         max_tool_calls: int = 15,
+        pause: ModelPause | None = None,
     ) -> None:
         self._client = client
+        self._pause = pause
         self._models = list(models)
         self._max_steps = max_steps
         self._deadline = deadline_seconds
@@ -104,6 +110,8 @@ class Orchestrator:
 
     async def _complete(self, messages: list[dict[str, Any]], tools: Sequence[Tool]) -> Any:
         """One model call, trying each model in order until one answers."""
+        if self._pause is not None and self._pause.active():
+            raise LLMError("model calls are paused after a 429 from OpenRouter")
         extra = {"tools": [tool.definition() for tool in tools]} if tools else {}
         last_error: Exception | None = None
         for model in self._models:
@@ -118,8 +126,16 @@ class Orchestrator:
                 continue
             except openai.AuthenticationError as error:
                 raise LLMError("OpenRouter rejected the API key") from error
+            except openai.RateLimitError as error:
+                seconds = pause_seconds(error.response.headers.get("retry-after"))
+                if self._pause is not None:
+                    self._pause.start(seconds)
+                logger.warning(
+                    "LLM calls paused for %d seconds after a 429 from %s", seconds, model
+                )
+                raise LLMError("model calls are paused after a 429 from OpenRouter") from error
             except openai.APIError as error:
-                # Per model on OpenRouter: rate limits, outages, no tool support. Try the next.
+                # Per model on OpenRouter: outages, no tool support. Try the next.
                 # Type and status only: the error body can quote the prompt (moderation).
                 logger.warning(
                     "LLM model %s failed: %s %s",

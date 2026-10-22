@@ -39,6 +39,7 @@ from novoya_api.accounts.application.use_cases.start_sign_in import (
     StartSignInCommand,
 )
 from novoya_api.accounts.application.use_cases.verify_email import VerifyEmail
+from novoya_api.accounts.domain.actor import AdminActor
 from novoya_api.accounts.domain.user import UserStatus
 from novoya_api.accounts.domain.value_objects import UserId
 from novoya_api.accounts.presentation.http.cookies import (
@@ -419,9 +420,13 @@ async def change_user_role(
     admin: Annotated[CurrentUserView, Depends(require_admin)],
     use_case: Annotated[ChangeUserRole, Depends(get_change_user_role)],
 ) -> UserResponse:
-    """Give a user another role. Admin only, never on their own account. The change is logged."""
+    """Give a user another role. Admin only, never on their own account (409). Only a super
+    admin gives or takes the admin role (403). The super admin role is never given nor taken
+    here: only the grant-role command does (403). The change is logged."""
     user = await use_case(
-        ChangeUserRoleCommand(UserId(user_id), role_of(body.role), changed_by=admin.user_id)
+        ChangeUserRoleCommand(
+            UserId(user_id), role_of(body.role), by=AdminActor(admin.user_id, admin.role)
+        )
     )
     return UserResponse.of(user)
 
@@ -433,10 +438,13 @@ async def change_user_status(
     admin: Annotated[CurrentUserView, Depends(require_admin)],
     use_case: Annotated[ChangeUserStatus, Depends(get_change_user_status)],
 ) -> UserResponse:
-    """Disable or enable a user's account. Admin only, never on their own account (409) nor
-    on another admin's (403). Disabling ends the user's sessions; who and when are kept."""
+    """Disable or enable a user's account. Admin only, never on their own account (409), only
+    a super admin on an admin's (403), and never on a super admin's: that is done on the server
+    (403). Disabling ends the user's sessions; who and when are kept."""
     user = await use_case(
-        ChangeUserStatusCommand(UserId(user_id), UserStatus(body.status), changed_by=admin.user_id)
+        ChangeUserStatusCommand(
+            UserId(user_id), UserStatus(body.status), by=AdminActor(admin.user_id, admin.role)
+        )
     )
     return UserResponse.of(user)
 

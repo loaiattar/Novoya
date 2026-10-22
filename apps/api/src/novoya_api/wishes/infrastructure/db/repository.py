@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.shared.domain.errors import InvalidTransition
@@ -135,3 +135,31 @@ class SqlWishRepository:
             .where(WishModel.user_id == user_id)
             .execution_options(synchronize_session=False)
         )
+
+    async def search(
+        self,
+        status: WishStatus | None,
+        query: str | None,
+        user_ids: Sequence[UUID],
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Wish]:
+        statement = select(WishModel)
+        if status is not None:
+            statement = statement.where(WishModel.status == status.value)
+        if query:
+            pattern = f"%{query.strip()}%"
+            matches = [
+                WishModel.destination_country.ilike(pattern),
+                WishModel.destination_city.ilike(pattern),
+            ]
+            if user_ids:
+                matches.append(WishModel.user_id.in_(user_ids))
+            statement = statement.where(or_(*matches))
+        rows = await self._session.scalars(
+            statement.order_by(WishModel.updated_at.desc(), WishModel.id)
+            .limit(limit)
+            .offset(offset)
+        )
+        return [wish_to_entity(row) for row in rows]

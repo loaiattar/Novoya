@@ -1,21 +1,28 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
+from novoya_api.accounts.public import require_admin
 from novoya_api.shared.presentation.http.errors import ErrorResponse
+from novoya_api.wishes.application.ports.wish_repository import ADMIN_CAP, ADMIN_PAGE
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel, AnswerPanelCommand
+from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.send_wish import SendWish, SendWishCommand
+from novoya_api.wishes.domain.wish import WishStatus
 from novoya_api.wishes.presentation.http.dependencies import (
     get_answer_panel,
     get_current_user_id,
+    get_list_admin_wishes,
     get_send_wish,
 )
 from novoya_api.wishes.presentation.http.schemas import (
+    AdminWish,
     AnswerPanelRequest,
     PlanResponse,
     SendWishRequest,
     WishResponse,
+    WishStatusName,
 )
 
 # Every error body is {code, detail} (shared handler), not FastAPI's default 422 list.
@@ -55,3 +62,30 @@ async def answer_panel(
     dates."""
     command = AnswerPanelCommand(user_id=user_id, wish_id=wish_id, answers=body.to_answers())
     return PlanResponse.of((await use_case(command)).plan)
+
+
+admin_router = APIRouter(
+    prefix="/admin/wishes",
+    tags=["admin"],
+    responses={status_code: {"model": ErrorResponse} for status_code in (401, 403)},
+    dependencies=[Depends(require_admin)],
+)
+
+
+@admin_router.get("", operation_id="listAdminWishes")
+async def list_admin_wishes(
+    use_case: Annotated[ListAdminWishes, Depends(get_list_admin_wishes)],
+    status: WishStatusName | None = None,
+    q: Annotated[
+        str | None,
+        Query(
+            max_length=254,
+            description="Part of the client's email or name, or of the country or city",
+        ),
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=ADMIN_CAP)] = ADMIN_PAGE,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[AdminWish]:
+    """Every client's wishes, last changed first, with who sent them. Admin only."""
+    wishes = await use_case(WishStatus(status) if status else None, q, limit=limit, offset=offset)
+    return [AdminWish.of(wish) for wish in wishes]

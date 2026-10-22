@@ -16,7 +16,9 @@ class Review:
     """A traveller's published review of a trip to a destination.
 
     Only reviews the traveller agreed to publish reach Novoya, already pseudonymised: the
-    author is "First name I." or "Voyageur anonyme", kept as DÉTOUR wrote it (ADR 0014)."""
+    author is "First name I." or "Voyageur anonyme", kept as DÉTOUR wrote it (ADR 0014).
+    hidden is the admin's switch in Novoya, which the import never changes: a hidden
+    review leaves GET /reviews at once, without waiting for the next export."""
 
     id: UUID
     country: str
@@ -25,6 +27,7 @@ class Review:
     reviewed_on: date
     text: str
     author: str
+    hidden: bool = False
 
     def __post_init__(self) -> None:
         if not 1 <= self.rating <= 5:

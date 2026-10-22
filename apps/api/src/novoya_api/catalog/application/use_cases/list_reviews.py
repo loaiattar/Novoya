@@ -5,7 +5,8 @@ REVIEWS_LIMIT = 100
 
 
 class ListReviews:
-    """Published reviews, newest first. None for country or city means any."""
+    """Published reviews, newest first. Hidden ones are omitted. None for country or city
+    means any."""
 
     def __init__(self, reviews: ReviewRepository) -> None:
         self._reviews = reviews

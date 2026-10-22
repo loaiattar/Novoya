@@ -66,6 +66,9 @@ export function SiteFooter({ className }: { className?: string }) {
           <Link to="/legal" className="min-h-11 content-center text-ivory underline-offset-4 hover:underline">
             {t('footer.legalNotices')}
           </Link>
+          <Link to="/privacy" className="min-h-11 content-center text-ivory underline-offset-4 hover:underline">
+            {t('footer.privacy')}
+          </Link>
         </nav>
         <div className="flex flex-wrap items-center gap-x-6 md:ms-auto">
           {/* Pulled back by the buttons' own padding: "EN" starts on the line's edge on a phone. */}

@@ -8,8 +8,10 @@ active again if it comes back.
 DÉTOUR owns imported rows (ADR 0014): every column it exports, `active` included, is written
 again on each import, and the admin API refuses to change them (409 imported_row), so a fix
 is made in DÉTOUR. Novoya owns two columns the import never writes: `hidden` (the agent's
-switch on a partner, an offer or an extra, kept across imports) and `featured` (offers). A
-hidden row is left out everywhere an inactive one is.
+switch on a partner, an offer or an extra, and the admin's switch on a review, kept across
+imports) and `featured` (offers). A hidden row is left out everywhere an inactive one is.
+A hidden review leaves GET /reviews until an admin shows it again; the import still
+deletes a review that left avis_diffusables.
 """
 
 from collections.abc import Sequence
