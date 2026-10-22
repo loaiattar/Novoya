@@ -13,7 +13,7 @@ import { WishComposer } from '../../../components/organisms/WishComposer'
 import { AppShell } from '../../../components/templates/AppShell'
 import { givenName } from '../../../domain/auth/session'
 import { destinationLabel, destinationPhoto, destinationPlace } from '../../../domain/wish/destination'
-import { sendWishErrorKey, WISH_MAX_LENGTH, wishTextError, type WishTextErrorKey } from '../../../domain/wish/wish'
+import { sendWishError, WISH_MAX_LENGTH, wishTextError, type WishTextErrorKey } from '../../../domain/wish/wish'
 
 export const Route = createFileRoute('/_authenticated/wish/')({
   component: WishPage,
@@ -82,9 +82,13 @@ function WishPage() {
     )
   }
 
-  const sendError = send.isError
-    ? tErrors(sendWishErrorKey(send.error instanceof ApiError ? send.error.code : undefined))
+  const refused = send.isError
+    ? sendWishError(
+        send.error instanceof ApiError ? send.error.code : undefined,
+        send.error instanceof ApiError ? send.error.retryAfterSeconds : undefined,
+      )
     : undefined
+  const sendError = refused ? tErrors(refused.key, { count: refused.count }) : undefined
   const textError = checkError ? tErrors(checkError, { max: WISH_MAX_LENGTH }) : undefined
   const firstName = givenName(me)
 

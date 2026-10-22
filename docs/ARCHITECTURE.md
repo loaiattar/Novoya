@@ -233,7 +233,7 @@ The PDF exists in English and French, in the client's language (`users.locale`).
 | `plans` | id, wish_id, status (`proposed`, `requested`, `negotiating`, `quoted`, `accepted`, `rejected`), based_on_preferences, summary, assigned_agent_id, created_at, updated_at |
 | `plan_items` | id, plan_id, offer_id, day, quantity, note, negotiated_price (empty until the agent fills it), removed |
 | `plan_extras` | plan_id, extra_id, pricing, price_eur (the supplement when requested, or the agent's price for `on_quote`), label and unit (copied when requested), confirmed (the agent set its price; a supplement per person, night or day needs it before the quote) |
-| `quotes` | id, number (`NV-YYYYMMDD-XXXXXX`), plan_id (one quote per plan), client_id, agent_id, total_price, currency (`EUR`), locale, sent_at, valid_until (sent_at + 7 days), pdf (the file's bytes: the demo host wipes its disk, [ADR 0013](adr/0013-host-the-demo-on-render.md)), decided_at, client_comment |
+| `quotes` | id, number (`NV-YYYYMMDD-XXXXXX`), plan_id (one quote per plan), client_id, agent_id, total_price, currency (`EUR`), locale, sent_at, valid_until (sent_at + 7 days; the quote stays open to the end of that day in Paris), pdf (the file's bytes: the demo host wipes its disk, [ADR 0013](adr/0013-host-the-demo-on-render.md)), answer (`accepted`, `rejected`) and decided_at (both set together when the client answers), client_comment |
 
 `wishes` holds the whole request: the text, the panel we showed, the tags the client clicked, the budget, the number of travellers and the dates. `panel_json` and `selected_tags` are JSONB columns.
 
@@ -270,8 +270,9 @@ Client:
 | POST | `/wishes/{id}/answers` | Send the selected tags, budget, travellers and dates. Saves them on the wish and returns the proposed plan |
 | GET | `/plans/{id}` | The plan, day by day, with no prices until it is quoted and no partner names |
 | POST | `/plans/{id}/request-quote` | Ask the agency for a quote, with optional `extra_ids` |
+| GET | `/quotes/{id}` | Read a quote and its status: `open`, `expired` after its validity date, or the client's answer (`accepted`, `rejected`). A quote is open until the end of its validity day in Paris time, the day the PDF shows. With what the quote page shows: the agent's name, the trip, the priced items and extras, the budget, and the answer's date and comment. Its client, an agent or an admin; 404 for anyone else. Not cached (`private, no-store`) |
 | GET | `/quotes/{id}/pdf` | Download the quote PDF |
-| POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment |
+| POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment (up to 1000 characters). Saves it on the quote and moves the plan to `accepted` or `rejected`, together. 204. Only the quote's client: 403 for staff, 404 for anyone else. 409 `quote_expired` after the validity day, 409 `quote_answered` when already answered |
 | DELETE | `/me` | Delete the account, its wishes, plans and quotes (with their PDF), then sign out. Clients only: 403 `staff_account` for an agent or an admin |
 
 Agent (roles `agent` and `admin`):

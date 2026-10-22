@@ -1,3 +1,5 @@
+import { rateLimitMessage } from '../rateLimit/wait'
+
 type Tag = { id: string; preselected: boolean }
 type Section = { id: string; multi: boolean; tags: Tag[] }
 
@@ -55,6 +57,8 @@ export type AnswerPanelErrorKey =
   | 'answers.inProgress'
   | 'answers.unknown'
 
+type AnswerPanelMessageKey = AnswerPanelErrorKey | 'rateLimit.waitSeconds' | 'rateLimit.waitMinutes'
+
 /**
  * The key of the message for panel answers that failed (errors.json). `status` is undefined
  * when no response came back (network failure). Then, as on a gateway timeout (504), the API
@@ -82,4 +86,14 @@ export function answerPanelErrorKey(code: string | undefined, status: number | u
     default:
       return 'answers.unknown'
   }
+}
+
+/** The message for failed panel answers, with a wait when Retry-After is present. */
+export function answerPanelError(
+  code: string | undefined,
+  status: number | undefined,
+  retryAfterSeconds?: number,
+): { key: AnswerPanelMessageKey; count?: number } {
+  const key = answerPanelErrorKey(code, status)
+  return key === 'answers.tooManyRequests' ? rateLimitMessage(key, retryAfterSeconds) : { key }
 }

@@ -25,7 +25,7 @@ import {
   parseBudget,
 } from '../../../../domain/constraints/constraints'
 import {
-  answerPanelErrorKey,
+  answerPanelError,
   initialSelection,
   type Selection,
   selectedTags,
@@ -80,6 +80,11 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
   // form meanwhile. The answers stay in this component's state, so a failure brings the form
   // back filled in.
   const answer = useMutation(answerPanelMutation())
+  const failed = answer.isError
+    ? answer.error instanceof ApiError
+      ? answerPanelError(answer.error.code, answer.error.status, answer.error.retryAfterSeconds)
+      : answerPanelError(undefined, undefined)
+    : undefined
 
   // On a phone the message is below a long form: bring it into view.
   useEffect(() => {
@@ -159,13 +164,9 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
               minPersons={MIN_PERSONS}
               maxPersons={MAX_PERSONS}
             />
-            {answer.isError && (
+            {failed && (
               <p ref={failure} tabIndex={-1} role="alert" className="mt-6 text-danger outline-none">
-                {tErrors(
-                  answer.error instanceof ApiError
-                    ? answerPanelErrorKey(answer.error.code, answer.error.status)
-                    : answerPanelErrorKey(undefined, undefined),
-                )}
+                {tErrors(failed.key, { count: failed.count })}
               </p>
             )}
           </form>

@@ -3,22 +3,32 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Response, status
 
+from novoya_api.quoting.application.use_cases.answer_quote import AnswerQuote
 from novoya_api.quoting.application.use_cases.get_plan_quote import GetPlanQuote
+from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
+from novoya_api.quoting.domain.quote import QuoteStatus
 from novoya_api.quoting.presentation.http.dependencies import (
     Reader,
     Staff,
+    get_answer_quote,
     get_current_agent_id,
     get_get_plan_quote,
+    get_get_quote,
     get_get_quote_pdf,
     get_reader,
     get_resend_quote_email,
     get_send_quote,
     get_staff,
 )
-from novoya_api.quoting.presentation.http.schemas import Quote, SendQuoteRequest
+from novoya_api.quoting.presentation.http.schemas import (
+    AnswerQuoteRequest,
+    Quote,
+    QuoteDetail,
+    SendQuoteRequest,
+)
 from novoya_api.shared.domain.value_objects import Locale
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 
@@ -81,6 +91,59 @@ async def resend_quote_email(
 
 
 router = APIRouter(prefix="/quotes", tags=["quoting"], responses=ERRORS)
+
+
+@router.get("/{quote_id}", operation_id="getQuote")
+async def get_quote(
+    quote_id: UUID,
+    reader: Annotated[Reader, Depends(get_reader)],
+    use_case: Annotated[GetQuote, Depends(get_get_quote)],
+    response: Response,
+) -> QuoteDetail:
+    """The quote and where it stands (open, expired after its validity date, accepted or
+    rejected), for its client or staff (agents, admins). 404 for anyone else, so the id
+    stays hidden."""
+    detail = QuoteDetail.of(await use_case(quote_id, reader.user_id, reader.staff))
+    # The client's negotiated price: no shared or browser cache keeps it, as for the PDF.
+    response.headers["Cache-Control"] = "private, no-store"
+    return detail
+
+
+@router.post(
+    "/{quote_id}/accept",
+    operation_id="acceptQuote",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={409: {"model": ErrorResponse}},
+)
+async def accept_quote(
+    quote_id: UUID,
+    reader: Annotated[Reader, Depends(get_reader)],
+    use_case: Annotated[AnswerQuote, Depends(get_answer_quote)],
+    body: Annotated[AnswerQuoteRequest | None, Body()] = None,
+) -> None:
+    """The client accepts their quote, with an optional comment for the agent. The plan
+    becomes accepted. 409 quote_expired after the validity day, 409 quote_answered when it
+    is answered already; 403 for staff, 404 for anyone else."""
+    comment = body.comment if body else None
+    await use_case(quote_id, reader.user_id, reader.staff, QuoteStatus.ACCEPTED, comment)
+
+
+@router.post(
+    "/{quote_id}/reject",
+    operation_id="rejectQuote",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={409: {"model": ErrorResponse}},
+)
+async def reject_quote(
+    quote_id: UUID,
+    reader: Annotated[Reader, Depends(get_reader)],
+    use_case: Annotated[AnswerQuote, Depends(get_answer_quote)],
+    body: Annotated[AnswerQuoteRequest | None, Body()] = None,
+) -> None:
+    """The client rejects their quote, with an optional comment for the agent. The plan
+    becomes rejected, and the client can start a new wish. Same errors as accept."""
+    comment = body.comment if body else None
+    await use_case(quote_id, reader.user_id, reader.staff, QuoteStatus.REJECTED, comment)
 
 
 @router.get(

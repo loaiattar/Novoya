@@ -1,3 +1,5 @@
+import { rateLimitMessage } from '../rateLimit/wait'
+
 /** The API's limit for a wish's text (SendWishRequest). */
 export const WISH_MAX_LENGTH = 1000
 
@@ -18,4 +20,13 @@ export function sendWishErrorKey(code: string | undefined): SendWishErrorKey {
   if (code === 'invalid_wish') return 'wish.invalid'
   if (code === 'too_many_requests' || code === 'too_many_attempts') return 'wish.tooManyRequests'
   return 'wish.unknown'
+}
+
+/** The message for a refused wish, with a wait when Retry-After is present. */
+export function sendWishError(
+  code: string | undefined,
+  retryAfterSeconds?: number,
+): { key: SendWishErrorKey | 'rateLimit.waitSeconds' | 'rateLimit.waitMinutes'; count?: number } {
+  const key = sendWishErrorKey(code)
+  return key === 'wish.tooManyRequests' ? rateLimitMessage(key, retryAfterSeconds) : { key }
 }

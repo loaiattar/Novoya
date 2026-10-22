@@ -1,4 +1,5 @@
-"""Plan.mark_quoted and the QuotePlan use case, tested with fake ports: no database."""
+"""Plan.mark_quoted, the answer after it, and the QuotePlan, RecordAnswer and GetPricedPlan
+use cases, tested with fake ports: no database."""
 
 from dataclasses import fields
 from datetime import UTC, date, datetime
@@ -14,7 +15,9 @@ from novoya_api.planning.application.dto import (
     PricedPlan,
     TripBrief,
 )
+from novoya_api.planning.application.use_cases.get_priced_plan import GetPricedPlan
 from novoya_api.planning.application.use_cases.quote_plan import QuotePlan
+from novoya_api.planning.application.use_cases.record_answer import RecordAnswer
 from novoya_api.planning.domain.errors import PlanNotFound, PlanNotReady
 from novoya_api.planning.domain.plan import DraftItem, Plan, PlanExtra, PlanStatus
 from novoya_api.shared.domain.errors import InvalidInput, InvalidTransition, PermissionDenied
@@ -355,3 +358,87 @@ async def test_an_item_put_back_meanwhile_without_a_price_stops_the_quote():
 
     with pytest.raises(PlanNotReady):
         await use_case(plan.id, AGENT_ID)
+
+
+# Plan.record_answer, RecordAnswer and GetPricedPlan: after the quote
+
+
+def quoted_plan() -> Plan:
+    plan = priced_plan()
+    plan.mark_quoted(AGENT_ID, NOW)
+    return plan
+
+
+@pytest.mark.parametrize(
+    ("accepted", "status"), [(True, PlanStatus.ACCEPTED), (False, PlanStatus.REJECTED)]
+)
+def test_the_answer_moves_a_quoted_plan(accepted, status):
+    plan = quoted_plan()
+
+    plan.record_answer(accepted, LATER)
+
+    assert plan.status is status
+    assert plan.updated_at == LATER
+    assert plan.is_quoted()
+
+
+def test_a_plan_not_quoted_cannot_be_answered():
+    with pytest.raises(InvalidTransition):
+        priced_plan().record_answer(True, LATER)
+
+
+def test_an_answered_plan_cannot_be_answered_again():
+    plan = quoted_plan()
+    plan.record_answer(False, LATER)
+
+    with pytest.raises(InvalidTransition):
+        plan.record_answer(True, LATER)
+
+
+async def test_record_answer_saves_the_plan():
+    plans = FakePlans(quoted_plan())
+
+    await RecordAnswer(plans, FixedClock())(plans.plan.id, accepted=True)
+
+    assert [plan.status for plan in plans.saved] == [PlanStatus.ACCEPTED]
+
+
+async def test_record_answer_for_a_missing_plan_is_not_found():
+    with pytest.raises(PlanNotFound):
+        await RecordAnswer(FakePlans(None), FixedClock())(WISH_ID, accepted=True)
+
+
+def get_priced_plan(plan: Plan | None) -> GetPricedPlan:
+    return GetPricedPlan(FakePlans(plan), FakeCatalog(), FakeTrips(), FakeWishes())
+
+
+async def test_get_priced_plan_reads_a_quoted_plan_like_its_quote():
+    plan = quoted_plan()
+
+    priced = await get_priced_plan(plan)(plan.id)
+
+    assert priced is not None
+    assert (priced.client_id, priced.agent_id) == (CLIENT_ID, AGENT_ID)
+    assert [(item.title, item.price) for item in priced.items] == [
+        ("Sea view room", Decimal("900.00")),
+        ("Boat trip", Decimal("120.00")),
+    ]
+    assert priced.total == Decimal("1020.00")
+    assert (priced.city, priced.persons, priced.budget_max) == ("Chania", 2, Decimal("1500.00"))
+
+
+async def test_get_priced_plan_reads_an_answered_plan():
+    plan = quoted_plan()
+    plan.record_answer(True, LATER)
+
+    assert await get_priced_plan(plan)(plan.id) is not None
+
+
+async def test_get_priced_plan_is_none_before_the_quote():
+    plan = priced_plan()
+
+    assert await get_priced_plan(plan)(plan.id) is None
+
+
+async def test_get_priced_plan_is_none_for_a_missing_plan():
+    assert await get_priced_plan(None)(WISH_ID) is None

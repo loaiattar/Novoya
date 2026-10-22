@@ -1,0 +1,2746 @@
+{
+  "url": "http://localhost:5198/agent/plans/p3 input[inputmode=decimal]",
+  "when": "2026-10-22T12:01:51.641Z",
+  "version": "0.1.0",
+  "shots": [
+    {
+      "variant": "360-light-ltr",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/360-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "390-light-ltr",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/390-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "768-light-ltr",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/768-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "1024-light-ltr",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/1024-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "1280-light-ltr",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/1280-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "1536-light-ltr",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full",
+      "file": "shots/1536-light-ltr.png",
+      "height": 900
+    },
+    {
+      "variant": "390-light-ltr-reduced",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "reduce",
+      "file": "shots/390-light-ltr-reduced.png",
+      "height": 900
+    }
+  ],
+  "findings": [
+    {
+      "check": "layout.shift",
+      "severity": "fail",
+      "message": "Layout shifts while loading (median CLS 0.284 of 3 loads, from 0.283 to 0.284; good is 0.1 or less); what moved: footer.bg-paper.px-5. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 360,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "layout.shift",
+      "severity": "fail",
+      "message": "Layout shifts while loading (median CLS 0.287 of 3 loads, from 0.283 to 0.287; good is 0.1 or less); what moved: footer.bg-paper.px-5, li.flex.min-h-11. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 390,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "layout.shift",
+      "severity": "warn",
+      "message": "Layout shifts while loading (median CLS 0.139 of 3 loads, from 0.139 to 0.139; good is 0.1 or less); what moved: footer.bg-paper.px-5, address.m-0.grid, a.min-h-11.content-center. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 768,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "layout.shift",
+      "severity": "warn",
+      "message": "Layout shifts while loading (median CLS 0.126 of 3 loads, from 0.122 to 0.126; good is 0.1 or less); what moved: footer.bg-paper.px-5, address.m-0.grid, nav.hidden.items-center. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 1024,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 1280,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-4 { right: calc(var(--spacing) * 4) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .right-5 { right: calc(var(--spacing) * 5) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-2 { left: calc(var(--spacing) * 2) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-4 { left: calc(var(--spacing) * 4) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-5 { left: calc(var(--spacing) * 5) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[44px\\] { left: 44px }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .left-\\[50\\left: 50%\\] { % }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .float-left { float: left }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .-mr-6 { margin-right: calc(var(--spacing) * -6) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1 { margin-right: var(--spacing) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .mr-1\\.5 { margin-right: calc(var(--spacing) * 1.5) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1 { margin-left: var(--spacing) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-1\\.5 { margin-left: calc(var(--spacing) * 1.5) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .ml-2 { margin-left: calc(var(--spacing) * 2) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pr-2 { padding-right: calc(var(--spacing) * 2) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-5 { padding-left: calc(var(--spacing) * 5) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .pl-8 { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-left { text-align: left }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .text-right { text-align: right }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .group-data-\\[orientation\\=vertical\\]\\/tabs\\:after\\:-right-1:is(:where(.group\\/tabs)[data-orientation=\"vertical\"] *)::after { right: calc(var(--spacing) * -1) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .data-\\[inset\\]\\:pl-8[data-inset] { padding-left: calc(var(--spacing) * 8) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .sm\\:group-data-\\[size\\=default\\]\\/alert-dialog-content\\:text-left:is(:where(.group\\/alert-dialog-content)[data-size=\"default\"] *) { text-align: left }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[4vw\\] { left: 4vw }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[8\\.3vw\\] { left: 8.3vw }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:left-\\[calc\\(14vw\\+24px\\)\\] { left: calc(24px + 14vw) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:ml-\\[17vw\\] { margin-left: 17vw }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:pr-10 { padding-right: calc(var(--spacing) * 10) }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .md\\:text-right { text-align: right }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    },
+    {
+      "check": "rtl.physical-css",
+      "severity": "info",
+      "message": "Physical left/right CSS will not mirror in RTL: .lg\\:right-\\[8vw\\] { right: 8vw }",
+      "width": 1536,
+      "theme": "light",
+      "dir": "ltr",
+      "motion": "full"
+    }
+  ],
+  "seen": [
+    {
+      "variant": "360-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 20,
+            "y": 177,
+            "w": 320,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 20,
+            "y": 80,
+            "w": 150,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 20,
+            "y": 699,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 20,
+            "y": 796,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 206,
+            "y": 796,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 359,
+            "y": 80,
+            "w": 134,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          8,
+          20,
+          181
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 40,
+            "count": 2
+          },
+          {
+            "value": 4,
+            "count": 1
+          },
+          {
+            "value": 12,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.185
+          },
+          {
+            "px": 14,
+            "share": 0.588
+          },
+          {
+            "px": 12,
+            "share": 0.227
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.894,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.051,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.027,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.013,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.013,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.002,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0.001,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    },
+    {
+      "variant": "390-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 20,
+            "y": 177,
+            "w": 350,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 20,
+            "y": 80,
+            "w": 150,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 20,
+            "y": 699,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 20,
+            "y": 796,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 206,
+            "y": 796,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 359,
+            "y": 80,
+            "w": 134,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          8,
+          20,
+          211
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 40,
+            "count": 2
+          },
+          {
+            "value": 4,
+            "count": 1
+          },
+          {
+            "value": 12,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.185
+          },
+          {
+            "px": 14,
+            "share": 0.588
+          },
+          {
+            "px": 12,
+            "share": 0.227
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.897,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.051,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.025,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.012,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.012,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.002,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0.001,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    },
+    {
+      "variant": "768-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 258,
+            "y": 144,
+            "w": 471,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 22,
+            "y": 168,
+            "w": 175,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 549,
+            "y": 726,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 38,
+            "y": 840,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 224,
+            "y": 840,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 22,
+            "y": 312,
+            "w": 175,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          22,
+          38,
+          475,
+          563
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 4,
+            "count": 4
+          },
+          {
+            "value": 12,
+            "count": 1
+          },
+          {
+            "value": 48,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.18
+          },
+          {
+            "px": 14,
+            "share": 0.571
+          },
+          {
+            "px": 12,
+            "share": 0.249
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.9,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.07,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.014,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.008,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.007,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.001,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    },
+    {
+      "variant": "1024-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 271,
+            "y": 144,
+            "w": 702,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 22,
+            "y": 168,
+            "w": 175,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 792,
+            "y": 726,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 51,
+            "y": 840,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 237,
+            "y": 840,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 22,
+            "y": 312,
+            "w": 175,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          22,
+          51,
+          718,
+          765
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 4,
+            "count": 4
+          },
+          {
+            "value": 12,
+            "count": 1
+          },
+          {
+            "value": 48,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.17
+          },
+          {
+            "px": 14,
+            "share": 0.596
+          },
+          {
+            "px": 12,
+            "share": 0.235
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.906,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.07,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.012,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.006,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.005,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.001,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    },
+    {
+      "variant": "1280-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 284,
+            "y": 144,
+            "w": 932,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 22,
+            "y": 168,
+            "w": 175,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 1035,
+            "y": 726,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 64,
+            "y": 840,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 250,
+            "y": 840,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 22,
+            "y": 312,
+            "w": 175,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          22,
+          64,
+          961,
+          1008
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 4,
+            "count": 4
+          },
+          {
+            "value": 12,
+            "count": 1
+          },
+          {
+            "value": 48,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.17
+          },
+          {
+            "px": 14,
+            "share": 0.596
+          },
+          {
+            "px": 12,
+            "share": 0.235
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.91,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.07,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.009,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.005,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.004,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.001,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    },
+    {
+      "variant": "1536-light-ltr",
+      "focus": [
+        {
+          "selector": "p",
+          "label": "This plan doesn't exist or isn't yours.",
+          "kind": "text",
+          "weight": 1,
+          "box": {
+            "x": 297,
+            "y": 144,
+            "w": 1162,
+            "h": 24
+          }
+        },
+        {
+          "selector": "a.flex.min-h-11",
+          "label": "Request queue",
+          "kind": "action",
+          "weight": 0.66,
+          "box": {
+            "x": 22,
+            "y": 168,
+            "w": 175,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.w-fit",
+          "label": "contact@detour-voyages.fr",
+          "kind": "text",
+          "weight": 0.61,
+          "box": {
+            "x": 1278,
+            "y": 726,
+            "w": 181,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Destinations and reviews",
+          "kind": "text",
+          "weight": 0.6,
+          "box": {
+            "x": 77,
+            "y": 840,
+            "w": 162,
+            "h": 44
+          }
+        },
+        {
+          "selector": "a.min-h-11.content-center",
+          "label": "Legal notices",
+          "kind": "text",
+          "weight": 0.44,
+          "box": {
+            "x": 263,
+            "y": 840,
+            "w": 85,
+            "h": 44
+          }
+        },
+        {
+          "selector": "li.flex.min-h-11",
+          "label": "Partners & offers",
+          "kind": "text",
+          "weight": 0.21,
+          "box": {
+            "x": 22,
+            "y": 312,
+            "w": 175,
+            "h": 44
+          }
+        }
+      ],
+      "alignment": {
+        "columns": [
+          22,
+          77,
+          1204,
+          1251
+        ],
+        "nearMisses": []
+      },
+      "rhythm": {
+        "base": 4,
+        "gaps": [
+          {
+            "value": 4,
+            "count": 4
+          },
+          {
+            "value": 12,
+            "count": 1
+          },
+          {
+            "value": 48,
+            "count": 1
+          }
+        ],
+        "offScale": [],
+        "uneven": []
+      },
+      "typography": {
+        "sizes": [
+          {
+            "px": 16,
+            "share": 0.17
+          },
+          {
+            "px": 14,
+            "share": 0.596
+          },
+          {
+            "px": 12,
+            "share": 0.235
+          }
+        ],
+        "ratio": 1.155,
+        "families": [
+          "DM Sans"
+        ],
+        "weights": [
+          "400",
+          "600",
+          "900"
+        ],
+        "longLines": [],
+        "tightLeading": []
+      },
+      "colour": {
+        "palette": [
+          {
+            "hex": "#fbfaf6",
+            "share": 0.913,
+            "token": "--color-paper"
+          },
+          {
+            "hex": "oklab(0.984755 -0.000433773 0.00538605 / 0.9)",
+            "share": 0.071,
+            "token": null
+          },
+          {
+            "hex": "#18332f",
+            "share": 0.008,
+            "token": "--color-ink"
+          },
+          {
+            "hex": "#f5f1e8",
+            "share": 0.004,
+            "token": "--color-ivory"
+          },
+          {
+            "hex": "#646e6a",
+            "share": 0.004,
+            "token": "--color-muted"
+          },
+          {
+            "hex": "#dfd6c7",
+            "share": 0.001,
+            "token": "--color-sand"
+          },
+          {
+            "hex": "#ef765e",
+            "share": 0,
+            "token": "--color-coral"
+          }
+        ],
+        "harmony": "split / contrasting",
+        "offToken": [
+          "oklab(0.984755 -0.000433773 0.00538605 / 0.9)"
+        ],
+        "lowContrast": []
+      }
+    }
+  ],
+  "diffs": [],
+  "summary": {
+    "fail": 1,
+    "warn": 0,
+    "info": 25,
+    "widths": [
+      360,
+      390,
+      768,
+      1024,
+      1280,
+      1536
+    ],
+    "verdict": "fail",
+    "concurrency": 7
+  }
+}

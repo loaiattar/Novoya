@@ -71,11 +71,6 @@ describe('demo fixtures', () => {
     expect(thread('chania').dates).toEqual({ start: plan.startDate, end: plan.endDate })
   })
 
-  it('give the quote as many days and nights as its dates', () => {
-    expect(daysAfter(quote.startDate, quote.nights)).toBe(quote.endDate)
-    expect(quote.days).toBe(quote.nights + 1)
-  })
-
   it('update the Chania plan and trip card before the quote is issued, and every open trip before now', () => {
     expect(thread('chania').updatedAt).toBe(plan.updatedAt)
     expect(localIsoDate(new Date(plan.updatedAt)) < quote.issuedAt).toBe(true)
@@ -84,9 +79,10 @@ describe('demo fixtures', () => {
     }
   })
 
-  it('issue the quote before today, still valid', () => {
+  it('issue the quote before today, valid a week from then', () => {
     expect(quote.issuedAt < today).toBe(true)
-    expect(daysAfter(quote.issuedAt, quote.validDays) > today).toBe(true)
+    expect(quote.validUntil).toBe(daysAfter(quote.issuedAt, 7))
+    expect(quote.validUntil > today).toBe(true)
   })
 
   it('date every open trip after today', () => {

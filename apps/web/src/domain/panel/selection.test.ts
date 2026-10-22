@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { answerPanelErrorKey, initialSelection, MAX_SELECTED_TAGS, selectedTags, toggleTag } from './selection'
+import {
+  answerPanelError,
+  answerPanelErrorKey,
+  initialSelection,
+  MAX_SELECTED_TAGS,
+  selectedTags,
+  toggleTag,
+} from './selection'
 
 const mood = {
   id: 'mood',
@@ -119,5 +126,13 @@ describe('answerPanelErrorKey', () => {
   it('says the plan may still be ready when the answer was lost on the way', () => {
     expect(answerPanelErrorKey(undefined, undefined)).toBe('answers.connectionLost')
     expect(answerPanelErrorKey('unknown', 504)).toBe('answers.connectionLost')
+  })
+})
+
+describe('answerPanelError', () => {
+  it('keeps the usual message without Retry-After, and names the wait when it is there', () => {
+    expect(answerPanelError('too_many_requests', 429)).toEqual({ key: 'answers.tooManyRequests' })
+    expect(answerPanelError('too_many_requests', 429, 12)).toEqual({ key: 'rateLimit.waitSeconds', count: 12 })
+    expect(answerPanelError('no_offer_fits', 422, 720)).toEqual({ key: 'answers.noOfferFits' })
   })
 })

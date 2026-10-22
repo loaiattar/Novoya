@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from novoya_api.quoting.domain.quote import Quote
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.shared.domain.value_objects import Locale
 
 
@@ -113,15 +113,74 @@ class QuoteView:
     @classmethod
     def of(cls, quote: Quote, email_sent: bool = False) -> "QuoteView":
         return cls(
-            quote.id,
-            quote.number,
-            quote.plan_id,
-            quote.total,
-            quote.currency,
-            quote.locale.value,
-            quote.sent_at,
-            quote.valid_until,
-            email_sent,
+            id=quote.id,
+            number=quote.number,
+            plan_id=quote.plan_id,
+            total=quote.total,
+            currency=quote.currency,
+            locale=quote.locale.value,
+            sent_at=quote.sent_at,
+            valid_until=quote.valid_until,
+            email_sent=email_sent,
+        )
+
+
+@dataclass(frozen=True)
+class QuoteDetailView:
+    """A quote as its reader sees it, without its PDF: where it stands, the client's answer,
+    who prepared it and the trip with its priced lines. The trip fields are empty and the
+    lines too when the plan is gone."""
+
+    id: UUID
+    number: str
+    plan_id: UUID
+    total: Decimal
+    currency: str
+    locale: str
+    sent_at: datetime
+    valid_until: datetime
+    status: QuoteStatus
+    decided_at: datetime | None
+    client_comment: str | None
+    agent_name: str | None
+    country: str | None
+    city: str | None
+    start_date: date | None
+    end_date: date | None
+    persons: int | None
+    budget_max: Decimal | None
+    items: tuple[QuotedItem, ...]
+    extras: tuple[QuotedExtra, ...]
+
+    @classmethod
+    def at(
+        cls,
+        quote: Quote,
+        status: QuoteStatus,
+        plan: QuotedPlan | None,
+        agent: Person | None,
+    ) -> "QuoteDetailView":
+        return cls(
+            id=quote.id,
+            number=quote.number,
+            plan_id=quote.plan_id,
+            total=quote.total,
+            currency=quote.currency,
+            locale=quote.locale.value,
+            sent_at=quote.sent_at,
+            valid_until=quote.valid_until,
+            status=status,
+            decided_at=quote.decided_at,
+            client_comment=quote.client_comment,
+            agent_name=agent.name if agent else None,
+            country=plan.country if plan else None,
+            city=plan.city if plan else None,
+            start_date=plan.start_date if plan else None,
+            end_date=plan.end_date if plan else None,
+            persons=plan.persons if plan else None,
+            budget_max=plan.budget_max if plan else None,
+            items=plan.items if plan else (),
+            extras=plan.extras if plan else (),
         )
 
 
