@@ -13,18 +13,25 @@ type Props = {
 /** One trip's details, with a link to its current plan when there is one. */
 export function HistoryPanel({ title, version, planId }: Props) {
   const { t } = useTranslation('trips')
-  const summary = version === null ? t('draftSummary') : t('previewSummary', { version })
+  const showsPreview = planId !== undefined && version !== null
+  // The preview card below names the version: the summary only speaks for a draft, or for a
+  // preview with no plan to open.
+  const summary = version === null ? t('draftSummary') : showsPreview ? null : t('previewSummary', { version })
   return (
-    <section aria-label={t('history.label', { title })} className="mt-6 flex min-h-0 flex-col border border-line bg-white lg:mt-0">
+    // Hugs its content: on large screens it sits next to the taller list of trips.
+    <section
+      aria-label={t('history.label', { title })}
+      className="mt-6 flex min-h-0 flex-col border border-line bg-white lg:mt-0 lg:self-start"
+    >
       <div className="flex items-center gap-3 border-b border-line p-4.5">
         <Seal tone="ink" />
         <div className="flex-1">
           <small className="text-xs tracking-[0.14em] text-muted uppercase">{t('history.eyebrow')}</small>
           <h2 className="my-1 text-xl tracking-normal">{title}</h2>
-          <p className="m-0 text-xs text-muted">{summary}</p>
+          {summary && <p className="m-0 text-xs text-muted">{summary}</p>}
         </div>
       </div>
-      {planId && version !== null && (
+      {showsPreview && (
         <div className="m-4.5 grid grid-cols-[1fr_auto] items-center bg-ivory p-3">
           <span className="font-serif">{t('previewVersion', { version })}</span>
           <Link

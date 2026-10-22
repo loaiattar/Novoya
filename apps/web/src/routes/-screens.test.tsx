@@ -454,6 +454,14 @@ describe('back-office and plan screens', () => {
     for (const button of buttons) expect(button).toBeDisabled()
   })
 
+  it('names the preview version once in the trip panel', async () => {
+    renderAt('/trips')
+
+    const panel = await screen.findByRole('region', { name: /^Trip: Chania/ })
+
+    expect(within(panel).getAllByText(/^Preview v\d+$/)).toHaveLength(1)
+  })
+
   it('shows the chosen trip', async () => {
     renderAt('/trips')
 
