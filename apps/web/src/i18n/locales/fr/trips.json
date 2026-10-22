@@ -1,10 +1,10 @@
 {
   "eyebrow": "Votre espace",
   "title": "Mes aperçus",
-  "intro": "Chaque proposition et l’intégralité de vos échanges, au même endroit.",
-  "newConversation": "+ Nouvelle conversation",
+  "intro": "Chaque proposition, au même endroit.",
+  "newWish": "+ Nouvelle envie",
   "tabs": {
-    "trips": "Aperçus & conversations",
+    "trips": "Aperçus",
     "profile": "Informations personnelles",
     "preferences": "Préférences"
   },
@@ -16,23 +16,20 @@
   "status": {
     "offer_sent": "Offre de l’agence envoyée",
     "preview_proposed": "Aperçu proposé",
-    "in_discussion": "En discussion",
+    "in_discussion": "Chez un conseiller",
     "accepted": "Acceptée",
     "refused": "Refusée"
   },
   "placeAndDates": "{{country}} · {{dates}}",
   "datesToBeSet": "Dates à préciser",
-  "previewSummary_one": "Aperçu v{{version}} · {{count}} message",
-  "previewSummary_other": "Aperçu v{{version}} · {{count}} messages",
-  "draftSummary_one": "Brouillon · {{count}} message",
-  "draftSummary_other": "Brouillon · {{count}} messages",
+  "previewSummary": "Aperçu v{{version}}",
+  "draftSummary": "Brouillon",
   "previewVersion": "Aperçu v{{version}}",
   "history": {
-    "label": "Historique : {{title}}",
-    "eyebrow": "Historique complet",
+    "label": "Voyage : {{title}}",
+    "eyebrow": "Ce voyage",
     "viewPreview": "Voir l’aperçu →",
-    "current": "Version actuelle",
-    "placeholder": "Reprendre cette conversation…"
+    "current": "Version actuelle"
   },
   "empty": "Aucun voyage pour l’instant. Décrivez le premier, il apparaîtra ici."
 }

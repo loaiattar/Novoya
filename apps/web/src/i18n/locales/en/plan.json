@@ -7,9 +7,9 @@
   "daysLabel": "Day by day",
   "dayDate": "Day {{number}} · {{date}}",
   "cta": {
-    "eyebrow": "The conversation goes on",
+    "eyebrow": "The next step",
     "title": "Does this preview feel like you?",
-    "text": "Keep refining it with the concierge, or hand it to a {{agency}} advisor when it suits you.",
+    "text": "When it suits you, hand it to a {{agency}} advisor. They will send a quote.",
     "button": "Ask an advisor for a quote",
     "unavailable": "Asking for a quote is coming soon."
   },

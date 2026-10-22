@@ -430,13 +430,20 @@ describe('back-office and plan screens', () => {
     },
   )
 
-  it('does not pretend the concierge answers', async () => {
+  it('does not show a concierge chat on the plan or on trips', async () => {
     renderAt('/plans/chania')
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Open the conversation' }))
+    expect(await screen.findByRole('note')).toHaveTextContent('Demo data.')
+    expect(screen.queryByRole('button', { name: 'Open the conversation' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/messages can't be sent yet/)).not.toBeInTheDocument()
 
-    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
-    expect(screen.getByText(/messages can't be sent yet/)).toBeInTheDocument()
+    renderAt('/trips')
+
+    expect(await screen.findByRole('heading', { name: 'My previews' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open the conversation' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/\d+ messages?/)).not.toBeInTheDocument()
   })
 
   it('does not let an agent take a demo request', async () => {
@@ -447,11 +454,12 @@ describe('back-office and plan screens', () => {
     for (const button of buttons) expect(button).toBeDisabled()
   })
 
-  it('shows the conversation of the chosen trip', async () => {
+  it('shows the chosen trip', async () => {
     renderAt('/trips')
 
     fireEvent.click(await screen.findByRole('button', { name: /Marrakech, derrière les portes/ }))
 
-    expect(await screen.findByRole('region', { name: 'History: Marrakech, derrière les portes' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Trip: Marrakech, derrière les portes' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
   })
 })

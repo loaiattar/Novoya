@@ -7,9 +7,9 @@
   "daysLabel": "Jour par jour",
   "dayDate": "Jour {{number}} · {{date}}",
   "cta": {
-    "eyebrow": "La conversation continue",
+    "eyebrow": "La suite",
     "title": "Cet aperçu vous ressemble ?",
-    "text": "Continuez à l’affiner avec le concierge, ou transmettez-le à un conseiller {{agency}} lorsqu’il vous convient.",
+    "text": "Lorsqu’il vous convient, transmettez-le à un conseiller {{agency}}. Il établira un devis.",
     "button": "Demander un devis à un conseiller",
     "unavailable": "La demande de devis arrive bientôt."
   },

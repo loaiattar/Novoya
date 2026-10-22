@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 const tones = {
   // Coral ring on a light background.
   coral: 'border border-coral',
-  // Ink ring, for the concierge in conversations.
+  // Ink ring on a light background.
   ink: 'border border-ink',
   // White ring on a dark background.
   light: 'border border-white/30',

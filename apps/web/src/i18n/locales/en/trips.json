@@ -1,10 +1,10 @@
 {
   "eyebrow": "Your space",
   "title": "My previews",
-  "intro": "Every proposal and all your conversations, in one place.",
-  "newConversation": "+ New conversation",
+  "intro": "Every proposal, in one place.",
+  "newWish": "+ New wish",
   "tabs": {
-    "trips": "Previews & conversations",
+    "trips": "Previews",
     "profile": "Personal information",
     "preferences": "Preferences"
   },
@@ -16,23 +16,20 @@
   "status": {
     "offer_sent": "Agency offer sent",
     "preview_proposed": "Preview proposed",
-    "in_discussion": "In discussion",
+    "in_discussion": "With an advisor",
     "accepted": "Accepted",
     "refused": "Declined"
   },
   "placeAndDates": "{{country}} · {{dates}}",
   "datesToBeSet": "Dates to be set",
-  "previewSummary_one": "Preview v{{version}} · {{count}} message",
-  "previewSummary_other": "Preview v{{version}} · {{count}} messages",
-  "draftSummary_one": "Draft · {{count}} message",
-  "draftSummary_other": "Draft · {{count}} messages",
+  "previewSummary": "Preview v{{version}}",
+  "draftSummary": "Draft",
   "previewVersion": "Preview v{{version}}",
   "history": {
-    "label": "History: {{title}}",
-    "eyebrow": "Full history",
+    "label": "Trip: {{title}}",
+    "eyebrow": "This trip",
     "viewPreview": "View the preview →",
-    "current": "Current version",
-    "placeholder": "Pick up this conversation…"
+    "current": "Current version"
   },
   "empty": "No trips yet. Describe your first one and it will appear here."
 }

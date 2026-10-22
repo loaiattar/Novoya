@@ -8,7 +8,6 @@ import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { DemoBanner } from '../../../../components/molecules/DemoBanner'
 import { ErrorNote } from '../../../../components/molecules/ErrorNote'
 import { QuoteNote } from '../../../../components/molecules/QuoteNote'
-import { ConversationDock } from '../../../../components/organisms/ConversationDock'
 import { DayTimeline } from '../../../../components/organisms/DayTimeline'
 import { PlanDays } from '../../../../components/organisms/PlanDays'
 import { PlanHeader } from '../../../../components/organisms/PlanHeader'
@@ -86,7 +85,6 @@ function DemoPlanPage() {
         <DayTimeline days={plan.days} />
         <QuoteNote />
         <QuoteCall />
-        <ConversationDock version={plan.version} />
       </main>
     </AppShell>
   )
