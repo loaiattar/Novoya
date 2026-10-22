@@ -428,6 +428,8 @@ describe('back-office and plan screens', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
     expect(router.state.location.search).toEqual({ redirect: `/plans/${PLAN_ID}` })
+    // Let the login page finish loading, or it ends after the test, without a window.
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('does not lead from the plan to a priced quote', async () => {
@@ -535,6 +537,8 @@ describe('back-office and plan screens', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
     expect(router.state.location.search).toEqual({ redirect: `/plans/${PLAN_ID}/days/2` })
+    // Let the login page finish loading, or it ends after the test, without a window.
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it("shows a day in the client's language", async () => {

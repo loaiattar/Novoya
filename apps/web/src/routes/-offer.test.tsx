@@ -240,5 +240,7 @@ describe('offer page', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
     expect(router.state.location.search).toEqual({ redirect: `/offers/${OFFER_ID}` })
+    // Let the login page finish loading, or it ends after the test, without a window.
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 })
