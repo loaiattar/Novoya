@@ -77,10 +77,15 @@ async def get_quote(
     quote_id: UUID,
     reader: Annotated[Reader, Depends(get_reader)],
     use_case: Annotated[GetQuote, Depends(get_get_quote)],
+    response: Response,
 ) -> QuoteDetail:
-    """The quote and where it stands (open, or expired after its validity date), for its
-    client or an agent. 404 for anyone else, so the id stays hidden."""
-    return QuoteDetail.detail(await use_case(quote_id, reader.user_id, reader.staff))
+    """The quote and where it stands (open, expired after its validity date, accepted or
+    rejected), for its client or staff (agents, admins). 404 for anyone else, so the id
+    stays hidden."""
+    detail = QuoteDetail.of(await use_case(quote_id, reader.user_id, reader.staff))
+    # The client's negotiated price: no shared or browser cache keeps it, as for the PDF.
+    response.headers["Cache-Control"] = "private, no-store"
+    return detail
 
 
 @router.get(

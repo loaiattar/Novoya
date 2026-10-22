@@ -1,5 +1,6 @@
 """Shared quoting test data and fakes: a priced plan, two people and the ports on memory."""
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -13,7 +14,7 @@ from novoya_api.quoting.application.dto import (
     QuoteEmail,
     QuoteTrip,
 )
-from novoya_api.quoting.domain.quote import Quote
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.shared.domain.value_objects import Locale
 
 PLAN_ID = UUID("00000000-0000-0000-0000-0000000000d1")
@@ -62,9 +63,15 @@ def document(locale: Locale) -> QuoteDocument:
 
 
 class FakePlanQuoting:
-    def __init__(self, error: Exception | None = None, trip: QuoteTrip | None = TRIP) -> None:
+    def __init__(
+        self,
+        error: Exception | None = None,
+        trip: QuoteTrip | None = TRIP,
+        answer: QuoteStatus | None = None,
+    ) -> None:
         self.error = error
         self.trip_found = trip
+        self.answered = answer
         self.calls: list[tuple[UUID, UUID]] = []
 
     async def quote(self, plan_id: UUID, agent_id: UUID) -> QuotedPlan:
@@ -75,6 +82,9 @@ class FakePlanQuoting:
 
     async def trip(self, plan_id: UUID) -> QuoteTrip | None:
         return self.trip_found
+
+    async def answer(self, plan_id: UUID) -> QuoteStatus | None:
+        return self.answered
 
 
 class FakePeople:
@@ -103,8 +113,11 @@ class FakeQuotes:
         self.added.append(quote)
         self.quotes[quote.id] = quote
 
-    async def get(self, quote_id: UUID) -> Quote | None:
-        return self.quotes.get(quote_id)
+    async def get(self, quote_id: UUID, with_pdf: bool = True) -> Quote | None:
+        quote = self.quotes.get(quote_id)
+        if quote is None or with_pdf:
+            return quote
+        return replace(quote, pdf=b"")
 
 
 class FakeNotifier:
@@ -134,8 +147,11 @@ class FakeUow:
 
 
 class FixedClock:
+    def __init__(self, now: datetime = NOW) -> None:
+        self._now = now
+
     def now(self) -> datetime:
-        return NOW
+        return self._now
 
 
 def stored_quote() -> Quote:

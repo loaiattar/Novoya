@@ -17,6 +17,7 @@ from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.application.use_cases.get_quote_pdf import GetQuotePdf
 from novoya_api.quoting.application.use_cases.resend_quote_email import ResendQuoteEmail
 from novoya_api.quoting.application.use_cases.send_quote import SendQuote
+from novoya_api.quoting.domain.quote import QuoteStatus
 from novoya_api.quoting.presentation.http.dependencies import (
     get_get_quote,
     get_get_quote_pdf,
@@ -75,7 +76,7 @@ def app_with(
         FixedClock(),
         FRONTEND,
     )
-    app.dependency_overrides[get_get_quote] = lambda: GetQuote(quotes, FixedClock())
+    app.dependency_overrides[get_get_quote] = lambda: GetQuote(quotes, plans, FixedClock())
     app.dependency_overrides[get_get_quote_pdf] = lambda: GetQuotePdf(quotes)
     limiter = InMemoryRateLimiter(FixedClock())  # one per app: tests don't share counters
     app.dependency_overrides[get_resend_quote_email] = lambda: ResendQuoteEmail(
@@ -309,6 +310,16 @@ async def test_the_client_reads_their_quote():
     assert datetime.fromisoformat(body["valid_until"]) == NOW + timedelta(days=7)
     assert body["status"] == "open"
     assert "email_sent" not in body
+    assert response.headers["Cache-Control"] == "private, no-store"
+
+
+async def test_the_quote_shows_the_clients_answer():
+    app = app_with(FakePlanQuoting(answer=QuoteStatus.ACCEPTED), Role.CLIENT, CLIENT_ID)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "accepted"
 
 
 @pytest.mark.parametrize(("role", "user_id"), [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID)])

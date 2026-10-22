@@ -128,6 +128,18 @@ async def test_get_reads_back_an_added_quote_with_its_pdf(engine, stored):
     assert read == quote
 
 
+async def test_get_without_the_pdf_leaves_it_empty(engine, stored):
+    quote = issue(stored)
+    await add_quote(engine, quote)
+
+    async with new_session(engine) as session:
+        read = await SqlQuoteRepository(session).get(quote.id, with_pdf=False)
+
+    assert read is not None
+    assert read.pdf == b""
+    assert read.number == quote.number
+
+
 async def test_get_returns_none_for_an_unknown_quote(engine, stored):
     async with new_session(engine) as session:
         assert await SqlQuoteRepository(session).get(uuid4()) is None

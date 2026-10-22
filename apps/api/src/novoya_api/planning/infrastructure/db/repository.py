@@ -85,6 +85,11 @@ class SqlPlanRepository:
         )
         return self._to_plan(row, items, extras)
 
+    async def status_of(self, plan_id: UUID) -> PlanStatus | None:
+        """The plan's status alone, without its items. None when the plan is gone."""
+        status = await self._session.scalar(select(PlanModel.status).where(PlanModel.id == plan_id))
+        return None if status is None else PlanStatus(status)
+
     async def list_by_status(
         self, status: PlanStatus, *, limit: int = QUEUE_PAGE, offset: int = 0
     ) -> list[Plan]:

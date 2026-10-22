@@ -7,36 +7,38 @@ import pytest
 
 from novoya_api.quoting.application.use_cases.get_quote import GetQuote
 from novoya_api.quoting.domain.errors import QuoteNotFound
-from tests.quoting_fakes import AGENT_ID, CLIENT_ID, NOW, OTHER_CLIENT, FakeQuotes, stored_quote
+from novoya_api.quoting.domain.quote import QuoteStatus
+from tests.quoting_fakes import (
+    AGENT_ID,
+    CLIENT_ID,
+    NOW,
+    OTHER_CLIENT,
+    FakePlanQuoting,
+    FakeQuotes,
+    FixedClock,
+    stored_quote,
+)
 
 QUOTE = stored_quote()
 
 
-class ClockAt:
-    def __init__(self, now: datetime) -> None:
-        self._now = now
-
-    def now(self) -> datetime:
-        return self._now
-
-
-def use_case(now: datetime = NOW) -> GetQuote:
-    return GetQuote(FakeQuotes(QUOTE), ClockAt(now))
+def use_case(now: datetime = NOW, answer: QuoteStatus | None = None) -> GetQuote:
+    return GetQuote(FakeQuotes(QUOTE), FakePlanQuoting(answer=answer), FixedClock(now))
 
 
 async def test_the_client_reads_their_open_quote():
     detail = await use_case()(QUOTE.id, CLIENT_ID, staff=False)
 
-    assert detail.status == "open"
-    assert detail.quote.id == QUOTE.id
-    assert detail.quote.number == QUOTE.number
-    assert detail.quote.total == QUOTE.total
+    assert detail.status == QuoteStatus.OPEN
+    assert detail.id == QUOTE.id
+    assert detail.number == QUOTE.number
+    assert detail.total == QUOTE.total
 
 
 async def test_the_quote_is_still_open_on_its_last_instant():
     detail = await use_case(QUOTE.valid_until)(QUOTE.id, CLIENT_ID, staff=False)
 
-    assert detail.status == "open"
+    assert detail.status == QuoteStatus.OPEN
 
 
 async def test_the_quote_is_expired_after_its_validity_date():
@@ -44,13 +46,28 @@ async def test_the_quote_is_expired_after_its_validity_date():
 
     detail = await use_case(later)(QUOTE.id, CLIENT_ID, staff=False)
 
-    assert detail.status == "expired"
+    assert detail.status == QuoteStatus.EXPIRED
+
+
+@pytest.mark.parametrize("answer", [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED])
+async def test_the_clients_answer_is_the_status(answer):
+    detail = await use_case(answer=answer)(QUOTE.id, CLIENT_ID, staff=False)
+
+    assert detail.status == answer
+
+
+async def test_an_answer_stays_after_the_validity_date():
+    later = QUOTE.valid_until + timedelta(days=1)
+
+    detail = await use_case(later, QuoteStatus.ACCEPTED)(QUOTE.id, CLIENT_ID, staff=False)
+
+    assert detail.status == QuoteStatus.ACCEPTED
 
 
 async def test_staff_read_any_quote():
     detail = await use_case()(QUOTE.id, AGENT_ID, staff=True)
 
-    assert detail.quote.id == QUOTE.id
+    assert detail.id == QUOTE.id
 
 
 async def test_another_client_cannot_read_the_quote():

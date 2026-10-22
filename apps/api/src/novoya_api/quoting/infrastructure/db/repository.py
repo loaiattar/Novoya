@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import defer
 
 from novoya_api.quoting.domain.quote import Quote
 from novoya_api.quoting.infrastructure.db.models import QuoteModel
@@ -34,8 +35,9 @@ class SqlQuoteRepository:
         )
         await self._session.flush()
 
-    async def get(self, quote_id: UUID) -> Quote | None:
-        row = await self._session.get(QuoteModel, quote_id)
+    async def get(self, quote_id: UUID, with_pdf: bool = True) -> Quote | None:
+        options = () if with_pdf else (defer(QuoteModel.pdf),)
+        row = await self._session.get(QuoteModel, quote_id, options=options)
         if row is None:
             return None
         return Quote(
@@ -49,7 +51,7 @@ class SqlQuoteRepository:
             locale=Locale(row.locale),
             sent_at=row.sent_at,
             valid_until=row.valid_until,
-            pdf=row.pdf,
+            pdf=row.pdf if with_pdf else b"",
         )
 
     async def delete_for_client(self, client_id: UUID) -> None:

@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from novoya_api.quoting.domain.quote import Quote
+from novoya_api.quoting.domain.quote import Quote, QuoteStatus
 from novoya_api.shared.domain.value_objects import Locale
 
 
@@ -127,15 +127,31 @@ class QuoteView:
 
 @dataclass(frozen=True)
 class QuoteDetailView:
-    """A quote and where it stands: open until its validity ends, then expired."""
+    """A quote as its reader sees it, without its PDF, and where it stands."""
 
-    quote: QuoteView
-    status: str
+    id: UUID
+    number: str
+    plan_id: UUID
+    total: Decimal
+    currency: str
+    locale: str
+    sent_at: datetime
+    valid_until: datetime
+    status: QuoteStatus
 
     @classmethod
-    def at(cls, quote: Quote, now: datetime) -> "QuoteDetailView":
-        status = "expired" if quote.has_expired(now) else "open"
-        return cls(QuoteView.of(quote), status)
+    def at(cls, quote: Quote, status: QuoteStatus) -> "QuoteDetailView":
+        return cls(
+            quote.id,
+            quote.number,
+            quote.plan_id,
+            quote.total,
+            quote.currency,
+            quote.locale.value,
+            quote.sent_at,
+            quote.valid_until,
+            status,
+        )
 
 
 @dataclass(frozen=True)

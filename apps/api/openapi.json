@@ -2003,7 +2003,7 @@
         "type": "object"
       },
       "QuoteDetail": {
-        "description": "A quote and where it stands: open, or expired once the validity date has passed.\nUnlike the quote just sent, it has no email_sent: that only matters when it is sent.",
+        "description": "A quote and where it stands: open, expired once the validity date has passed, or the\nclient's answer (accepted, rejected). Unlike the quote just sent, it has no email_sent:\nthat only matters when it is sent.",
         "properties": {
           "currency": {
             "title": "Currency",
@@ -2037,12 +2037,7 @@
             "type": "string"
           },
           "status": {
-            "enum": [
-              "open",
-              "expired"
-            ],
-            "title": "Status",
-            "type": "string"
+            "$ref": "#/components/schemas/QuoteStatus"
           },
           "total": {
             "title": "Total",
@@ -2067,6 +2062,17 @@
         ],
         "title": "QuoteDetail",
         "type": "object"
+      },
+      "QuoteStatus": {
+        "description": "Where a quote stands: open until the client answers or its validity ends.",
+        "enum": [
+          "open",
+          "expired",
+          "accepted",
+          "rejected"
+        ],
+        "title": "QuoteStatus",
+        "type": "string"
       },
       "RegisterRequest": {
         "properties": {
@@ -6569,7 +6575,7 @@
     },
     "/quotes/{quote_id}": {
       "get": {
-        "description": "The quote and where it stands (open, or expired after its validity date), for its\nclient or an agent. 404 for anyone else, so the id stays hidden.",
+        "description": "The quote and where it stands (open, expired after its validity date, accepted or\nrejected), for its client or staff (agents, admins). 404 for anyone else, so the id\nstays hidden.",
         "operationId": "getQuote",
         "parameters": [
           {
