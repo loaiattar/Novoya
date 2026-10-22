@@ -270,6 +270,7 @@ Client:
 | POST | `/wishes/{id}/answers` | Send the selected tags, budget, travellers and dates. Saves them on the wish and returns the proposed plan |
 | GET | `/plans/{id}` | The plan, day by day, with no prices until it is quoted and no partner names |
 | POST | `/plans/{id}/request-quote` | Ask the agency for a quote, with optional `extra_ids` |
+| GET | `/quotes/{id}` | Read a quote and its status: `open`, or `expired` after its validity date. Its client, an agent or an admin; 404 for anyone else |
 | GET | `/quotes/{id}/pdf` | Download the quote PDF |
 | POST | `/quotes/{id}/accept`, `/quotes/{id}/reject` | The client's answer, with an optional comment |
 | DELETE | `/me` | Delete the account, its wishes, plans and quotes (with their PDF), then sign out. Clients only: 403 `staff_account` for an agent or an admin |
