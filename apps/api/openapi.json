@@ -564,6 +564,249 @@
         "title": "AdminWish",
         "type": "object"
       },
+      "AdvisorProfileResponse": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "consent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consent At"
+          },
+          "public_name": {
+            "title": "Public Name",
+            "type": "string"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/AdvisorServiceResponse"
+            },
+            "title": "Services",
+            "type": "array"
+          },
+          "shown": {
+            "title": "Shown",
+            "type": "boolean"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_name",
+          "title",
+          "summary",
+          "services",
+          "consent",
+          "consent_at",
+          "shown",
+          "updated_at"
+        ],
+        "title": "AdvisorProfileResponse",
+        "type": "object"
+      },
+      "AdvisorResponse": {
+        "description": "An advisor as the home page shows them: public fields only, never an account detail.\nThe id is the profile's, not the account's.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100,
+            "title": "Name",
+            "type": "string"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/AdvisorServiceResponse"
+            },
+            "title": "Services",
+            "type": "array"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "title",
+          "summary",
+          "services"
+        ],
+        "title": "AdvisorResponse",
+        "type": "object"
+      },
+      "AdvisorServiceBody": {
+        "additionalProperties": false,
+        "description": "A service in French, in English or both: one of the two at least.",
+        "properties": {
+          "en": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "En"
+          },
+          "fr": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fr"
+          }
+        },
+        "title": "AdvisorServiceBody",
+        "type": "object"
+      },
+      "AdvisorServiceResponse": {
+        "properties": {
+          "en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "En"
+          },
+          "fr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fr"
+          }
+        },
+        "required": [
+          "fr",
+          "en"
+        ],
+        "title": "AdvisorServiceResponse",
+        "type": "object"
+      },
+      "AgentAdvisorResponse": {
+        "description": "An agent for the back office: their account, and their public profile if filled in.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdvisorProfileResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "name",
+          "status",
+          "profile"
+        ],
+        "title": "AgentAdvisorResponse",
+        "type": "object"
+      },
       "AgentPlan": {
         "description": "The plan as the assigned agent sees it. Prices, partners, running total and budget.\ntotal counts priced items and priced extras; ready_to_quote is false while a kept item or\nan on_quote extra has no price, or a supplement that needs a quantity check is not\nconfirmed.",
         "properties": {
@@ -3697,6 +3940,65 @@
         "title": "Trip",
         "type": "object"
       },
+      "UpdateAdvisorProfileRequest": {
+        "additionalProperties": false,
+        "description": "The whole profile. `shown` needs `consent`: the agent agreed to appear on the site.",
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "public_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Public Name",
+            "type": "string"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/AdvisorServiceBody"
+            },
+            "maxItems": 6,
+            "title": "Services",
+            "type": "array"
+          },
+          "shown": {
+            "title": "Shown",
+            "type": "boolean"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 140,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "public_name",
+          "consent",
+          "shown"
+        ],
+        "title": "UpdateAdvisorProfileRequest",
+        "type": "object"
+      },
       "UpdateExtraRequest": {
         "additionalProperties": false,
         "description": "true hides the extra from clients, false shows it again. The import never changes it.",
@@ -4548,6 +4850,196 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/advisors": {
+      "get": {
+        "description": "Every agent with their public profile (null until filled in), newest first. Admin only.",
+        "operationId": "listAgentAdvisors",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentAdvisorResponse"
+                  },
+                  "title": "Response Listagentadvisors",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "List Agent Advisors",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/advisors/{user_id}": {
+      "put": {
+        "description": "Fill in or replace an agent's public profile. Admin only. 409 not_an_agent for another\nrole, 409 advisor_consent_required to show an agent whose agreement is not recorded.\nEach service is given in French, in English or both. The admin who records the agreement\nand when are kept.",
+        "operationId": "updateAdvisorProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvisorProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAdvisorResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Update Advisor Profile",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/catalog/import": {
       "get": {
         "description": "The largest export POST /admin/catalog/import accepts, in bytes. Admins only.",
@@ -6536,6 +7028,32 @@
         "summary": "List Admin Wishes",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/advisors": {
+      "get": {
+        "description": "The agency's advisors for the home page. Public. Only the agents an admin chose to show,\nonce they agreed to it, and only their public fields: never an email or an account id.\nAn empty list when nobody is shown: the home page then hides the section.",
+        "operationId": "listAdvisors",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdvisorResponse"
+                  },
+                  "title": "Response Listadvisors",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Advisors",
+        "tags": [
+          "advisors"
         ]
       }
     },

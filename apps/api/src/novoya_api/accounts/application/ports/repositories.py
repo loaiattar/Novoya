@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from novoya_api.accounts.domain.advisor_profile import AdvisorProfile
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.credentials import PasswordCredential
 from novoya_api.accounts.domain.oauth_identity import OAuthIdentity
@@ -32,6 +33,21 @@ class UserRepository(Protocol):
     async def search(
         self, query: str | None, role: Role | None, limit: int, offset: int
     ) -> list[User]: ...
+
+
+class AdvisorProfileRepository(Protocol):
+    async def get_for_user(self, user_id: UserId) -> AdvisorProfile | None: ...
+
+    async def for_users(self, user_ids: list[UserId]) -> dict[UserId, AdvisorProfile]: ...
+
+    async def save(self, profile: AdvisorProfile) -> None:
+        """Adds the profile or replaces it."""
+        ...
+
+    async def list_shown(self) -> list[AdvisorProfile]:
+        """The profiles for the home page, by public name: shown, agreed to, and whose user is
+        an active agent today. A demoted or disabled agent drops out on their own."""
+        ...
 
 
 class RoleChangeRepository(Protocol):

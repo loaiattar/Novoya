@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.accounts.application.ports.identity_provider import PendingSignIn
+from novoya_api.accounts.domain.advisor_profile import AdvisorProfile, AdvisorService
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.credentials import PasswordCredential
 from novoya_api.accounts.domain.errors import EmailAlreadyUsed, IdentityAlreadyLinked
@@ -23,6 +24,7 @@ from novoya_api.accounts.domain.role_change import RoleChange
 from novoya_api.accounts.domain.user import User, UserStatus
 from novoya_api.accounts.domain.value_objects import Email, PasswordHash, UserId
 from novoya_api.accounts.infrastructure.db.models import (
+    AdvisorProfileModel,
     OAuthIdentityModel,
     OAuthStateModel,
     OneTimeTokenModel,
@@ -153,6 +155,70 @@ class SqlUserRepository:
         statement = statement.order_by(UserModel.created_at.desc()).limit(limit).offset(offset)
         rows = await self._session.scalars(statement)
         return [self._entity(row) for row in rows]
+
+
+def _profile_to_entity(row: AdvisorProfileModel) -> AdvisorProfile:
+    return AdvisorProfile(
+        id=row.id,
+        user_id=UserId(row.user_id),
+        public_name=row.public_name,
+        title=row.title,
+        summary=row.summary,
+        services=tuple(AdvisorService(s.get("fr"), s.get("en")) for s in row.services),
+        shown=row.shown,
+        consent_at=row.consent_at,
+        consent_by=UserId(row.consent_by) if row.consent_by else None,
+        updated_at=row.updated_at,
+    )
+
+
+class SqlAdvisorProfileRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_for_user(self, user_id: UserId) -> AdvisorProfile | None:
+        row = await self._session.scalar(
+            select(AdvisorProfileModel).where(AdvisorProfileModel.user_id == user_id.value)
+        )
+        return _profile_to_entity(row) if row else None
+
+    async def for_users(self, user_ids: list[UserId]) -> dict[UserId, AdvisorProfile]:
+        if not user_ids:
+            return {}
+        rows = await self._session.scalars(
+            select(AdvisorProfileModel).where(
+                AdvisorProfileModel.user_id.in_([user_id.value for user_id in user_ids])
+            )
+        )
+        return {UserId(row.user_id): _profile_to_entity(row) for row in rows}
+
+    async def save(self, profile: AdvisorProfile) -> None:
+        row = await self._session.get(AdvisorProfileModel, profile.id)
+        if row is None:
+            row = AdvisorProfileModel(id=profile.id, user_id=profile.user_id.value)
+            self._session.add(row)
+        row.public_name = profile.public_name
+        row.title = profile.title
+        row.summary = profile.summary
+        row.services = [{"fr": s.fr, "en": s.en} for s in profile.services]
+        row.shown = profile.shown
+        row.consent_at = profile.consent_at
+        row.consent_by = profile.consent_by.value if profile.consent_by else None
+        row.updated_at = profile.updated_at
+
+    async def list_shown(self) -> list[AdvisorProfile]:
+        rows = await self._session.scalars(
+            select(AdvisorProfileModel)
+            .join(UserModel, UserModel.id == AdvisorProfileModel.user_id)
+            .where(
+                AdvisorProfileModel.shown.is_(True),
+                AdvisorProfileModel.consent_at.is_not(None),
+                UserModel.role == Role.AGENT.value,
+                UserModel.status == UserStatus.ACTIVE.value,
+            )
+            .order_by(AdvisorProfileModel.public_name, AdvisorProfileModel.id)
+        )
+        return [_profile_to_entity(row) for row in rows]
 
 
 class SqlRoleChangeRepository:

@@ -14,7 +14,16 @@ from pydantic import (
     model_validator,
 )
 
-from novoya_api.accounts.application.dto import AccountView
+from novoya_api.accounts.application.dto import AccountView, AgentAdvisorView
+from novoya_api.accounts.domain.advisor_profile import (
+    NAME_MAX,
+    SERVICE_MAX,
+    SERVICES_MAX,
+    SUMMARY_MAX,
+    TITLE_MAX,
+    AdvisorProfile,
+    AdvisorService,
+)
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.user import User
 
@@ -181,6 +190,117 @@ class UserDetailResponse(UserResponse):
                 **UserResponse.of(account.user).model_dump(),
                 "sign_in_methods": _sign_in_methods(account),
             }
+        )
+
+
+# The advisors on the home page (#167)
+
+ServiceLabel = Annotated[str, StringConstraints(strip_whitespace=True, max_length=SERVICE_MAX)]
+
+
+class AdvisorServiceBody(BaseModel):
+    """A service in French, in English or both: one of the two at least."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fr: ServiceLabel | None = None
+    en: ServiceLabel | None = None
+
+    @model_validator(mode="after")
+    def _one_language_at_least(self) -> "AdvisorServiceBody":
+        if not self.fr and not self.en:
+            raise ValueError("give the service in French, in English or both")
+        return self
+
+
+class UpdateAdvisorProfileRequest(BaseModel):
+    """The whole profile. `shown` needs `consent`: the agent agreed to appear on the site."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    public_name: PersonName
+    title: Annotated[str, StringConstraints(strip_whitespace=True, max_length=TITLE_MAX)] | None = (
+        None
+    )
+    summary: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=SUMMARY_MAX)] | None
+    ) = None
+    services: list[AdvisorServiceBody] = Field(default_factory=list, max_length=SERVICES_MAX)
+    consent: bool
+    shown: bool
+
+
+class AdvisorServiceResponse(BaseModel):
+    fr: str | None
+    en: str | None
+
+    @classmethod
+    def of(cls, service: AdvisorService) -> "AdvisorServiceResponse":
+        return cls(fr=service.fr, en=service.en)
+
+
+class AdvisorResponse(BaseModel):
+    """An advisor as the home page shows them: public fields only, never an account detail.
+    The id is the profile's, not the account's."""
+
+    id: UUID
+    name: str = Field(max_length=NAME_MAX)
+    title: str | None
+    summary: str | None
+    services: list[AdvisorServiceResponse]
+
+    @classmethod
+    def of(cls, profile: AdvisorProfile) -> "AdvisorResponse":
+        return cls(
+            id=profile.id,
+            name=profile.public_name,
+            title=profile.title,
+            summary=profile.summary,
+            services=[AdvisorServiceResponse.of(s) for s in profile.services],
+        )
+
+
+class AdvisorProfileResponse(BaseModel):
+    public_name: str
+    title: str | None
+    summary: str | None
+    services: list[AdvisorServiceResponse]
+    consent: bool
+    consent_at: datetime | None
+    shown: bool
+    updated_at: datetime
+
+    @classmethod
+    def of(cls, profile: AdvisorProfile) -> "AdvisorProfileResponse":
+        return cls(
+            public_name=profile.public_name,
+            title=profile.title,
+            summary=profile.summary,
+            services=[AdvisorServiceResponse.of(s) for s in profile.services],
+            consent=profile.has_consent,
+            consent_at=profile.consent_at,
+            shown=profile.shown,
+            updated_at=profile.updated_at,
+        )
+
+
+class AgentAdvisorResponse(BaseModel):
+    """An agent for the back office: their account, and their public profile if filled in."""
+
+    user_id: UUID
+    email: str
+    name: str | None
+    status: Literal["active", "disabled"]
+    profile: AdvisorProfileResponse | None
+
+    @classmethod
+    def of(cls, view: AgentAdvisorView) -> "AgentAdvisorResponse":
+        return cls(
+            user_id=view.user.id.value,
+            email=view.user.email.value,
+            name=view.user.name,
+            status=view.user.status.value,
+            profile=AdvisorProfileResponse.of(view.profile) if view.profile else None,
         )
 
 

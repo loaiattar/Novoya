@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from novoya_api.accounts.domain.advisor_profile import AdvisorProfile
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.user import User
 from novoya_api.accounts.domain.value_objects import Email, SessionToken, UserId
@@ -39,3 +40,11 @@ class AccountView:
     user: User
     has_password: bool
     has_google: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class AgentAdvisorView:
+    """An agent and their public profile, for the back office. None until an admin fills it."""
+
+    user: User
+    profile: AdvisorProfile | None
