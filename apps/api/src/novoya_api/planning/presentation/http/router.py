@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Body, Depends, Query, status
 
 from novoya_api.accounts.public import require_admin
 from novoya_api.planning.application.ports.plan_repository import QUEUE_CAP, QUEUE_PAGE
@@ -10,6 +10,11 @@ from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPla
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
 from novoya_api.planning.application.use_cases.list_admin_plans import ListAdminPlans
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
+from novoya_api.planning.application.use_cases.plan_offers import (
+    AddItemCommand,
+    AddPlanItem,
+    ListPlanOffers,
+)
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.application.use_cases.set_extra_price import (
     SetExtraCommand,
@@ -19,6 +24,7 @@ from novoya_api.planning.application.use_cases.set_item_price import SetItemComm
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.domain.plan import PlanStatus
 from novoya_api.planning.presentation.http.dependencies import (
+    get_add_plan_item,
     get_answer_days,
     get_current_agent_id,
     get_current_user_id,
@@ -26,6 +32,7 @@ from novoya_api.planning.presentation.http.dependencies import (
     get_get_agent_plan,
     get_get_plan,
     get_list_admin_plans,
+    get_list_plan_offers,
     get_list_quote_queue,
     get_request_quote,
     get_set_extra_price,
@@ -33,8 +40,10 @@ from novoya_api.planning.presentation.http.dependencies import (
     get_take_plan,
 )
 from novoya_api.planning.presentation.http.schemas import (
+    AddPlanItemRequest,
     AdminPlan,
     AdminPlanEntry,
+    AgentOffer,
     AgentPlan,
     Plan,
     QueueEntry,
@@ -133,6 +142,47 @@ async def take_plan(
 ) -> AgentPlan:
     """Assign this requested plan to me and move it to negotiating. 409 if it is already taken."""
     return AgentPlan.of(await use_case(plan_id, agent_id))
+
+
+@agent_router.get("/{plan_id}/offers", operation_id="listPlanOffers")
+async def list_plan_offers(
+    plan_id: UUID,
+    agent_id: Annotated[UUID, Depends(get_current_agent_id)],
+    use_case: Annotated[ListPlanOffers, Depends(get_list_plan_offers)],
+) -> list[AgentOffer]:
+    """The offers the assigned agent may add to this plan: listed, taking the trip's
+    travellers, open on at least one of its days, best first, with their open days and
+    partner. 403 if another agent took the plan."""
+    return [AgentOffer.of(offer) for offer in await use_case(plan_id, agent_id)]
+
+
+@agent_router.post(
+    "/{plan_id}/items",
+    operation_id="addPlanItem",
+    status_code=status.HTTP_201_CREATED,
+    responses={409: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
+)
+async def add_plan_item(
+    plan_id: UUID,
+    body: AddPlanItemRequest,
+    agent_id: Annotated[UUID, Depends(get_current_agent_id)],
+    use_case: Annotated[AddPlanItem, Depends(get_add_plan_item)],
+) -> AgentPlan:
+    """Add an offer to the plan, with no price yet: how a custom request is built (#184).
+    Only the assigned agent (403). 409 if the plan is no longer negotiating. 422 invalid_plan
+    if the offer does not take the travellers, or is closed on the item's days."""
+    return AgentPlan.of(
+        await use_case(
+            AddItemCommand(
+                plan_id=plan_id,
+                agent_id=agent_id,
+                offer_id=body.offer_id,
+                day=body.day,
+                quantity=body.quantity,
+                note=(body.note.strip() or None) if body.note else None,
+            )
+        )
+    )
 
 
 @agent_router.patch(

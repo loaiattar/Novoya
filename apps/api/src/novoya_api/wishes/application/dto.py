@@ -48,3 +48,13 @@ class PanelLimitsView:
 
     limits: PanelLimits | None
     fits: bool | None
+
+
+@dataclass(frozen=True)
+class DateOption:
+    """Other dates for the same trip, the same length, when a plan can be built (#184):
+    `offers` listed offers fit the group from start_date to end_date."""
+
+    start_date: date
+    end_date: date
+    offers: int

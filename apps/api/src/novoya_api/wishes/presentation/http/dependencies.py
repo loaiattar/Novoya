@@ -23,9 +23,11 @@ from novoya_api.shared.infrastructure.system_clock import SystemClock
 from novoya_api.wishes.application.ports.destination_reader import DestinationReader
 from novoya_api.wishes.application.ports.panel_builder import PanelBuilder
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel
+from novoya_api.wishes.application.use_cases.closest_dates import GetClosestDates
 from novoya_api.wishes.application.use_cases.get_panel_limits import GetPanelLimits
 from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.preferences import ListPreferences, RemovePreference
+from novoya_api.wishes.application.use_cases.send_custom_request import SendCustomRequest
 from novoya_api.wishes.application.use_cases.send_wish import SendWish
 from novoya_api.wishes.infrastructure.answers_in_progress import InMemoryAnswersInProgress
 from novoya_api.wishes.infrastructure.catalog import PartnerCatalog
@@ -112,6 +114,29 @@ def get_answer_panel(
         rate_limiter=rate_limiter,
         uow=SqlAlchemyUnitOfWork(session),
         clock=SystemClock(),
+    )
+
+
+def get_send_custom_request(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    rate_limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+) -> SendCustomRequest:
+    return SendCustomRequest(
+        wishes=SqlWishRepository(session),
+        planner=PartnerPlanner(session),
+        in_progress=ANSWERS_IN_PROGRESS,
+        rate_limiter=rate_limiter,
+        uow=SqlAlchemyUnitOfWork(session),
+        clock=SystemClock(),
+    )
+
+
+def get_closest_dates(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    rate_limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+) -> GetClosestDates:
+    return GetClosestDates(
+        SqlWishRepository(session), PartnerCatalog(session), SystemClock(), rate_limiter
     )
 
 

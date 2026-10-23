@@ -32,6 +32,7 @@ def queue_entry_as_view(plan: Plan, trip: TripBrief | None) -> QueueEntryView:
         end_date=trip.end_date if trip else None,
         budget_max=trip.budget_max if trip else None,
         currency=trip.currency if trip else None,
+        custom=plan.custom,
     )
 
 
@@ -125,4 +126,6 @@ def agent_plan_as_view(
         persons=trip.persons if trip else None,
         start_date=trip.start_date if trip else None,
         end_date=trip.end_date if trip else None,
+        custom=plan.custom,
+        outline=plan.outline,
     )

@@ -1,6 +1,47 @@
 {
   "components": {
     "schemas": {
+      "AddPlanItemRequest": {
+        "description": "An offer on a day of the trip. quantity: nights for a hotel, else how many.",
+        "properties": {
+          "day": {
+            "maximum": 366.0,
+            "minimum": 1.0,
+            "title": "Day",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "quantity": {
+            "default": 1,
+            "maximum": 366.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "offer_id",
+          "day"
+        ],
+        "title": "AddPlanItemRequest",
+        "type": "object"
+      },
       "AdminExtraResponse": {
         "description": "An extra, for agents: inactive ones (gone from the D\u00c9TOUR export) and hidden ones too.\nhidden is the only field an agent changes; D\u00c9TOUR owns the rest.",
         "properties": {
@@ -807,6 +848,48 @@
         "title": "AgentAdvisorResponse",
         "type": "object"
       },
+      "AgentOffer": {
+        "description": "An offer the agent may add to the plan: it takes the trip's travellers and is open on\nopen_days (day 1 is the trip's first day). An activity goes on one of them; a hotel needs\neach night it books on one of them.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OfferKind"
+          },
+          "open_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Open Days",
+            "type": "array"
+          },
+          "partner_name": {
+            "title": "Partner Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "description",
+          "partner_name",
+          "open_days"
+        ],
+        "title": "AgentOffer",
+        "type": "object"
+      },
       "AgentPlan": {
         "description": "The plan as the assigned agent sees it. Prices, partners, running total and budget.\ntotal counts priced items and priced extras; ready_to_quote is false while a kept item or\nan on_quote extra has no price, or a supplement that needs a quantity check is not\nconfirmed.",
         "properties": {
@@ -866,6 +949,11 @@
             ],
             "title": "Currency"
           },
+          "custom": {
+            "description": "No offer fitted: the agent builds the plan (#184).",
+            "title": "Custom",
+            "type": "boolean"
+          },
           "end_date": {
             "anyOf": [
               {
@@ -896,6 +984,18 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "outline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A model's idea of the trip from the client's text, for the agent only: not from the catalog, no partner and no price behind it. Null when none was written.",
+            "title": "Outline"
           },
           "over_budget": {
             "title": "Over Budget",
@@ -974,7 +1074,9 @@
           "city",
           "persons",
           "start_date",
-          "end_date"
+          "end_date",
+          "custom",
+          "outline"
         ],
         "title": "AgentPlan",
         "type": "object"
@@ -1587,6 +1689,59 @@
           "contact_email"
         ],
         "title": "CreatePartnerRequest",
+        "type": "object"
+      },
+      "CustomRequestResponse": {
+        "description": "The trip sent to the agency as it is (#184): its plan is requested, with no item until\nan advisor builds it. GET /plans/{id} shows it.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "const": "requested",
+            "title": "Status",
+            "type": "string"
+          },
+          "wish_id": {
+            "format": "uuid",
+            "title": "Wish Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "wish_id",
+          "status"
+        ],
+        "title": "CustomRequestResponse",
+        "type": "object"
+      },
+      "DateOptionOut": {
+        "description": "Other dates for the same trip and group, when a plan can be built: from start_date to\nend_date, `offers` listed offers fit.",
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "offers": {
+            "title": "Offers",
+            "type": "integer"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "offers"
+        ],
+        "title": "DateOptionOut",
         "type": "object"
       },
       "DestinationOut": {
@@ -2574,6 +2729,11 @@
             "title": "Based On Preferences",
             "type": "boolean"
           },
+          "custom": {
+            "description": "Sent to the agency although no offer fitted (#184): an advisor builds it, so it has no item until then.",
+            "title": "Custom",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -2606,7 +2766,8 @@
           "based_on_preferences",
           "summary",
           "items",
-          "answer_within_days"
+          "answer_within_days",
+          "custom"
         ],
         "title": "Plan",
         "type": "object"
@@ -3004,6 +3165,11 @@
             ],
             "title": "Currency"
           },
+          "custom": {
+            "description": "No offer fitted: the agent builds the plan (#184).",
+            "title": "Custom",
+            "type": "boolean"
+          },
           "end_date": {
             "anyOf": [
               {
@@ -3079,7 +3245,8 @@
           "start_date",
           "end_date",
           "budget_max",
-          "currency"
+          "currency",
+          "custom"
         ],
         "title": "QueueEntry",
         "type": "object"
@@ -7960,6 +8127,118 @@
         ]
       }
     },
+    "/agent/plans/{plan_id}/items": {
+      "post": {
+        "description": "Add an offer to the plan, with no price yet: how a custom request is built (#184).\nOnly the assigned agent (403). 409 if the plan is no longer negotiating. 422 invalid_plan\nif the offer does not take the travellers, or is closed on the item's days.",
+        "operationId": "addPlanItem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPlanItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "database_busy: a lock or statement timeout, or a deadlock. Try again.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add Plan Item",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
     "/agent/plans/{plan_id}/items/{item_id}": {
       "patch": {
         "description": "Set the negotiated price in EUR, or set removed (true drops, false puts back).\nOnly the assigned agent. 409 if the plan is no longer negotiating.",
@@ -8077,6 +8356,102 @@
           }
         },
         "summary": "Set Plan Item",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/agent/plans/{plan_id}/offers": {
+      "get": {
+        "description": "The offers the assigned agent may add to this plan: listed, taking the trip's\ntravellers, open on at least one of its days, best first, with their open days and\npartner. 403 if another agent took the plan.",
+        "operationId": "listPlanOffers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentOffer"
+                  },
+                  "title": "Response Listplanoffers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "database_busy: a lock or statement timeout, or a deadlock. Try again.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List Plan Offers",
         "tags": [
           "agent"
         ]
@@ -11434,6 +11809,265 @@
           }
         },
         "summary": "Answer Panel",
+        "tags": [
+          "wishes"
+        ]
+      }
+    },
+    "/wishes/{wish_id}/closest-dates": {
+      "get": {
+        "description": "When no offer fits these travellers and dates (#184), the nearest dates before and\nafter, the same length and group, for which a plan can be built, by the plan's own rule,\nwith how many offers fit then. At most two, none before today; empty when none is within\n90 days. 422 invalid_answers for dates the answer would refuse. 404 if the wish is not\ntheirs or has no destination yet. 429 past the client's limit of reads.",
+        "operationId": "getClosestDates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wish_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Wish Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "persons",
+            "required": true,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Persons",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Start Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "End Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DateOptionOut"
+                  },
+                  "title": "Response Getclosestdates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "database_busy: a lock or statement timeout, or a deadlock. Try again.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get Closest Dates",
+        "tags": [
+          "wishes"
+        ]
+      }
+    },
+    "/wishes/{wish_id}/custom-request": {
+      "post": {
+        "description": "Send the panel answers to the agency as they are, when no offer fits them (#184): the\nwish's plan is a custom request, requested at once, with no item, and an advisor builds\nit. The client gets the same email as for a plan sent to the agency. The same body and\nrules as the answer: 404 if the wish is not theirs; 409 if it is already answered (a\nsecond click too: no second request) or being answered by another request; 422 for a tag\nthe panel did not show or dates it refuses; 429 past the limit of answers.",
+        "operationId": "sendCustomRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wish_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Wish Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerPanelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "database_busy: a lock or statement timeout, or a deadlock. Try again.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Send Custom Request",
         "tags": [
           "wishes"
         ]

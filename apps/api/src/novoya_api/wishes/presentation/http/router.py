@@ -9,23 +9,29 @@ from novoya_api.shared.domain.errors import InvalidInput
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 from novoya_api.wishes.application.ports.wish_repository import ADMIN_CAP, ADMIN_PAGE
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel, AnswerPanelCommand
+from novoya_api.wishes.application.use_cases.closest_dates import GetClosestDates
 from novoya_api.wishes.application.use_cases.get_panel_limits import GetPanelLimits
 from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.preferences import ListPreferences, RemovePreference
+from novoya_api.wishes.application.use_cases.send_custom_request import SendCustomRequest
 from novoya_api.wishes.application.use_cases.send_wish import SendWish, SendWishCommand
 from novoya_api.wishes.domain.wish import WishStatus
 from novoya_api.wishes.presentation.http.dependencies import (
     get_answer_panel,
+    get_closest_dates,
     get_current_user_id,
     get_list_admin_wishes,
     get_list_preferences,
     get_panel_limits,
     get_remove_preference,
+    get_send_custom_request,
     get_send_wish,
 )
 from novoya_api.wishes.presentation.http.schemas import (
     AdminWish,
     AnswerPanelRequest,
+    CustomRequestResponse,
+    DateOptionOut,
     PanelLimitsOut,
     PlanResponse,
     PreferenceSectionOut,
@@ -101,6 +107,52 @@ async def get_limits(
     # The catalog changes at any time, and the limits are the client's own trip.
     response.headers["Cache-Control"] = PRIVATE
     return PanelLimitsOut.of(view)
+
+
+@router.post(
+    "/{wish_id}/custom-request",
+    operation_id="sendCustomRequest",
+    status_code=status.HTTP_201_CREATED,
+    responses={status_code: {"model": ErrorResponse} for status_code in (404, 409)},
+)
+async def send_custom_request(
+    wish_id: UUID,
+    body: AnswerPanelRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    use_case: Annotated[SendCustomRequest, Depends(get_send_custom_request)],
+) -> CustomRequestResponse:
+    """Send the panel answers to the agency as they are, when no offer fits them (#184): the
+    wish's plan is a custom request, requested at once, with no item, and an advisor builds
+    it. The client gets the same email as for a plan sent to the agency. The same body and
+    rules as the answer: 404 if the wish is not theirs; 409 if it is already answered (a
+    second click too: no second request) or being answered by another request; 422 for a tag
+    the panel did not show or dates it refuses; 429 past the limit of answers."""
+    command = AnswerPanelCommand(user_id=user_id, wish_id=wish_id, answers=body.to_answers())
+    return CustomRequestResponse.of((await use_case(command)).plan)
+
+
+@router.get(
+    "/{wish_id}/closest-dates",
+    operation_id="getClosestDates",
+    responses={404: {"model": ErrorResponse}},
+)
+async def get_closest_dates(
+    wish_id: UUID,
+    response: Response,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    use_case: Annotated[GetClosestDates, Depends(get_closest_dates)],
+    persons: Annotated[int, Query(ge=1, le=50)],
+    start_date: date,
+    end_date: date,
+) -> list[DateOptionOut]:
+    """When no offer fits these travellers and dates (#184), the nearest dates before and
+    after, the same length and group, for which a plan can be built, by the plan's own rule,
+    with how many offers fit then. At most two, none before today; empty when none is within
+    90 days. 422 invalid_answers for dates the answer would refuse. 404 if the wish is not
+    theirs or has no destination yet. 429 past the client's limit of reads."""
+    options = await use_case(wish_id, user_id, persons, start_date, end_date)
+    response.headers["Cache-Control"] = PRIVATE
+    return [DateOptionOut.of(option) for option in options]
 
 
 # The client's own tastes: no shared or browser cache keeps them.

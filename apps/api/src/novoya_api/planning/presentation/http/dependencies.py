@@ -18,6 +18,7 @@ from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPla
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
 from novoya_api.planning.application.use_cases.list_admin_plans import ListAdminPlans
 from novoya_api.planning.application.use_cases.list_quote_queue import ListQuoteQueue
+from novoya_api.planning.application.use_cases.plan_offers import AddPlanItem, ListPlanOffers
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.application.use_cases.set_extra_price import SetExtraPrice
 from novoya_api.planning.application.use_cases.set_item_price import SetItemPrice
@@ -25,7 +26,7 @@ from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
 from novoya_api.planning.infrastructure.clients import AccountClients
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
-from novoya_api.planning.infrastructure.email.smtp_request_notifier import SmtpRequestNotifier
+from novoya_api.planning.infrastructure.email.smtp_request_notifier import smtp_request_notifier
 from novoya_api.planning.infrastructure.people import AccountPeople
 from novoya_api.planning.infrastructure.wish_owners import WishOwners
 from novoya_api.planning.infrastructure.wish_search import WishesSearch
@@ -55,16 +56,7 @@ def get_answer_days() -> int:
 
 def get_request_notifier() -> RequestNotifier:
     """The same NOVOYA_SMTP_* settings as the other emails."""
-    settings = get_settings()
-    password = settings.smtp_password.get_secret_value() if settings.smtp_password else None
-    return SmtpRequestNotifier(
-        settings.smtp_host,
-        settings.smtp_port,
-        settings.mail_from,
-        username=settings.smtp_username,
-        password=password,
-        start_tls=settings.smtp_start_tls,
-    )
+    return smtp_request_notifier()
 
 
 def get_request_quote(
@@ -115,6 +107,26 @@ def get_get_agent_plan(session: Annotated[AsyncSession, Depends(get_session)]) -
 
 def get_set_item_price(session: Annotated[AsyncSession, Depends(get_session)]) -> SetItemPrice:
     return SetItemPrice(
+        plans=SqlPlanRepository(session),
+        catalog=PartnerOffers(session),
+        trips=WishTrips(session),
+        uow=SqlAlchemyUnitOfWork(session),
+        clock=SystemClock(),
+    )
+
+
+def get_list_plan_offers(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ListPlanOffers:
+    return ListPlanOffers(
+        plans=SqlPlanRepository(session),
+        catalog=PartnerOffers(session),
+        trips=WishTrips(session),
+    )
+
+
+def get_add_plan_item(session: Annotated[AsyncSession, Depends(get_session)]) -> AddPlanItem:
+    return AddPlanItem(
         plans=SqlPlanRepository(session),
         catalog=PartnerOffers(session),
         trips=WishTrips(session),

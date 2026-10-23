@@ -37,6 +37,8 @@ class SqlPlanRepository:
                 assigned_agent_id=plan.assigned_agent_id,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at,
+                custom=plan.custom,
+                agent_outline=plan.outline,
             )
         )
         # The plan row first: plan_items points to it, and the unit of work does not know.
@@ -200,6 +202,8 @@ class SqlPlanRepository:
             created_at=row.created_at,
             updated_at=row.updated_at,
             assigned_agent_id=row.assigned_agent_id,
+            custom=row.custom,
+            outline=row.agent_outline,
             extras=tuple(
                 PlanExtra(
                     extra_id=extra.extra_id,
@@ -302,6 +306,33 @@ class SqlPlanRepository:
             if write is ItemWrite.PRICE:
                 raise InvalidTransition("the plan changed meanwhile, reload it")
             raise PlanNotFound("no such item")
+
+    async def add_item(self, plan: Plan, item_id: UUID) -> None:
+        read_status = self._read_status[plan.id]  # KeyError: add_item() without get() or add()
+        item = next((entry for entry in plan.items if entry.id == item_id), None)
+        if item is None:
+            raise PlanNotFound("no such item")
+        result = await self._session.execute(
+            update(PlanModel)
+            .where(PlanModel.id == plan.id, PlanModel.status == read_status)
+            .values(updated_at=plan.updated_at)
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            raise InvalidTransition("the plan changed meanwhile, reload it")
+        self._session.add(
+            PlanItemModel(
+                id=item.id,
+                plan_id=plan.id,
+                offer_id=item.offer_id,
+                day=item.day,
+                quantity=item.quantity,
+                note=item.note,
+                negotiated_price=None,
+                removed=False,
+            )
+        )
+        await self._session.flush()
 
     def _item_update(self, plan_id: UUID, item: PlanItem, write: ItemWrite):
         row = (PlanItemModel.id == item.id, PlanItemModel.plan_id == plan_id)

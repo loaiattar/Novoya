@@ -5,8 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from novoya_api.wishes.application.dto import AdminWishView, PanelLimitsView
-from novoya_api.wishes.application.ports.planner import ProposedPlan
+from novoya_api.wishes.application.dto import AdminWishView, DateOption, PanelLimitsView
+from novoya_api.wishes.application.ports.planner import CustomRequest, ProposedPlan
 from novoya_api.wishes.application.use_cases.preferences import PreferenceSection
 from novoya_api.wishes.application.use_cases.send_wish import SendWishResult
 from novoya_api.wishes.domain.answers import Answers, SelectedTag
@@ -148,6 +148,32 @@ class PlanResponse(BaseModel):
             summary=plan.summary,
             items=[PlanItemOut.model_validate(item, from_attributes=True) for item in plan.items],
         )
+
+
+class CustomRequestResponse(BaseModel):
+    """The trip sent to the agency as it is (#184): its plan is requested, with no item until
+    an advisor builds it. GET /plans/{id} shows it."""
+
+    id: UUID
+    wish_id: UUID
+    status: Literal["requested"]
+
+    @classmethod
+    def of(cls, plan: CustomRequest) -> "CustomRequestResponse":
+        return cls(id=plan.id, wish_id=plan.wish_id, status="requested")
+
+
+class DateOptionOut(BaseModel):
+    """Other dates for the same trip and group, when a plan can be built: from start_date to
+    end_date, `offers` listed offers fit."""
+
+    start_date: date
+    end_date: date
+    offers: int
+
+    @classmethod
+    def of(cls, option: DateOption) -> "DateOptionOut":
+        return cls(start_date=option.start_date, end_date=option.end_date, offers=option.offers)
 
 
 WishStatusName = Literal["draft", "not_covered", "panel_shown", "answered", "planned"]

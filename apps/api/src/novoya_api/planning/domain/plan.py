@@ -158,10 +158,28 @@ def tidy(
     return kept
 
 
+def item_fits(
+    is_hotel: bool, day: int, quantity: int, open_days: frozenset[int], trip_days: int
+) -> bool:
+    """Whether an item an agent adds stays inside the trip and on days its offer is open
+    (#182): an activity on its day, a hotel on each night it books. A night runs from its day
+    to the next, so the nights are 1 to trip_days - 1, and a one-day trip has night 1."""
+    if quantity < 1 or not 1 <= day <= trip_days:
+        return False
+    if not is_hotel:
+        return day in open_days
+    nights = set(range(day, day + quantity))
+    return max(nights) <= max(1, trip_days - 1) and nights <= open_days
+
+
 @dataclass(slots=True)
 class Plan:
     """The trip built from partner offers, day by day. It starts proposed, with no price:
-    the client asks for a quote, then an agent negotiates each item."""
+    the client asks for a quote, then an agent negotiates each item.
+
+    A custom plan (#184) is a trip no offer fitted: it starts requested with no item, and its
+    agent adds the items. outline is a model's idea of the trip from the client's text, for
+    the agent only: it has no partner and no price behind it."""
 
     id: UUID
     wish_id: UUID
@@ -173,6 +191,8 @@ class Plan:
     updated_at: datetime
     assigned_agent_id: UUID | None = None
     extras: tuple[PlanExtra, ...] = ()
+    custom: bool = False
+    outline: str | None = None
 
     @classmethod
     def propose(
@@ -197,6 +217,30 @@ class Plan:
         )
         return cls(
             uuid4(), wish_id, PlanStatus.PROPOSED, based_on_preferences, summary, items, now, now
+        )
+
+    @classmethod
+    def custom_request(
+        cls,
+        wish_id: UUID,
+        based_on_preferences: bool,
+        summary: str,
+        outline: str | None,
+        now: datetime,
+    ) -> "Plan":
+        """The trip sent to the agency although no offer fits it (#184): requested at once,
+        with no item and no extra, so it waits in the agents' queue like any request."""
+        return cls(
+            uuid4(),
+            wish_id,
+            PlanStatus.REQUESTED,
+            based_on_preferences,
+            summary,
+            (),
+            now,
+            now,
+            custom=True,
+            outline=outline,
         )
 
     def request_quote(self, now: datetime, extras: Sequence[PlanExtra] = ()) -> None:
@@ -234,6 +278,21 @@ class Plan:
             for entry in self.items
         )
         self.updated_at = now
+
+    def add_item(
+        self, offer_id: UUID, day: int, quantity: int, note: str | None, by: UUID, now: datetime
+    ) -> PlanItem:
+        """The assigned agent adds an offer on a day, with no price yet. The caller checks
+        the offer fits the trip and is open on its days (item_fits)."""
+        self._must_be_assigned(by)
+        if day < 1:
+            raise InvalidPlan("the day must be at least 1")
+        if quantity < 1:
+            raise InvalidPlan("the quantity must be at least 1")
+        item = PlanItem(uuid4(), offer_id, day, quantity, note)
+        self.items = tuple(sorted((*self.items, item), key=lambda entry: entry.day))
+        self.updated_at = now
+        return item
 
     def remove_item(self, item_id: UUID, by: UUID, now: datetime) -> None:
         """The assigned agent drops an item so it is not quoted. At least one item must stay."""
@@ -314,10 +373,12 @@ class Plan:
         return sum((*items, *extras), Decimal("0"))
 
     def ready_to_quote(self) -> bool:
-        """Every kept item and every on_quote extra has a price, and the agent confirmed every
-        supplement that needs a quantity check."""
+        """At least one kept item, every kept item and every on_quote extra has a price, and
+        the agent confirmed every supplement that needs a quantity check. A custom plan has no
+        item until its agent adds one: there is nothing to quote before."""
         return (
-            all(item.negotiated_price is not None for item in self.items if not item.removed)
+            any(not item.removed for item in self.items)
+            and all(item.negotiated_price is not None for item in self.items if not item.removed)
             and all(
                 extra.price_eur is not None for extra in self.extras if extra.pricing == "on_quote"
             )

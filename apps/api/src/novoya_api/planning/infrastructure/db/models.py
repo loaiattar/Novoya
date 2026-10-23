@@ -42,6 +42,10 @@ class PlanModel(Base):
     assigned_agent_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Sent to the agency although no offer fitted (#184): its agent adds the items.
+    custom: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # A model's idea of the trip, for the agent only: never shown to the client.
+    agent_outline: Mapped[str | None] = mapped_column(Text)
 
 
 class PlanItemModel(Base):

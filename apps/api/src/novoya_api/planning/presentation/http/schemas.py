@@ -9,6 +9,7 @@ from novoya_api.catalog.public import OfferKind
 from novoya_api.planning.application.dto import (
     AdminPlanEntryView,
     AdminPlanView,
+    AgentOfferView,
     AgentPlanView,
     Person,
     PlanView,
@@ -41,11 +42,16 @@ class Plan(BaseModel):
     answer_within_days: int = Field(
         description="Days within which the agency answers once the trip is sent (a setting)."
     )
+    custom: bool = Field(
+        description="Sent to the agency although no offer fitted (#184): an advisor builds it, "
+        "so it has no item until then."
+    )
 
     @classmethod
     def of(cls, plan: PlanView, answer_within_days: int) -> "Plan":
         return cls(
             answer_within_days=answer_within_days,
+            custom=plan.custom,
             id=plan.id,
             wish_id=plan.wish_id,
             status=plan.status,
@@ -73,6 +79,7 @@ class QueueEntry(BaseModel):
     end_date: date | None
     budget_max: Decimal | None
     currency: str | None
+    custom: bool = Field(description="No offer fitted: the agent builds the plan (#184).")
 
     @classmethod
     def of(cls, entry: QueueEntryView) -> "QueueEntry":
@@ -137,6 +144,11 @@ class AgentPlan(BaseModel):
     persons: int | None
     start_date: date | None
     end_date: date | None
+    custom: bool = Field(description="No offer fitted: the agent builds the plan (#184).")
+    outline: str | None = Field(
+        description="A model's idea of the trip from the client's text, for the agent only: "
+        "not from the catalog, no partner and no price behind it. Null when none was written."
+    )
 
     @classmethod
     def of(cls, plan: AgentPlanView) -> "AgentPlan":
@@ -161,7 +173,35 @@ class AgentPlan(BaseModel):
             persons=plan.persons,
             start_date=plan.start_date,
             end_date=plan.end_date,
+            custom=plan.custom,
+            outline=plan.outline,
         )
+
+
+class AgentOffer(BaseModel):
+    """An offer the agent may add to the plan: it takes the trip's travellers and is open on
+    open_days (day 1 is the trip's first day). An activity goes on one of them; a hotel needs
+    each night it books on one of them."""
+
+    id: UUID
+    kind: OfferKind
+    title: str
+    description: str
+    partner_name: str
+    open_days: list[int]
+
+    @classmethod
+    def of(cls, offer: AgentOfferView) -> "AgentOffer":
+        return cls.model_validate(offer, from_attributes=True)
+
+
+class AddPlanItemRequest(BaseModel):
+    """An offer on a day of the trip. quantity: nights for a hotel, else how many."""
+
+    offer_id: UUID
+    day: int = Field(ge=1, le=366)
+    quantity: int = Field(default=1, ge=1, le=366)
+    note: str | None = Field(default=None, max_length=300)
 
 
 class SetPlanItemRequest(BaseModel):

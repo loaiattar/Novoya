@@ -3,8 +3,8 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.catalog.public import covered_destinations, limits_at, tags_at
-from novoya_api.planning.public import trip_fits
-from novoya_api.wishes.application.dto import PanelLimits
+from novoya_api.planning.public import closest_trip_dates, trip_fits
+from novoya_api.wishes.application.dto import DateOption, PanelLimits
 from novoya_api.wishes.domain.wish import Destination
 
 
@@ -42,3 +42,17 @@ class PartnerCatalog:
         return await trip_fits(
             destination.country, destination.city, persons, start, end, session=self._session
         )
+
+    async def closest_dates(
+        self, destination: Destination, persons: int, start: date, end: date, earliest: date
+    ) -> list[DateOption]:
+        found = await closest_trip_dates(
+            destination.country,
+            destination.city,
+            persons,
+            start,
+            end,
+            earliest,
+            session=self._session,
+        )
+        return [DateOption(option.start_date, option.end_date, option.offers) for option in found]

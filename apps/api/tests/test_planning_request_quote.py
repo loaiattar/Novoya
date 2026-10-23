@@ -7,13 +7,13 @@ from uuid import UUID
 
 import pytest
 
+from novoya_api.planning.application import request_confirmation as request_confirmation_module
 from novoya_api.planning.application.dto import (
     ClientContact,
     ExtraSummary,
     OfferSummary,
     RequestReceivedEmail,
 )
-from novoya_api.planning.application.use_cases import request_quote as request_quote_module
 from novoya_api.planning.application.use_cases.request_quote import RequestQuote
 from novoya_api.planning.domain.errors import PlanNotFound
 from novoya_api.planning.domain.plan import DraftItem, Plan, PlanExtra, PlanStatus
@@ -329,7 +329,7 @@ async def test_a_failing_contact_lookup_keeps_the_request_and_logs_the_error_typ
     notifier = FakeNotifier()
     use_case, uow = request_quote(plan, notifier=notifier, clients=BrokenClients())
     # Alembic's fileConfig, run by the SQL tests, disables the loggers that exist already.
-    monkeypatch.setattr(request_quote_module.logger, "disabled", False)
+    monkeypatch.setattr(request_confirmation_module.logger, "disabled", False)
 
     with caplog.at_level(logging.ERROR):
         view = await use_case(plan.id, OWNER_ID)

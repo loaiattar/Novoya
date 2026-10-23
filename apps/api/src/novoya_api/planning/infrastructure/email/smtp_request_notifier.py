@@ -6,7 +6,9 @@ from email.message import EmailMessage
 
 import aiosmtplib
 
+from novoya_api.config import get_settings
 from novoya_api.planning.application.dto import RequestReceivedEmail
+from novoya_api.planning.application.request_confirmation import RequestConfirmation
 from novoya_api.shared.domain.value_objects import Locale
 
 logger = logging.getLogger(__name__)
@@ -99,3 +101,25 @@ class SmtpRequestNotifier:
             logger.error("could not send the request email: %s", type(error).__name__)
             return False
         return True
+
+
+def smtp_request_notifier() -> SmtpRequestNotifier:
+    """The notifier on the NOVOYA_SMTP_* settings, as the other emails use them."""
+    settings = get_settings()
+    password = settings.smtp_password.get_secret_value() if settings.smtp_password else None
+    return SmtpRequestNotifier(
+        settings.smtp_host,
+        settings.smtp_port,
+        settings.mail_from,
+        username=settings.smtp_username,
+        password=password,
+        start_tls=settings.smtp_start_tls,
+    )
+
+
+def request_confirmation() -> RequestConfirmation:
+    """The request email on the settings: SMTP, the web app's address, the answer time."""
+    settings = get_settings()
+    return RequestConfirmation(
+        smtp_request_notifier(), settings.frontend_url, settings.quote_answer_days
+    )

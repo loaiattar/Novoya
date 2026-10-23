@@ -52,7 +52,7 @@ _LINK = re.compile(
 _MONEY = re.compile(r"€\s*\d|\d[\d.,]*\s*(?:€|eur\b|euros?\b)|\beur(?:os?)?\s*\d", re.IGNORECASE)
 
 
-def _plain(value: str) -> str:
+def plain_text(value: str) -> str:
     # The wish text can steer the answer, and this text is shown as Novoya's: no link to
     # follow and no price, which only an agent gives.
     if _LINK.search(value.lower()):
@@ -65,10 +65,10 @@ def _plain(value: str) -> str:
 Text = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=1000),
-    AfterValidator(_plain),
+    AfterValidator(plain_text),
 ]
 Note = Annotated[
-    str, StringConstraints(strip_whitespace=True, max_length=300), AfterValidator(_plain)
+    str, StringConstraints(strip_whitespace=True, max_length=300), AfterValidator(plain_text)
 ]
 
 

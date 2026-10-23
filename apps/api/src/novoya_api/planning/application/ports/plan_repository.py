@@ -63,6 +63,12 @@ class PlanRepository(Protocol):
         Raises InvalidTransition if the status changed since get()."""
         ...
 
+    async def add_item(self, plan: Plan, item_id: UUID) -> None:
+        """Inserts this new item of the plan, with no price, and writes the plan's updated_at.
+
+        Raises InvalidTransition if the status changed since get()."""
+        ...
+
     async def save_extra(self, plan: Plan, extra_id: UUID) -> None:
         """Writes the price of one chosen extra, and the plan's updated_at.
 

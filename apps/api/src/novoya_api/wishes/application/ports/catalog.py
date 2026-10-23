@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Protocol
 
-from novoya_api.wishes.application.dto import PanelLimits
+from novoya_api.wishes.application.dto import DateOption, PanelLimits
 from novoya_api.wishes.domain.wish import Destination
 
 
@@ -26,4 +26,11 @@ class Catalog(Protocol):
     async def fits(self, destination: Destination, persons: int, start: date, end: date) -> bool:
         """Whether a plan can be built for this trip there, whatever the model writes: the
         plan's own rule, so a yes never ends in no_offer_fits (#182, #183)."""
+        ...
+
+    async def closest_dates(
+        self, destination: Destination, persons: int, start: date, end: date, earliest: date
+    ) -> list[DateOption]:
+        """The nearest dates before and after this trip, the same length and group, for which
+        fits() would say yes, none before earliest (#184). Empty when none is near."""
         ...

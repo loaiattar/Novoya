@@ -53,4 +53,5 @@ def plan_as_view(plan: Plan, offers: dict[UUID, OfferSummary]) -> PlanView:
         based_on_preferences=plan.based_on_preferences,
         summary=plan.summary,
         items=tuple(items),
+        custom=plan.custom,
     )

@@ -77,6 +77,7 @@ class PlanView:
     based_on_preferences: bool
     summary: str
     items: tuple[PlanItemView, ...]
+    custom: bool = False  # sent to the agency although no offer fitted (#184)
 
 
 @dataclass(frozen=True)
@@ -126,6 +127,7 @@ class QueueEntryView:
     end_date: date | None
     budget_max: Decimal | None
     currency: str | None
+    custom: bool = False  # no offer fitted: the agent builds the plan (#184)
 
 
 @dataclass(frozen=True)
@@ -190,6 +192,32 @@ class AgentPlanView:
     persons: int | None
     start_date: date | None
     end_date: date | None
+    custom: bool = False
+    # A model's idea of the trip from the client's text (#184): not from the catalog, no price.
+    outline: str | None = None
+
+
+@dataclass(frozen=True)
+class AgentOfferView:
+    """An offer the agent may add to the plan: it fits the trip's travellers and is open on
+    open_days (day 1 = the trip's first day). With the partner, as on the agent's plan."""
+
+    id: UUID
+    kind: str
+    title: str
+    description: str
+    partner_name: str
+    open_days: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class TripDates:
+    """Other dates for the same trip, the same length, when a plan can be built: from
+    start_date to end_date, `offers` listed offers fit the group (#184)."""
+
+    start_date: date
+    end_date: date
+    offers: int
 
 
 @dataclass(frozen=True)

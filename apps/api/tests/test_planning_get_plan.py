@@ -45,7 +45,7 @@ ITEM_FIELDS = {
     "description",
     "available",
 }
-PLAN_FIELDS = {"id", "wish_id", "status", "based_on_preferences", "summary", "items"}
+PLAN_FIELDS = {"id", "wish_id", "status", "based_on_preferences", "summary", "items", "custom"}
 
 
 def stored_plan(*drafts: DraftItem) -> Plan:

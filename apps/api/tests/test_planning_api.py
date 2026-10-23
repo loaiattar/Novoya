@@ -139,6 +139,7 @@ async def test_the_owner_reads_the_plan(plan, client):
         "summary",
         "items",
         "answer_within_days",
+        "custom",
     }
     assert set(body["items"][0]) == {
         "id",
@@ -199,6 +200,7 @@ async def test_the_owner_requests_a_quote(plan, client):
         "summary",
         "items",
         "answer_within_days",
+        "custom",
     }
     assert set(body["items"][0]) == {
         "id",

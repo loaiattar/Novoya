@@ -27,6 +27,15 @@
   this wish, for the advisor chat's read rule (messaging). Empty when the wish has no plan.
 - trip_fits(country, city, persons, start, end) -> whether a plan can be built for this trip
   whatever the model does: the rule the preference panel checks before sending (#183).
+- closest_trip_dates(country, city, persons, start, end, earliest) -> [TripDates]: when no
+  plan can be built for a trip, the nearest dates before and after it, the same length and
+  group, for which one can, by the same rule (#184). Empty when none is near.
+- request_custom_plan(request) -> PlanView: sends an answered wish to the agency although no
+  offer fits it (#184): a custom plan, requested, with no item, added to the caller's session;
+  the caller commits. Like generate_plan, it ends the read before a model drafts the agent's
+  outline, so call it before writing anything in that session.
+- confirm_request(plan_id, client): after the caller committed request_custom_plan, the
+  email to `client` (a ClientContact) that the agency has the trip (#168). Never raises.
 - plan_statuses(wish_ids) -> {wish_id: (status, ...)}: where the plans of these wishes stand,
   so wishes knows which answers the agency already works from (#165).
 - delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
@@ -42,6 +51,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.planning.application.dto import (
+    ClientContact,
     PlanItemView,
     PlanRequest,
     PlanView,
@@ -49,16 +59,25 @@ from novoya_api.planning.application.dto import (
     PricedItem,
     PricedPlan,
     TripBrief,
+    TripDates,
 )
+from novoya_api.planning.application.ports.outline_writer import OutlineWriter
 from novoya_api.planning.application.ports.plan_writer import PlanWriter
+from novoya_api.planning.application.use_cases.closest_dates import ClosestDates
 from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan, plannable
 from novoya_api.planning.application.use_cases.get_priced_plan import GetPricedPlan
 from novoya_api.planning.application.use_cases.quote_plan import QuotePlan
 from novoya_api.planning.application.use_cases.record_answer import RecordAnswer
+from novoya_api.planning.application.use_cases.request_custom_plan import RequestCustomPlan
 from novoya_api.planning.domain.errors import NoOfferFits, PlanNotFound, PlanNotReady
 from novoya_api.planning.domain.plan import PlanStatus
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
+from novoya_api.planning.infrastructure.email.smtp_request_notifier import request_confirmation
+from novoya_api.planning.infrastructure.llm.outline_writer import (
+    LlmOutlineWriter,
+    NoModelOutlineWriter,
+)
 from novoya_api.planning.infrastructure.llm.plan_writer import LlmPlanWriter, NoModelPlanWriter
 from novoya_api.planning.infrastructure.llm.tools import TripBounds, travel_tools
 from novoya_api.planning.infrastructure.wish_owners import WishOwners
@@ -72,6 +91,7 @@ from novoya_api.shared.infrastructure.system_clock import SystemClock
 from novoya_api.wishes.public import ids_for_user as wish_ids_for_user
 
 __all__ = [
+    "ClientContact",
     "NoOfferFits",
     "PlanItemView",
     "PlanNotFound",
@@ -82,8 +102,11 @@ __all__ = [
     "PricedItem",
     "PricedPlan",
     "TripBrief",
+    "TripDates",
     "WishPlanAccess",
     "WishPlan",
+    "closest_trip_dates",
+    "confirm_request",
     "count_plans_by_status",
     "delete_for_user",
     "find_plan_ids",
@@ -98,6 +121,7 @@ __all__ = [
     "plans_for_wishes",
     "priced_plan",
     "quote_plan",
+    "request_custom_plan",
 ]
 
 # The plans a quote search may match, last changed first: past it the query is too broad, and
@@ -118,6 +142,8 @@ class WishPlanAccess:
 
 # The client waits for the plan; the fallback covers a slow model.
 DEADLINE_SECONDS = 60
+# The client waits for a custom request too, and it goes without an outline past this.
+OUTLINE_DEADLINE_SECONDS = 30
 
 
 @dataclass(frozen=True)
@@ -220,6 +246,47 @@ async def plan_statuses(
     left out. The caller checks the wishes are the signed-in client's."""
     found = await SqlPlanRepository(session).statuses_by_wish(wish_ids)
     return {wish_id: tuple(statuses) for wish_id, statuses in found.items()}
+
+
+async def request_custom_plan(request: PlanRequest, *, session: AsyncSession) -> PlanView:
+    """The custom plan of an answered wish no offer fits, added to `session`. The caller
+    commits, then calls confirm_request."""
+    use_case = RequestCustomPlan(
+        writer=_outline_writer(),
+        plans=SqlPlanRepository(session),
+        uow=SqlAlchemyUnitOfWork(session),
+        clock=SystemClock(),
+    )
+    return await use_case(request)
+
+
+async def confirm_request(plan_id: UUID, client: ClientContact) -> None:
+    """Email the client that the agency has the trip. Call it after the commit; never raises.
+    The caller finds the client: accounts erases plans, so importing it here would loop."""
+    await request_confirmation().send_to(client, plan_id)
+
+
+async def closest_trip_dates(
+    country: str,
+    city: str | None,
+    persons: int,
+    start: date,
+    end: date,
+    earliest: date,
+    *,
+    session: AsyncSession,
+) -> list[TripDates]:
+    """The nearest dates before and after this trip for which a plan can be built, the same
+    length and group, none before `earliest`. Empty when none is near."""
+    return await ClosestDates(PartnerOffers(session))(country, city, persons, start, end, earliest)
+
+
+def _outline_writer() -> OutlineWriter:
+    try:
+        orchestrator = get_orchestrator(deadline_seconds=OUTLINE_DEADLINE_SECONDS)
+    except LLMError:
+        return NoModelOutlineWriter()  # no API key: the agent works from the client's text
+    return LlmOutlineWriter(orchestrator, OUTLINE_DEADLINE_SECONDS)
 
 
 def _writer() -> PlanWriter:
