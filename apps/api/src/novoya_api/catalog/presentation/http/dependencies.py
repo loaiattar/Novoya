@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from novoya_api.catalog.application.use_cases.create_offer import CreateOffer
 from novoya_api.catalog.application.use_cases.create_partner import CreatePartner
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
+from novoya_api.catalog.application.use_cases.import_catalog import ImportCatalog
 from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtras
 from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
@@ -29,6 +30,8 @@ from novoya_api.catalog.infrastructure.db.repositories import (
     SqlPartnerRepository,
     SqlReviewRepository,
 )
+from novoya_api.catalog.infrastructure.detour.upload import DetourUploadImporter
+from novoya_api.config import get_settings
 from novoya_api.shared.infrastructure.db.session import get_session
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 
@@ -99,3 +102,15 @@ def get_list_all_extras(session: Annotated[AsyncSession, Depends(get_session)]) 
 
 def get_update_extra(session: Annotated[AsyncSession, Depends(get_session)]) -> UpdateExtra:
     return UpdateExtra(SqlExtraRepository(session), SqlAlchemyUnitOfWork(session))
+
+
+def get_detour_max_bytes() -> int:
+    """The upload limit, NOVOYA_DETOUR_MAX_BYTES. The web page reads it from the API too."""
+    return get_settings().detour_max_bytes
+
+
+def get_import_catalog(
+    max_bytes: Annotated[int, Depends(get_detour_max_bytes)],
+) -> ImportCatalog:
+    # import_detour opens its own transaction: it holds the import lock until it commits.
+    return ImportCatalog(DetourUploadImporter(max_bytes))

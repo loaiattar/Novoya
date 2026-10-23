@@ -13,8 +13,8 @@ class AnswerQuote:
     """The client accepts or rejects their quote, with an optional comment. The answer on the
     quote and the plan's new status are committed together.
 
-    Only the quote's client answers. Staff can read the quote, so they get 403; anyone else
-    gets 404, as for a read."""
+    Only the quote's client answers. Its agent and admins can read the quote, so they get
+    403; anyone else gets 404, as for a read."""
 
     def __init__(
         self, quotes: QuoteRepository, plans: PlanQuoting, uow: UnitOfWork, clock: Clock
@@ -28,12 +28,12 @@ class AnswerQuote:
         self,
         quote_id: UUID,
         reader_id: UUID,
-        staff: bool,
+        admin: bool,
         answer: QuoteStatus,
         comment: str | None,
     ) -> None:
         quote = await self._quotes.get(quote_id, with_pdf=False)
-        if quote is None or not quote.readable_by(reader_id, staff):
+        if quote is None or not quote.readable_by(reader_id, admin):
             raise QuoteNotFound("no such quote")
         if quote.client_id != reader_id:
             raise PermissionDenied("only the client answers their quote")

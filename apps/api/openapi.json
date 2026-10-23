@@ -1483,6 +1483,49 @@
         "title": "Health",
         "type": "object"
       },
+      "ImportCountsResponse": {
+        "description": "What the D\u00c9TOUR import wrote: rows in the export, imported or updated.",
+        "properties": {
+          "extras": {
+            "title": "Extras",
+            "type": "integer"
+          },
+          "offers": {
+            "title": "Offers",
+            "type": "integer"
+          },
+          "partners": {
+            "title": "Partners",
+            "type": "integer"
+          },
+          "reviews": {
+            "title": "Reviews",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "partners",
+          "offers",
+          "reviews",
+          "extras"
+        ],
+        "title": "ImportCountsResponse",
+        "type": "object"
+      },
+      "ImportLimitsResponse": {
+        "description": "What the import accepts, so the page refuses a file before sending it.",
+        "properties": {
+          "max_bytes": {
+            "title": "Max Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_bytes"
+        ],
+        "title": "ImportLimitsResponse",
+        "type": "object"
+      },
       "MeResponse": {
         "properties": {
           "created_at": {
@@ -2295,6 +2338,92 @@
           "available"
         ],
         "title": "PlanItemResponse",
+        "type": "object"
+      },
+      "PlanQuote": {
+        "description": "The quote of a plan, for the agent who sent it: where it stands (open, expired,\naccepted, rejected), and when the client answered with their comment (null until then).\nNo email_sent: that only matters on the answer to sending.",
+        "properties": {
+          "client_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Comment"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "fr"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QuoteStatus"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date-time",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "plan_id",
+          "total",
+          "currency",
+          "locale",
+          "sent_at",
+          "valid_until",
+          "status",
+          "decided_at",
+          "client_comment"
+        ],
+        "title": "PlanQuote",
         "type": "object"
       },
       "PlanResponse": {
@@ -4276,6 +4405,159 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/catalog/import": {
+      "get": {
+        "description": "The largest export POST /admin/catalog/import accepts, in bytes. Admins only.",
+        "operationId": "getImportLimits",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportLimitsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Import Limits",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Import a D\u00c9TOUR sqlite export, sent as the raw body: the same import as the command\nline, all of it or nothing. The file is read once and deleted, never kept. 413 over the\nsize limit, 422 not_a_detour_export or detour_import_failed (the message names the D\u00c9TOUR\ntable and id), 409 import_running while another import runs. Admins only.",
+        "operationId": "importDetour",
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportCountsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Import Detour",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/extras": {
       "get": {
         "description": "All extras, inactive and hidden ones too. Agents only.",
@@ -6511,7 +6793,7 @@
     },
     "/agent/plans/{plan_id}/quote": {
       "get": {
-        "description": "The quote sent for this plan, with the id of its PDF. Only the agent who sent it\n(403). 404 before the quote is sent.",
+        "description": "The quote sent for this plan, with the id of its PDF, where it stands and the\nclient's answer and comment. Only the agent who sent it or an admin (403). 404 before\nthe quote is sent.",
         "operationId": "getPlanQuote",
         "parameters": [
           {
@@ -6530,7 +6812,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Quote"
+                  "$ref": "#/components/schemas/PlanQuote"
                 }
               }
             },
@@ -8525,7 +8807,7 @@
     },
     "/quotes/{quote_id}": {
       "get": {
-        "description": "The quote and where it stands (open, expired after its validity date, accepted or\nrejected), for its client or staff (agents, admins). 404 for anyone else, so the id\nstays hidden.",
+        "description": "The quote and where it stands (open, expired after its validity date, accepted or\nrejected), for its client, the agent who sent it or an admin. 404 for anyone else\n(another agent too), so the id stays hidden.",
         "operationId": "getQuote",
         "parameters": [
           {
@@ -8599,7 +8881,7 @@
     },
     "/quotes/{quote_id}/accept": {
       "post": {
-        "description": "The client accepts their quote, with an optional comment for the agent. The plan\nbecomes accepted. 409 quote_expired after the validity day, 409 quote_answered when it\nis answered already; 403 for staff, 404 for anyone else.",
+        "description": "The client accepts their quote, with an optional comment for the agent. The plan\nbecomes accepted. 409 quote_expired after the validity day, 409 quote_answered when it\nis answered already; 403 for its agent and admins, 404 for anyone else.",
         "operationId": "acceptQuote",
         "parameters": [
           {
@@ -8693,7 +8975,7 @@
     },
     "/quotes/{quote_id}/pdf": {
       "get": {
-        "description": "The quote as a PDF, for its client or an agent. 404 for anyone else, so the id stays\nhidden.",
+        "description": "The quote as a PDF, for its client, the agent who sent it or an admin. 404 for anyone\nelse (another agent too), so the id stays hidden.",
         "operationId": "getQuotePdf",
         "parameters": [
           {

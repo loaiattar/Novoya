@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     argon2_time_cost: int = 3
     argon2_memory_cost_kib: int = 65536
 
+    # The DÉTOUR export an admin uploads from the back office (#132). The first export is
+    # well under this; a bigger one is refused with 413 before it is all received.
+    detour_max_bytes: int = 20_000_000
+
     # LLM through OpenRouter (#22). Free models; the fallbacks are tried in order.
     openrouter_api_key: SecretStr | None = None
     llm_model: str = "nvidia/nemotron-3-ultra-550b-a55b:free"

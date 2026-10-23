@@ -65,6 +65,16 @@ class ExtraView:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class ImportCounts:
+    """What a DÉTOUR import wrote. Counts only: never a name or an email."""
+
+    partners: int
+    offers: int
+    reviews: int
+    extras: int
+
+
 @dataclass(frozen=True)
 class RowCounts:
     """How many rows clients may see, how many an admin hid, and how many left the DÉTOUR

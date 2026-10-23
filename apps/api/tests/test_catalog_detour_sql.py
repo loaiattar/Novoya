@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import NullPool
 
 from alembic import command
+from novoya_api.catalog.application.dto import ImportCounts
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
 from novoya_api.catalog.application.use_cases.update_extra import UpdateExtra, UpdateExtraCommand
 from novoya_api.catalog.application.use_cases.update_offer import UpdateOffer, UpdateOfferCommand
@@ -38,12 +39,20 @@ from novoya_api.catalog.infrastructure.db.repositories import (
     SqlReviewRepository,
 )
 from novoya_api.catalog.infrastructure.detour.mapping import DetourImportError, detour_id
-from novoya_api.catalog.infrastructure.detour.run import import_detour
+from novoya_api.catalog.infrastructure.detour.run import LOCK_KEY, DetourImportBusy, import_detour
+from novoya_api.catalog.infrastructure.detour.upload import DetourUploadImporter
 from novoya_api.catalog.infrastructure.seed.run import seed_catalog
 from novoya_api.catalog.public import covered_destinations, get_extras, search_offers, tags_at
 from novoya_api.shared.infrastructure.db.session import close_db
 from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
-from tests.detour_fixture import CHANIA, CHANIA_STAY, CHANIA_TRANSFER, DetourFile, sample_detour
+from tests.detour_fixture import (
+    CHANIA,
+    CHANIA_STAY,
+    CHANIA_TRANSFER,
+    DetourFile,
+    leftover_folders,
+    sample_detour,
+)
 from tests.test_catalog_sql import (
     API_DIR,
     database_url,  # noqa: F401  (fixture)
@@ -148,6 +157,32 @@ async def test_an_invalid_file_writes_nothing(session, source):
         await import_detour(source)
 
     assert await counts(session) == {"partners": 0, "offers": 0, "reviews": 0, "extras": 0}
+
+
+async def test_a_second_import_stops_while_one_is_running(session, source):
+    # The test's session holds the lock, as a running import's transaction would.
+    await session.execute(select(func.pg_advisory_lock(LOCK_KEY)))
+    try:
+        with pytest.raises(DetourImportBusy):
+            await import_detour(source)
+    finally:
+        await session.execute(select(func.pg_advisory_unlock(LOCK_KEY)))
+
+    assert await counts(session) == {"partners": 0, "offers": 0, "reviews": 0, "extras": 0}
+    assert (await import_detour(source)).partners == 3  # the lock went with the transaction
+
+
+async def test_an_uploaded_export_is_imported_and_not_kept(session, source):
+    async def chunks():
+        data = source.read_bytes()
+        for start in range(0, len(data), 4096):
+            yield data[start : start + 4096]
+
+    reported = await DetourUploadImporter(max_bytes=10_000_000).import_export(chunks())
+
+    assert reported == ImportCounts(partners=3, offers=3, reviews=3, extras=3)
+    assert await counts(session) == {"partners": 3, "offers": 3, "reviews": 3, "extras": 3}
+    assert not leftover_folders()
 
 
 async def test_imported_destinations_with_an_active_partner_are_covered(session, source):

@@ -103,6 +103,10 @@ after 30 days and has no backups.
    python -m novoya_api.accounts.presentation.cli grant-role --email you@example.com --role admin
    ```
 
+   To load the client's catalog instead of the seed, sign in as that admin and upload
+   `detour.sqlite` on `/admin/import` (#132). The file is deleted once imported. Check that
+   the static site's `/api` rewrite lets a request body of that size through.
+
 6. Smoke test on `https://<web>.onrender.com`: sign up and get the verification email, sign in
    with Google, send a wish, get a plan, send a quote and open its PDF.
 7. To redeploy: merge into the deployed branch; Render builds and runs the migrations. To

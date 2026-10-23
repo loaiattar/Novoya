@@ -92,9 +92,10 @@ class Quote:
         self.decided_at = now
         self.client_comment = comment
 
-    def readable_by(self, reader_id: UUID, staff: bool) -> bool:
-        """Its client and staff (agents, admins) may read it; nobody else."""
-        return staff or self.client_id == reader_id
+    def readable_by(self, reader_id: UUID, admin: bool) -> bool:
+        """Its client, the agent who sent it and any admin may read it; nobody else. Another
+        agent may not: agents see client data only for their own plans."""
+        return admin or reader_id in (self.client_id, self.agent_id)
 
     def has_expired(self, now: datetime) -> bool:
         """True once the validity day is over in Paris: the PDF and the email show the client

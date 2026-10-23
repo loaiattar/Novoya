@@ -75,6 +75,14 @@
     "notReady": "Some lines still have no price. The plan was read again: check it and try once more.",
     "alreadySent": "This quote was already sent, or the plan is no longer being negotiated.",
     "failed": "The quote was not sent. Please try again.",
-    "loadFailed": "We couldn't load the quote."
+    "loadFailed": "We couldn't load the quote.",
+    "answer": {
+      "open": "Waiting for the client's answer.",
+      "accepted": "The client accepted the quote on {{date}}.",
+      "rejected": "The client declined the quote on {{date}}.",
+      "expired": "The quote expired on {{date}} without an answer.",
+      "comment": "Client's comment:",
+      "noComment": "none."
+    }
   }
 }

@@ -20,6 +20,7 @@ from tests.quoting_fakes import (
     CLIENT_ID,
     FRONTEND,
     NOW,
+    OTHER_AGENT,
     OTHER_CLIENT,
     PLAN_ID,
     QUOTED,
@@ -173,29 +174,37 @@ async def test_a_failed_email_keeps_the_quote():
 async def test_the_client_reads_their_quote_pdf():
     quote = stored_quote()
 
-    pdf = await GetQuotePdf(FakeQuotes(quote))(quote.id, CLIENT_ID, staff=False)
+    pdf = await GetQuotePdf(FakeQuotes(quote))(quote.id, CLIENT_ID, admin=False)
 
     assert pdf == QuotePdf(f"{quote.number}.pdf", b"%PDF-1.7 stored")
 
 
-async def test_staff_read_any_quote_pdf():
+@pytest.mark.parametrize(("reader_id", "admin"), [(AGENT_ID, False), (uuid4(), True)])
+async def test_its_agent_and_admins_read_the_quote_pdf(reader_id, admin):
     quote = stored_quote()
 
-    pdf = await GetQuotePdf(FakeQuotes(quote))(quote.id, AGENT_ID, staff=True)
+    pdf = await GetQuotePdf(FakeQuotes(quote))(quote.id, reader_id, admin=admin)
 
     assert pdf.content == b"%PDF-1.7 stored"
+
+
+async def test_another_agent_cannot_read_the_quote_pdf():
+    quote = stored_quote()
+
+    with pytest.raises(QuoteNotFound):
+        await GetQuotePdf(FakeQuotes(quote))(quote.id, OTHER_AGENT, admin=False)
 
 
 async def test_another_client_cannot_read_the_quote_pdf():
     quote = stored_quote()
 
     with pytest.raises(QuoteNotFound):
-        await GetQuotePdf(FakeQuotes(quote))(quote.id, OTHER_CLIENT, staff=False)
+        await GetQuotePdf(FakeQuotes(quote))(quote.id, OTHER_CLIENT, admin=False)
 
 
 async def test_a_missing_quote_pdf_is_not_found():
     with pytest.raises(QuoteNotFound):
-        await GetQuotePdf(FakeQuotes(stored_quote()))(uuid4(), CLIENT_ID, staff=True)
+        await GetQuotePdf(FakeQuotes(stored_quote()))(uuid4(), CLIENT_ID, admin=True)
 
 
 async def test_the_agent_can_send_the_quote_in_english_to_a_french_client():

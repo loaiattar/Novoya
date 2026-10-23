@@ -14,9 +14,15 @@ from novoya_api.catalog.infrastructure.detour.mapping import DetourCatalog, Deto
 
 
 def open_source(path: Path) -> sqlite3.Connection:
-    """The export, opened read-only: the import can never change the client's file."""
+    """The export, opened read-only: the import can never change the client's file.
+
+    The file may come from an upload (#132), so it is not trusted either: no writes even
+    through a view or a trigger, and no SQL functions with side effects in its schema.
+    Extensions stay off, as Python leaves them."""
     connection = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA query_only = ON")
+    connection.execute("PRAGMA trusted_schema = OFF")
     return connection
 
 

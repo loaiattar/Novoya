@@ -32,12 +32,10 @@ from novoya_api.shared.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWor
 from novoya_api.shared.infrastructure.in_memory_rate_limiter import InMemoryRateLimiter
 from novoya_api.shared.infrastructure.system_clock import SystemClock
 
-STAFF = frozenset({Role.AGENT, Role.ADMIN, Role.SUPER_ADMIN})
-
 
 class Reader(NamedTuple):
     user_id: UUID
-    staff: bool  # an agent, an admin or a super admin reads every quote
+    admin: bool  # an admin or a super admin reads every quote; an agent only the ones they sent
 
 
 class Staff(NamedTuple):
@@ -57,7 +55,7 @@ def get_staff(user: Annotated[CurrentUserView, Depends(require_agent)]) -> Staff
 
 def get_reader(user: CurrentUser) -> Reader:
     """Whoever is signed in: 401 without a session. The use case decides what they may read."""
-    return Reader(user.user_id.value, user.role in STAFF)
+    return Reader(user.user_id.value, user.role in (Role.ADMIN, Role.SUPER_ADMIN))
 
 
 def get_notifier() -> QuoteNotifier:
@@ -112,7 +110,7 @@ def get_resend_quote_email(
 
 
 def get_get_plan_quote(session: Annotated[AsyncSession, Depends(get_session)]) -> GetPlanQuote:
-    return GetPlanQuote(quotes=SqlQuoteRepository(session))
+    return GetPlanQuote(quotes=SqlQuoteRepository(session), clock=SystemClock())
 
 
 def get_get_quote(session: Annotated[AsyncSession, Depends(get_session)]) -> GetQuote:

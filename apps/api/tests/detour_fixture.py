@@ -5,6 +5,7 @@ every row is invented: never copy names, emails, reviews or authors from the rea
 """
 
 import sqlite3
+import tempfile
 from pathlib import Path
 from types import TracebackType
 
@@ -360,3 +361,8 @@ def sample_detour(path: Path) -> Path:
             constraints=((0, "Trois jours de préavis"),),
         )
     return path
+
+
+def leftover_folders() -> list[Path]:
+    """Folders of uploaded exports still on disk (#132): there should never be any."""
+    return list(Path(tempfile.gettempdir()).glob("novoya-detour-*"))

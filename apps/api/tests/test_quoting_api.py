@@ -36,6 +36,7 @@ from tests.quoting_fakes import (
     CLIENT_ID,
     FRONTEND,
     NOW,
+    OTHER_AGENT,
     OTHER_CLIENT,
     PLAN_ID,
     FakeNotifier,
@@ -179,8 +180,11 @@ async def test_the_client_downloads_their_quote_pdf():
     assert response.content == b"%PDF-1.7 stored"
 
 
-@pytest.mark.parametrize(("role", "user_id"), [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID)])
-async def test_staff_download_any_quote_pdf(role, user_id):
+@pytest.mark.parametrize(
+    ("role", "user_id"),
+    [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID), (Role.SUPER_ADMIN, uuid4())],
+)
+async def test_its_agent_and_admins_download_the_quote_pdf(role, user_id):
     app = app_with(FakePlanQuoting(), role, user_id)
 
     response = await call(app, "GET", f"/quotes/{QUOTE.id}/pdf")
@@ -346,14 +350,26 @@ async def test_the_quote_shows_the_clients_answer():
     assert response.json()["status"] == "accepted"
 
 
-@pytest.mark.parametrize(("role", "user_id"), [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID)])
-async def test_staff_read_any_quote(role, user_id):
+@pytest.mark.parametrize(
+    ("role", "user_id"),
+    [(Role.AGENT, AGENT_ID), (Role.ADMIN, ADMIN_ID), (Role.SUPER_ADMIN, uuid4())],
+)
+async def test_its_agent_and_admins_read_the_quote(role, user_id):
     app = app_with(FakePlanQuoting(), role, user_id)
 
     response = await call(app, "GET", f"/quotes/{QUOTE.id}")
 
     assert response.status_code == 200
     assert response.json()["id"] == str(QUOTE.id)
+
+
+@pytest.mark.parametrize("path", ["", "/pdf"])
+async def test_another_agent_gets_404_for_the_quote_and_its_pdf(path):
+    app = app_with(FakePlanQuoting(), Role.AGENT, OTHER_AGENT)
+
+    response = await call(app, "GET", f"/quotes/{QUOTE.id}{path}")
+
+    assert response.status_code == 404
 
 
 async def test_another_client_gets_404_for_the_quote():

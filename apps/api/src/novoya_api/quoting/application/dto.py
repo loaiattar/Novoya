@@ -126,6 +126,17 @@ class QuoteView:
 
 
 @dataclass(frozen=True)
+class PlanQuoteView:
+    """A sent quote as its agent follows it: where it stands, and the client's answer and
+    comment once they gave them."""
+
+    quote: QuoteView
+    status: QuoteStatus
+    decided_at: datetime | None
+    client_comment: str | None
+
+
+@dataclass(frozen=True)
 class QuoteDetailView:
     """A quote as its reader sees it, without its PDF: where it stands, the client's answer,
     who prepared it and the trip with its priced lines. The trip fields are empty and the

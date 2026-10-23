@@ -25,3 +25,5 @@ detour*.sql
 detour*.xlsx
 livraison/
 DETOUR/
+# On a case-insensitive disk (Windows, macOS), DETOUR/ also matches the importer's code.
+!apps/api/src/novoya_api/catalog/infrastructure/detour/

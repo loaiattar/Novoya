@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { formatDay, formatEuros } from '@/lib/format'
+import { formatAgencyDay, formatEuros } from '@/lib/format'
 
 import {
   AlertDialog,
@@ -17,7 +17,8 @@ type Props = {
   /** Decimal strings, as the API gives them. */
   total: string
   budget: string | null
-  /** ISO day the quote stays valid until if it goes out now; null while nothing is asked. */
+  /** ISO date-time the quote stays valid until if it goes out now, shown as the agency's day
+   *  in Paris like the PDF; null while nothing is asked. */
   validUntil: string | null
   onConfirm: () => void
   onCancel: () => void
@@ -43,7 +44,7 @@ export function SendQuoteDialog({ total, budget, validUntil, onConfirm, onCancel
             <dt className="text-muted">{t('quote.budget')}</dt>
             <dd className="m-0">{budget === null ? t('request.noBudget') : formatEuros(locale, Number(budget))}</dd>
           </dl>
-          <p className="m-0 text-sm">{t('quote.validUntil', { date: formatDay(locale, validUntil) })}</p>
+          <p className="m-0 text-sm">{t('quote.validUntil', { date: formatAgencyDay(locale, validUntil) })}</p>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-11 rounded-full">{t('quote.cancel')}</AlertDialogCancel>
             <AlertDialogAction className="min-h-11 rounded-full" onClick={onConfirm}>

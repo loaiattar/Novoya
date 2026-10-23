@@ -4,8 +4,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../api/client'
+import { getPlanQuoteQueryKey } from '../api/generated/@tanstack/react-query.gen'
 import { client } from '../api/generated/client.gen'
-import type { AgentPlan, AgentPlanExtra, AgentPlanItem, MeResponse, Quote } from '../api/generated/types.gen'
+import type { AgentPlan, AgentPlanExtra, AgentPlanItem, MeResponse, PlanQuote, Quote } from '../api/generated/types.gen'
 import { createAppRouter } from '../router'
 
 const AGENT: MeResponse = {
@@ -107,6 +108,10 @@ const QUOTE: Quote = {
   email_sent: true,
 }
 
+// What GET /agent/plans/{id}/quote answers: the sent quote and where it stands.
+const { email_sent: _emailSent, ...QUOTE_FIELDS } = QUOTE
+const OPEN_QUOTE: PlanQuote = { ...QUOTE_FIELDS, status: 'open', decided_at: null, client_comment: null }
+
 type Answer = (body: unknown) => Response | Promise<Response>
 
 let me: MeResponse
@@ -115,6 +120,7 @@ let planAnswer: () => Response
 let itemAnswer: Answer
 let extraAnswer: Answer
 let quoteAnswer: () => Response | Promise<Response>
+let planQuote: PlanQuote
 let requests: { method: string; path: string; search: string; body?: unknown }[]
 
 function mockApi() {
@@ -129,8 +135,8 @@ function mockApi() {
     if (url.pathname.startsWith(`/agent/plans/${PLAN_ID}/extras/`) && request.method === 'PATCH') return extraAnswer(body)
     if (url.pathname === `/agent/plans/${PLAN_ID}/quote` && request.method === 'POST') return quoteAnswer()
     if (url.pathname === `/agent/plans/${PLAN_ID}/quote` && request.method === 'GET') {
-      return plan.status === 'quoted'
-        ? Response.json(QUOTE)
+      return ['quoted', 'accepted', 'rejected'].includes(plan.status)
+        ? Response.json(planQuote)
         : Response.json({ code: 'not_found', detail: 'no quote' }, { status: 404 })
     }
     return Response.json({ code: 'not_found', detail: 'no route' }, { status: 404 })
@@ -169,6 +175,7 @@ describe('agent plan page', () => {
       plan = { ...plan, status: 'quoted' }
       return Response.json(QUOTE, { status: 201 })
     }
+    planQuote = OPEN_QUOTE
     requests = []
     mockApi()
   })
@@ -345,6 +352,17 @@ describe('agent plan page', () => {
       expect(dialog).toHaveTextContent(/Valid until (29 October 2026|October 29, 2026)/)
     })
 
+    it("shows the validity as the agency's day in Paris, like the PDF", async () => {
+      // 23:30 UTC on 22 October is already 23 October in Paris: valid until 30 October.
+      vi.setSystemTime(new Date('2026-10-22T23:30:00Z'))
+      renderAt(`/agent/plans/${PLAN_ID}`)
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Send the quote' }))
+
+      const dialog = await screen.findByRole('alertdialog', { name: 'Send the quote?' })
+      expect(dialog).toHaveTextContent('Valid until October 30, 2026')
+    })
+
     it('says in the dialog when the client gave no budget', async () => {
       plan = { ...READY, budget_max: null }
       renderAt(`/agent/plans/${PLAN_ID}`)
@@ -387,7 +405,7 @@ describe('agent plan page', () => {
     })
 
     it('shows the quote as sent, with its number and its PDF', async () => {
-      renderAt(`/agent/plans/${PLAN_ID}`)
+      const { queryClient } = renderAt(`/agent/plans/${PLAN_ID}`)
       fireEvent.click(await screen.findByRole('button', { name: 'Send the quote' }))
       const dialog = await screen.findByRole('alertdialog', { name: 'Send the quote?' })
 
@@ -400,6 +418,69 @@ describe('agent plan page', () => {
         `http://api.test/quotes/${QUOTE.id}/pdf`,
       )
       expect(screen.queryByRole('button', { name: 'Send the quote' })).not.toBeInTheDocument()
+      expect(screen.getByText("Waiting for the client's answer.")).toBeInTheDocument()
+      // The page reads the quote from what sending answered: open, no answer, no email_sent.
+      const cached = queryClient.getQueryData(getPlanQuoteQueryKey({ path: { plan_id: PLAN_ID } }))
+      expect(cached).toMatchObject({ status: 'open', decided_at: null, client_comment: null })
+      expect(cached).not.toHaveProperty('email_sent')
+    })
+
+    it('shows the answer once the client gives it while the page is open', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'], shouldAdvanceTime: true })
+      plan = { ...READY, status: 'quoted' }
+      renderAt(`/agent/plans/${PLAN_ID}`)
+      expect(await screen.findByText("Waiting for the client's answer.")).toBeInTheDocument()
+
+      plan = { ...READY, status: 'rejected' }
+      planQuote = { ...OPEN_QUOTE, status: 'rejected', decided_at: '2026-10-24T08:30:00Z', client_comment: 'Too far' }
+      const before = planReads()
+      // No focus, no reload: the open quote is read again every minute.
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      expect(await screen.findByText('The client declined the quote on October 24, 2026.')).toBeInTheDocument()
+      expect(screen.getByText('Too far')).toBeInTheDocument()
+      // The plan follows the answer: read again, its status is now declined.
+      await waitFor(() => expect(planReads()).toBeGreaterThan(before))
+      expect(await screen.findByText('Declined')).toBeInTheDocument()
+    })
+
+    it('stops reading the quote again once the client answered', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'], shouldAdvanceTime: true })
+      plan = { ...READY, status: 'accepted' }
+      planQuote = { ...OPEN_QUOTE, status: 'accepted', decided_at: '2026-10-24T08:30:00Z' }
+      renderAt(`/agent/plans/${PLAN_ID}`)
+      await screen.findByText('The client accepted the quote on October 24, 2026.')
+      const reads = sent('GET', `/agent/plans/${PLAN_ID}/quote`).length
+
+      await vi.advanceTimersByTimeAsync(5 * 60_000)
+
+      expect(sent('GET', `/agent/plans/${PLAN_ID}/quote`)).toHaveLength(reads)
+    })
+
+    it("shows the client's answer and comment", async () => {
+      plan = { ...READY, status: 'accepted' }
+      planQuote = { ...OPEN_QUOTE, status: 'accepted', decided_at: '2026-10-24T08:30:00Z', client_comment: 'See you in May!' }
+      renderAt(`/agent/plans/${PLAN_ID}`)
+
+      expect(await screen.findByText('The client accepted the quote on October 24, 2026.')).toBeInTheDocument()
+      expect(screen.getByText('See you in May!')).toBeInTheDocument()
+    })
+
+    it('says when the client declined without a comment', async () => {
+      plan = { ...READY, status: 'rejected' }
+      planQuote = { ...OPEN_QUOTE, status: 'rejected', decided_at: '2026-10-24T08:30:00Z' }
+      renderAt(`/agent/plans/${PLAN_ID}`)
+
+      expect(await screen.findByText('The client declined the quote on October 24, 2026.')).toBeInTheDocument()
+      expect(screen.getByRole('status')).toHaveTextContent("Client's comment: none.")
+    })
+
+    it('says when the quote expired without an answer', async () => {
+      plan = { ...READY, status: 'quoted' }
+      planQuote = { ...OPEN_QUOTE, status: 'expired' }
+      renderAt(`/agent/plans/${PLAN_ID}`)
+
+      expect(await screen.findByText('The quote expired on October 29, 2026 without an answer.')).toBeInTheDocument()
     })
 
     it('explains when the plan is not ready after all, reads it again and keeps the prices', async () => {

@@ -6,7 +6,8 @@
     "partners": "Partners",
     "extras": "Extras",
     "reviews": "Reviews",
-    "activity": "Activity"
+    "activity": "Activity",
+    "import": "Import"
   },
   "eyebrow": "Administration",
   "title": "Users",
@@ -393,5 +394,29 @@
     "offersInactive_other": "{{count}} no longer in {{agency}}",
     "users": "Accounts",
     "byRole": "{{client}} clients · {{agent}} agents · {{admin}} admins"
+  },
+  "import": {
+    "title": "Import an export",
+    "intro": "Upload the latest {{agency}} export to update partners, offers, reviews and extras. The whole file is imported or nothing is. The file is read once and deleted: it is never kept.",
+    "file": "{{agency}} export (.sqlite)",
+    "fileHint": "The .sqlite file {{agency}} sends, {{max}} MB at most.",
+    "fileHintNoLimit": "The .sqlite file {{agency}} sends.",
+    "submit": "Import",
+    "importing": "Importing…",
+    "done": "Export imported.",
+    "counts": {
+      "partners": "Partners",
+      "offers": "Offers",
+      "reviews": "Reviews",
+      "extras": "Extras"
+    },
+    "errors": {
+      "notSqlite": "This is not a {{agency}} export: choose the .sqlite file.",
+      "tooLarge": "This file is larger than {{max}} MB.",
+      "tooLargeNoLimit": "This file is too large.",
+      "failed": "Nothing was imported: a row of the export was refused ({{detail}}). Fix it in {{agency}}, then import a new export.",
+      "running": "Another import is running. Try again in a moment.",
+      "unknown": "The export could not be imported. Please try again."
+    }
   }
 }

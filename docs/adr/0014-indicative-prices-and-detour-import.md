@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-21
-- **Issue / PR:** #83, #119
+- **Issue / PR:** #83, #119, #132
 
 ## Context
 
@@ -17,6 +17,7 @@ names in the export are in French; Novoya stores English names.
 
 We import partners, offers, publishable reviews and extras with
 `python -m novoya_api.catalog.infrastructure.detour --source detour.sqlite`, and nothing else.
+An admin can run the same import from the back office (#132): see below.
 
 - **Indicative prices on the offer page only.** An offer keeps its unit price (`price_eur`,
   `price_unit` per person per night, trip or activity) and shows it as indicative on
@@ -67,6 +68,26 @@ We import partners, offers, publishable reviews and extras with
 - The import is idempotent (ids are uuid5 of the DÉTOUR ids), runs in one transaction, opens
   the file read-only, prints counts only, and its errors name DÉTOUR ids, never a name or
   an email. The export itself is never committed (`*.sqlite`, `livraison/` in `.gitignore`).
+- **Import from the back office (#132).** An admin uploads the export on `/admin/import`;
+  `POST /admin/catalog/import` (admins only) takes the raw file and runs `import_detour`, the
+  code of the command line, and answers the counts. Since the file holds partner contacts
+  and reviews, and comes from a browser:
+  - it is written to a new temporary folder (mode 0700) under a name the server picks, the
+    browser's file name is never used, and the folder is deleted after the import, whether it
+    worked or not. Nothing is kept or committed, and nothing relies on Render's disk (ADR 0013);
+  - it must start with the sqlite header (`not_a_detour_export`, 422), and stay under
+    `NOVOYA_DETOUR_MAX_BYTES`, 20 MB by default: the upload stops as soon as it passes it
+    (413). The page reads the same limit from `GET /admin/catalog/import`, so it refuses a
+    bigger file before sending it;
+  - sqlite opens it read-only, with `query_only` on and `trusted_schema` off; extensions
+    stay off;
+  - one import at a time: the import's transaction takes a PostgreSQL advisory lock, so a
+    second one, from the back office or the command line, stops with `import_running` (409)
+    instead of waiting;
+  - a refused row answers `detour_import_failed` (422) with the DÉTOUR table and id only.
+  - `avis_diffusables` is a view defined in the file itself. A hand-made file could make it
+    read the raw reviews; we accept it because only admins import, and the file is the one
+    the client sent.
 - The privacy page (#45) must list published reviews (ARCHITECTURE §9).
-- Tests: `tests/test_catalog_detour_mapping.py`, `tests/test_catalog_detour_sql.py`, on a
-  made-up export (`tests/detour_fixture.py`).
+- Tests: `tests/test_catalog_detour_mapping.py`, `tests/test_catalog_detour_sql.py`,
+  `tests/test_catalog_import.py`, on a made-up export (`tests/detour_fixture.py`).

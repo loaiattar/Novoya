@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
@@ -5,7 +6,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from novoya_api.quoting.application.dto import AdminQuoteView, QuoteDetailView, QuoteView
+from novoya_api.quoting.application.dto import (
+    AdminQuoteView,
+    PlanQuoteView,
+    QuoteDetailView,
+    QuoteView,
+)
 from novoya_api.quoting.domain.quote import COMMENT_MAX_LENGTH, QuoteStatus
 
 
@@ -38,6 +44,27 @@ class Quote(QuoteFields):
     @classmethod
     def of(cls, view: QuoteView) -> "Quote":
         return cls.model_validate(view, from_attributes=True)
+
+
+class PlanQuote(QuoteFields):
+    """The quote of a plan, for the agent who sent it: where it stands (open, expired,
+    accepted, rejected), and when the client answered with their comment (null until then).
+    No email_sent: that only matters on the answer to sending."""
+
+    status: QuoteStatus
+    decided_at: datetime | None
+    client_comment: str | None
+
+    @classmethod
+    def of_plan(cls, view: PlanQuoteView) -> "PlanQuote":
+        return cls.model_validate(
+            {
+                **asdict(view.quote),
+                "status": view.status,
+                "decided_at": view.decided_at,
+                "client_comment": view.client_comment,
+            }
+        )
 
 
 class QuoteItem(BaseModel):

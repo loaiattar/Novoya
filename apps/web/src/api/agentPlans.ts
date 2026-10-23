@@ -5,11 +5,12 @@ import { useEffect } from 'react'
 import { ApiError, isUnauthenticated } from './errors'
 import {
   getAgentPlanOptions,
+  getAgentPlanQueryKey,
   getMeQueryKey,
   getPlanQuoteOptions,
   listQuoteQueueOptions,
 } from './generated/@tanstack/react-query.gen'
-import type { ListQuoteQueueData } from './generated/types.gen'
+import type { AgentPlan, ListQuoteQueueData } from './generated/types.gen'
 
 export type QueueFilter = 'unassigned' | 'in_progress' | 'decided'
 type QueueStatus = NonNullable<NonNullable<ListQuoteQueueData['query']>['status']>[number]
@@ -56,7 +57,29 @@ export function useAgentPlan(planId: string, comeBackTo: string) {
   return { plan, signedOut, missing }
 }
 
-/** The quote sent for a plan, read once the plan is quoted (404 before that). */
-export function usePlanQuote(planId: string, enabled: boolean) {
-  return useQuery({ ...getPlanQuoteOptions({ path: { plan_id: planId } }), enabled, retry: false })
+/** How often an open quote is read again, so the client's answer shows without a reload. */
+export const QUOTE_POLL_MS = 60_000
+
+/**
+ * The quote sent for a plan, read once the plan is quoted (404 before that). While it waits
+ * for the client it is read again every minute; once they answered, the plan is read again
+ * too, as its status moved to accepted or rejected with the answer.
+ */
+export function usePlanQuote(planId: string, enabled: boolean, planStatus: AgentPlan['status']) {
+  const queryClient = useQueryClient()
+  const quote = useQuery({
+    ...getPlanQuoteOptions({ path: { plan_id: planId } }),
+    enabled,
+    retry: false,
+    refetchInterval: (query) => (query.state.data?.status === 'open' ? QUOTE_POLL_MS : false),
+  })
+  const answered = quote.data?.status === 'accepted' || quote.data?.status === 'rejected'
+
+  useEffect(() => {
+    if (answered && planStatus === 'quoted') {
+      void queryClient.invalidateQueries({ queryKey: getAgentPlanQueryKey({ path: { plan_id: planId } }) })
+    }
+  }, [answered, planStatus, planId, queryClient])
+
+  return quote
 }

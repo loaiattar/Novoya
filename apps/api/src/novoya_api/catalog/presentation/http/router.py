@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from novoya_api.accounts.public import current_user, require_admin
 from novoya_api.catalog.application.use_cases.create_offer import CreateOffer, CreateOfferCommand
@@ -10,6 +10,7 @@ from novoya_api.catalog.application.use_cases.create_partner import (
     CreatePartnerCommand,
 )
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
+from novoya_api.catalog.application.use_cases.import_catalog import ImportCatalog
 from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtras
 from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
@@ -31,7 +32,9 @@ from novoya_api.catalog.domain import OfferKind, PartnerKind, PriceUnit
 from novoya_api.catalog.presentation.http.dependencies import (
     get_create_offer,
     get_create_partner,
+    get_detour_max_bytes,
     get_get_offer_detail,
+    get_import_catalog,
     get_list_all_extras,
     get_list_all_reviews,
     get_list_destinations,
@@ -51,6 +54,8 @@ from novoya_api.catalog.presentation.http.schemas import (
     CreatePartnerRequest,
     DestinationResponse,
     ExtraResponse,
+    ImportCountsResponse,
+    ImportLimitsResponse,
     OfferDetailResponse,
     OfferResponse,
     PartnerResponse,
@@ -94,6 +99,12 @@ reviews_router = APIRouter(
     prefix="/admin/reviews",
     tags=["admin"],
     responses=ERRORS,
+    dependencies=[Depends(require_admin)],
+)
+import_router = APIRouter(
+    prefix="/admin/catalog",
+    tags=["admin"],
+    responses={code: {"model": ErrorResponse} for code in (401, 403, 409, 413, 422)},
     dependencies=[Depends(require_admin)],
 )
 
@@ -313,6 +324,37 @@ async def update_review(
     )
 
 
+@import_router.get("/import", operation_id="getImportLimits")
+async def get_import_limits(
+    max_bytes: Annotated[int, Depends(get_detour_max_bytes)],
+) -> ImportLimitsResponse:
+    """The largest export POST /admin/catalog/import accepts, in bytes. Admins only."""
+    return ImportLimitsResponse(max_bytes=max_bytes)
+
+
+@import_router.post(
+    "/import",
+    operation_id="importDetour",
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/octet-stream": {"schema": {"type": "string", "format": "binary"}}
+            },
+        }
+    },
+)
+async def import_detour(
+    request: Request,
+    use_case: Annotated[ImportCatalog, Depends(get_import_catalog)],
+) -> ImportCountsResponse:
+    """Import a DÉTOUR sqlite export, sent as the raw body: the same import as the command
+    line, all of it or nothing. The file is read once and deleted, never kept. 413 over the
+    size limit, 422 not_a_detour_export or detour_import_failed (the message names the DÉTOUR
+    table and id), 409 import_running while another import runs. Admins only."""
+    return ImportCountsResponse.of(await use_case(request.stream()))
+
+
 router = APIRouter()
 router.include_router(destinations_router)
 router.include_router(signed_in_router)
@@ -320,3 +362,4 @@ router.include_router(partners_router)
 router.include_router(offers_router)
 router.include_router(extras_router)
 router.include_router(reviews_router)
+router.include_router(import_router)
