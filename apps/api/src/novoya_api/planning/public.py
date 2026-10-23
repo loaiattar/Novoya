@@ -21,12 +21,15 @@
 - mark_accepted(plan_id), mark_rejected(plan_id): the client's answer to the quote, in the
   caller's session (the caller commits, with the answer on its quote). Raises PlanNotFound
   (404) or InvalidTransition (409, not quoted, or changed meanwhile).
+- plans_of_wish(wish_id) -> [WishPlanAccess]: the status and assigned agent of each plan of
+  this wish, for the advisor chat's read rule (messaging). Empty when the wish has no plan.
 - delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
   go with them. Erase the user's quotes first (quoting.public.delete_for_user) and the wishes
   after (wishes.public.delete_for_user): neither has a cascade. The caller commits.
 """
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,6 +74,7 @@ __all__ = [
     "PricedItem",
     "PricedPlan",
     "TripBrief",
+    "WishPlanAccess",
     "count_plans_by_status",
     "delete_for_user",
     "find_plan_ids",
@@ -78,6 +82,7 @@ __all__ = [
     "mark_accepted",
     "mark_rejected",
     "plan_trip",
+    "plans_of_wish",
     "plan_trips",
     "priced_plan",
     "quote_plan",
@@ -86,6 +91,18 @@ __all__ = [
 # The plans a quote search may match, last changed first: past it the query is too broad, and
 # the rest is dropped without a sign. Fine at the agency's size; a page would say "refine".
 SEARCH_CAP = 1000
+
+# A wish has one plan in practice; the cap only bounds the read.
+WISH_PLANS_CAP = 20
+
+
+@dataclass(frozen=True)
+class WishPlanAccess:
+    """Who works on a plan of a wish: its status (a PlanStatus value) and assigned agent."""
+
+    status: str
+    assigned_agent_id: UUID | None
+
 
 # The client waits for the plan; the fallback covers a slow model.
 DEADLINE_SECONDS = 60
@@ -189,3 +206,9 @@ async def delete_for_user(user_id: UUID, *, session: AsyncSession) -> None:
     """Erase the plans of this user's wishes, after their quotes. The caller commits."""
     wish_ids = await wish_ids_for_user(user_id, session=session)
     await SqlPlanRepository(session).delete_for_wishes(wish_ids)
+
+
+async def plans_of_wish(wish_id: UUID, *, session: AsyncSession) -> list[WishPlanAccess]:
+    """The status and assigned agent of each plan of this wish. Empty without a plan."""
+    plans = await SqlPlanRepository(session).search([], [wish_id], limit=WISH_PLANS_CAP)
+    return [WishPlanAccess(plan.status.value, plan.assigned_agent_id) for plan in plans]

@@ -1,10 +1,31 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from novoya_api.messaging.domain.errors import InvalidMessage
 
 MAX_LENGTH = 2000
+
+# A plan the agents' queue shows: requested and not taken yet (as planning's queue).
+REQUESTED = "requested"
+
+
+class Side(StrEnum):
+    """What the caller is, for the chat's read rule."""
+
+    CLIENT = "client"
+    AGENT = "agent"
+    ADMIN = "admin"  # an admin or a super admin
+
+
+@dataclass(frozen=True)
+class WishPlan:
+    """A plan of the wish, as far as the read rule needs it."""
+
+    status: str
+    assigned_agent_id: UUID | None
 
 
 @dataclass(frozen=True)
@@ -31,6 +52,23 @@ class Message:
         return cls(uuid4(), wish_id, author_id, from_agency, text, now)
 
 
-def may_read(owner_id: UUID | None, reader_id: UUID, staff: bool) -> bool:
-    """Only the client who sent the wish and the agency's staff read its conversation."""
-    return owner_id is not None and (staff or owner_id == reader_id)
+def agent_may_read(agent_id: UUID, plans: Iterable[WishPlan]) -> bool:
+    """An agent reads the chat of a wish whose plan waits in the queue (requested, nobody
+    took it), or whose plan they took, the same plans GET /agent/plans lets them see. No plan,
+    or a proposed one: not them."""
+    return any(
+        plan.assigned_agent_id == agent_id
+        or (plan.status == REQUESTED and plan.assigned_agent_id is None)
+        for plan in plans
+    )
+
+
+def may_read(
+    owner_id: UUID | None, reader_id: UUID, side: Side, plans: Iterable[WishPlan] = ()
+) -> bool:
+    """The client who sent the wish and the admins always; an agent per agent_may_read."""
+    if owner_id is None:
+        return False
+    if owner_id == reader_id or side is Side.ADMIN:
+        return True
+    return side is Side.AGENT and agent_may_read(reader_id, plans)

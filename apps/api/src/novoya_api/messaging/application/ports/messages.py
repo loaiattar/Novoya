@@ -1,7 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from novoya_api.messaging.domain.message import Message
+from novoya_api.messaging.domain.message import Message, WishPlan
 
 # The newest messages a conversation shows. A chat about one trip stays far below it.
 CONVERSATION_CAP = 500
@@ -18,4 +18,10 @@ class MessageRepository(Protocol):
 class Wishes(Protocol):
     async def owner_id(self, wish_id: UUID) -> UUID | None:
         """The client who sent the wish, or None when there is no such wish."""
+        ...
+
+
+class Plans(Protocol):
+    async def of_wish(self, wish_id: UUID) -> list[WishPlan]:
+        """The status and assigned agent of each plan of this wish. Empty without a plan."""
         ...

@@ -9246,7 +9246,7 @@
     },
     "/wishes/{wish_id}/messages": {
       "get": {
-        "description": "The advisor chat of this wish, oldest first (the last 500). For the client who sent\nthe wish, an agent or an admin; 404 for anyone else, so the id stays hidden. The pages\npoll it, and no cache keeps it.",
+        "description": "The advisor chat of this wish, oldest first (the last 500). For the client who sent\nthe wish, an admin, or an agent while the wish's plan waits in the queue (requested, not\ntaken) or once they took it. 404 for anyone else, so the id stays hidden. The pages poll\nit, and no cache keeps it.",
         "operationId": "listWishMessages",
         "parameters": [
           {
@@ -9312,7 +9312,7 @@
         ]
       },
       "post": {
-        "description": "Write in the advisor chat of this wish: its client, an agent or an admin. 404 for\nanyone else. 422 invalid_message when it is empty or longer than 2000 characters.",
+        "description": "Write in the advisor chat of this wish: the same people as GET. 404 for anyone else.\n422 invalid_message when it is empty or longer than 2000 characters. 429\ntoo_many_requests past 30 messages in 5 minutes, with Retry-After.",
         "operationId": "postWishMessage",
         "parameters": [
           {
@@ -9376,6 +9376,16 @@
               }
             },
             "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           }
         },
         "summary": "Post Message",
