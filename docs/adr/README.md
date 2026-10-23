@@ -21,4 +21,4 @@ below. An accepted ADR is never rewritten to change the decision: a new ADR repl
 | [0013](0013-host-the-demo-on-render.md) | Host the demo on Render: static web app, Docker API, managed PostgreSQL | Proposed |
 | [0014](0014-indicative-prices-and-detour-import.md) | Indicative partner prices on the offer page, and the DÉTOUR catalog import | Accepted |
 | [0015](0015-super-admin-role.md) | Four roles: a super admin acts on admins, and super admins are managed on the server | Accepted |
-| [0016](0016-advisor-chat.md) | Advisor chat: messages tied to the wish, read by its client and all staff, polled | Proposed |
+| [0016](0016-advisor-chat.md) | Advisor chat: messages tied to the wish, read by its client, the admins and the plan's agent, polled | Proposed |
