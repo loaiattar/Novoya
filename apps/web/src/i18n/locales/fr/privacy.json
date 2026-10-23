@@ -49,6 +49,10 @@
     "title": "Les avis des voyageurs",
     "body": "Les avis affichés sur les destinations viennent de voyageurs de {{name}} qui ont accepté leur publication. Ils sont signés d’un prénom et d’une initiale, ou affichés de façon anonyme. Si un voyageur retire son accord, son avis est retiré à la prochaine mise à jour du catalogue, et l’agence peut retirer un avis immédiatement sur demande."
   },
+  "advisors": {
+    "title": "Le profil public de nos conseillers",
+    "body": "La page d’accueil peut présenter des conseillers de {{name}} : un nom public, un intitulé, une courte présentation et les voyages dont ils s’occupent, avec leurs initiales. Jamais leur adresse e-mail, leur compte ou une photo. Un conseiller n’est présenté qu’une fois son accord donné ; l’agence note quand, et qui l’a enregistré. Il peut le retirer à tout moment : son profil est alors masqué aussitôt, et il est supprimé avec son compte. Nous le montrons pour vous dire qui s’occupe de votre voyage, avec le consentement du conseiller."
+  },
   "cookies": {
     "title": "Cookies et stockage du navigateur",
     "body": "Nous utilisons uniquement ce dont le site a besoin pour fonctionner, il n’y a donc rien à accepter : un cookie qui vous garde connecté, un cookie de courte durée pendant une connexion avec Google, et votre choix de langue enregistré dans votre navigateur."

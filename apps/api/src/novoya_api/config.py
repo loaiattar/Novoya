@@ -15,6 +15,18 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://novoya:novoya@localhost:5432/novoya"
     cors_origins: list[str] = ["http://localhost:5173"]
 
+    # PostgreSQL timeouts, set on every connection of the app's engine (API and CLI commands).
+    # A lock held too long or a transaction left open fails the request behind it (503) instead
+    # of making it wait forever and use up the pool. They cannot be turned off (0); a one-off
+    # CLI run that needs more raises them through the environment.
+    db_lock_timeout_ms: int = Field(default=5_000, ge=100, le=60_000)
+    db_statement_timeout_ms: int = Field(default=30_000, ge=1_000, le=600_000)
+    db_idle_in_transaction_timeout_ms: int = Field(default=60_000, ge=1_000, le=3_600_000)
+    # Alembic has its own engine (alembic/env.py) with only a lock timeout: a migration that
+    # cannot get its lock fails (retry the deploy) instead of making every app query on that
+    # table queue behind it. No statement timeout there, so long backfills still run.
+    db_migration_lock_timeout_ms: int = Field(default=10_000, ge=1_000, le=600_000)
+
     # Accounts: sessions, passwords, emails, Google
     frontend_url: str = "http://localhost:5173"  # links in emails point to the web app
     api_public_url: str = "http://localhost:8000"  # builds the Google redirect URI

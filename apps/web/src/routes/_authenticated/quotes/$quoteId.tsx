@@ -126,7 +126,7 @@ function QuoteLayout({
     <main className="px-5 py-14 md:grid md:grid-cols-[0.8fr_1.2fr_0.65fr] md:items-start md:gap-10 md:px-[7vw] md:py-20">
       <div className="md:sticky md:top-37">
         <Eyebrow>{t('eyebrow', { id: number })}</Eyebrow>
-        <h1 className="mb-6 text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+        <h1 className="mb-6 text-display-m">
           {t('titleStart')}
           {place && (
             <>

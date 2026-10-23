@@ -41,6 +41,17 @@ export function toApiError(body: unknown, response: Response | undefined): unkno
   )
 }
 
+/**
+ * The errors.json key of the message for a request that failed on the server's side:
+ * "busy, try again in a moment" for a database timeout (503 database_busy), else the generic
+ * "can't reach the server". Its Retry-After stays on the ApiError (retryAfterSeconds).
+ */
+export function serverErrorKey(error: unknown): 'databaseBusy' | 'serverUnreachable' {
+  return error instanceof ApiError && error.status === 503 && error.code === 'database_busy'
+    ? 'databaseBusy'
+    : 'serverUnreachable'
+}
+
 /** No session, or it expired or was revoked: the only error that means "go to /login". */
 export function isUnauthenticated(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401 && error.code === 'unauthenticated'

@@ -74,7 +74,7 @@ function LivePlan({ plan }: { plan: Plan }) {
     <main>
       <section className="bg-ivory px-5 pt-16 pb-10 md:px-[8vw] md:pt-25 md:pb-20">
         <Eyebrow>{t('live.eyebrow')}</Eyebrow>
-        <h1 className="m-0 text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+        <h1 className="m-0 text-display-m">
           {t('live.titleStart')}{' '}
           <br />
           <em>{t('live.titleEnd')}</em>
@@ -120,7 +120,7 @@ function QuoteCall({ children }: { children: ReactNode }) {
     <section className="bg-ink px-6 py-15 text-white md:flex md:items-end md:justify-between md:gap-10 md:px-[8vw] md:py-20">
       <div className="max-w-[660px]">
         <Eyebrow light>{t('cta.eyebrow')}</Eyebrow>
-        <h2 className="mb-4 text-[43px] leading-tight md:text-[56px]">{t('cta.title')}</h2>
+        <h2 className="mb-4 text-display-m">{t('cta.title')}</h2>
         <p className="leading-relaxed text-white/70">{t('cta.text')}</p>
       </div>
       <div className="mt-6 grid gap-2 md:mt-0 md:max-w-[360px] md:justify-items-end md:text-right">{children}</div>

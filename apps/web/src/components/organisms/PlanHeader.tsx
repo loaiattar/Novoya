@@ -27,7 +27,7 @@ export function PlanHeader({ version, updatedAt, place, tagline, startDate, endD
           <Eyebrow>{t('eyebrow', { version })}</Eyebrow>
           <span className="mb-6 text-xs text-muted">{t('updated', { date: formatDateTime(i18n.language, updatedAt) })}</span>
         </div>
-        <h1 className="m-0 text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+        <h1 className="m-0 text-display-m">
           {t('placeHeading', { place })}{' '}
           <br />
           <em>{tagline}</em>

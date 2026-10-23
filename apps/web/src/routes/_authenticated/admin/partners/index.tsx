@@ -29,7 +29,7 @@ function PartnersPage() {
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <h1 className="m-0 text-[39px] md:text-[50px]">{t('partners.title')}</h1>
+        <h1 className="m-0 text-display-s">{t('partners.title')}</h1>
         <Button asChild variant="coral" className="self-start md:self-auto">
           <Link to="/admin/partners/new">{t('partners.new')}</Link>
         </Button>

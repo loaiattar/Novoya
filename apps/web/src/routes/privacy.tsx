@@ -13,7 +13,7 @@ export const Route = createFileRoute('/privacy')({
 // Public: linked from the sign-in page and from Google's consent screen.
 // In reading order. A list has items, a paragraph a body; "rights" closes the page with a link.
 type ListKey = 'data' | 'processors' | 'retention'
-type ParagraphKey = 'controller' | 'never' | 'reviews' | 'cookies' | 'basis'
+type ParagraphKey = 'controller' | 'never' | 'reviews' | 'advisors' | 'cookies' | 'basis'
 const SECTIONS: ({ list: ListKey } | { paragraph: ParagraphKey })[] = [
   { paragraph: 'controller' },
   { list: 'data' },
@@ -21,6 +21,7 @@ const SECTIONS: ({ list: ListKey } | { paragraph: ParagraphKey })[] = [
   { list: 'processors' },
   { list: 'retention' },
   { paragraph: 'reviews' },
+  { paragraph: 'advisors' },
   { paragraph: 'cookies' },
   { paragraph: 'basis' },
 ]
@@ -82,7 +83,7 @@ function PrivacyPage() {
         <HomeLink />
       </header>
       <main className="mx-auto w-full max-w-[640px] flex-1 px-5 py-10 text-sm leading-relaxed md:px-8 md:py-16">
-        <h1 className="mb-3 font-serif text-[40px] leading-none md:text-[56px]">{t('title')}</h1>
+        <h1 className="mb-3 font-serif text-display-m">{t('title')}</h1>
         <p className="mb-6 text-muted">{t('updated')}</p>
         <p className="m-0">{t('intro', values)}</p>
         {SECTIONS.map((entry) =>

@@ -36,7 +36,7 @@ from novoya_api.quoting.presentation.http.schemas import (
     SendQuoteRequest,
 )
 from novoya_api.shared.domain.value_objects import Locale
-from novoya_api.shared.presentation.http.errors import ErrorResponse
+from novoya_api.shared.presentation.http.errors import DATABASE_BUSY_RESPONSE, ErrorResponse
 
 ERRORS = {status_code: {"model": ErrorResponse} for status_code in (401, 403, 404)}
 
@@ -84,7 +84,15 @@ agent_quotes_router = APIRouter(prefix="/agent/quotes", tags=["agent"], response
     "/{quote_id}/email",
     operation_id="resendQuoteEmail",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={429: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+    responses={
+        429: {"model": ErrorResponse},
+        # Replaces the shared 503 (FastAPI does not merge inside a status), so it names both.
+        503: {
+            **DATABASE_BUSY_RESPONSE,
+            "description": "email_not_sent: the email server did not take it. "
+            "Or database_busy: a lock or statement timeout, or a deadlock (with Retry-After).",
+        },
+    },
 )
 async def resend_quote_email(
     quote_id: UUID,

@@ -54,7 +54,7 @@ function PreferencesPage() {
     <AppShell>
       <main className="mx-auto max-w-xl px-5 py-24 text-center">
         <Eyebrow>{t('steps.preferences')}</Eyebrow>
-        <h1 className="mb-4 text-[47px] leading-none">{t('lost.title')}</h1>
+        <h1 className="mb-4 text-display-m">{t('lost.title')}</h1>
         <p className="mb-8 text-muted">
           {t('lost.text')}
         </p>
@@ -186,7 +186,7 @@ function PreferencesForm({
         <IntentAside wish={text} steps={STEPS.map((step) => t(`steps.${step}`))} current={0} />
         <main className="bg-paper px-5 pt-[55px] pb-[155px] md:px-[8vw] md:pt-20 md:pb-40">
           <Eyebrow>{t('stepOf', { current: 1, total: STEPS.length })}</Eyebrow>
-          <h1 className="mb-[23px] text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+          <h1 className="mb-[23px] text-display-m">
             {t('titleStart')}
             <br />
             <em>{t('titleEnd')}</em>

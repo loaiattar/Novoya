@@ -69,7 +69,7 @@ python3 -c "import json,jsonschema as j; s=json.load(open('apps/web/brand/agency
 | `brand.colors` | **to_check** | Design tokens (CSS variables / Tailwind theme), only if they match Figma |
 | `brand.fonts` | **to_check** | Font loading and design tokens, only if they match Figma |
 | `images.logo` | confirmed | Header, footer, Open Graph image (on a background), e-mail templates |
-| `images.favicon` | confirmed | Favicon + `apple-touch-icon` + PWA icons (generate 16/32/180/192/512 from this file) |
+| `images.favicon` | confirmed | Not used by the web app: its icons (`public/favicon.svg`, 16/32/180/192/512 PNG) show the site's wordmark, DÉTOUR with its raised yellow O, as the `Logo` component draws it, on navy |
 | `credits.web_agency` | to_check | Nowhere by default (it built the old site; it is not the host) |
 
 ## What is missing

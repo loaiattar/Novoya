@@ -23,7 +23,7 @@ function SignUpPage() {
     return (
       <>
         <Eyebrow>{t('signUp.eyebrow')}</Eyebrow>
-        <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('signUp.checkTitle')}</h1>
+        <h1 className="mb-2.5 text-display-m">{t('signUp.checkTitle')}</h1>
         <p role="status" className="text-muted">
           {t('signUp.checkBody', { email: register.data.email })}
         </p>
@@ -39,7 +39,7 @@ function SignUpPage() {
   return (
     <>
       <Eyebrow className="mb-2">{t('signUp.eyebrow')}</Eyebrow>
-      <h1 className="mb-1.5 text-[32px] leading-none md:text-[40px]">{t('signUp.title')}</h1>
+      <h1 className="mb-1.5 text-display-s">{t('signUp.title')}</h1>
       <p className="text-sm text-muted">{t('signUp.intro')}</p>
       <SignUpForm
         googleHref={googleSignInUrl('/wish')}

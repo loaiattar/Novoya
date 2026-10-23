@@ -1,5 +1,6 @@
 {
   "serverUnreachable": "{{agency}} ne parvient pas à joindre le serveur pour le moment. Veuillez réessayer dans un instant.",
+  "databaseBusy": "Le service est très sollicité. Réessayez dans un instant.",
   "wishFailed": "Une erreur est survenue, veuillez réessayer.",
   "rateLimit": {
     "waitSeconds_one": "Réessayez dans {{count}} seconde",

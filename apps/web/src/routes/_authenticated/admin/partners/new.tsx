@@ -33,7 +33,7 @@ function NewPartnerPage() {
         {t('partners.back')}
       </Link>
       <Eyebrow className="mt-6">{t('partners.title')}</Eyebrow>
-      <h1 className="m-0 mb-8 text-[39px] md:text-[50px]">{t('partners.new')}</h1>
+      <h1 className="m-0 mb-8 text-display-s">{t('partners.new')}</h1>
       <PartnerForm
         mode="create"
         initialValues={NEW_PARTNER}

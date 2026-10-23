@@ -8,6 +8,7 @@ from novoya_api.accounts.application.ports.identity_provider import (
     AuthorizationRequest,
     PendingSignIn,
 )
+from novoya_api.accounts.domain.advisor_profile import AdvisorProfile
 from novoya_api.accounts.domain.auth_session import AuthSession
 from novoya_api.accounts.domain.credentials import PasswordCredential
 from novoya_api.accounts.domain.errors import EmailAlreadyUsed, IdentityAlreadyLinked
@@ -212,6 +213,36 @@ class InMemoryOneTimeTokenRepository:
         self.rows = {key: token for key, token in self.rows.items() if token.expires_at > now}
 
 
+class InMemoryAdvisorProfileRepository:
+    def __init__(self, users: InMemoryUserRepository) -> None:
+        self._users = users
+        self.rows: dict[UserId, AdvisorProfile] = {}
+
+    async def get_for_user(self, user_id: UserId) -> AdvisorProfile | None:
+        profile = self.rows.get(user_id)
+        return replace(profile) if profile else None
+
+    async def for_users(self, user_ids: list[UserId]) -> dict[UserId, AdvisorProfile]:
+        return {i: replace(self.rows[i]) for i in user_ids if i in self.rows}
+
+    async def save(self, profile: AdvisorProfile) -> None:
+        self.rows[profile.user_id] = replace(profile)
+
+    async def list_shown(self) -> list[AdvisorProfile]:
+        shown = []
+        for profile in self.rows.values():
+            user = self._users.rows.get(profile.user_id)
+            if (
+                profile.shown
+                and profile.has_consent
+                and user is not None
+                and user.role is Role.AGENT
+                and user.is_active
+            ):
+                shown.append(replace(profile))
+        return sorted(shown, key=lambda p: p.public_name)
+
+
 @dataclass
 class InMemoryStore:
     """Same shape as AccountsStore in the composition root."""
@@ -228,9 +259,11 @@ class InMemoryStore:
     oauth_states: InMemoryOAuthStateStore = field(default_factory=InMemoryOAuthStateStore)
     uow: FakeUnitOfWork = field(default_factory=FakeUnitOfWork)
     sessions: InMemorySessionRepository = field(init=False)
+    advisor_profiles: InMemoryAdvisorProfileRepository = field(init=False)
 
     def __post_init__(self) -> None:
         self.sessions = InMemorySessionRepository(self.users)
+        self.advisor_profiles = InMemoryAdvisorProfileRepository(self.users)
 
 
 class PlainTextPasswordHasher:

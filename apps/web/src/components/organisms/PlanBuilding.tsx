@@ -29,7 +29,7 @@ export function PlanBuilding() {
         </span>
       </div>
       <Eyebrow light>{t('eyebrow')}</Eyebrow>
-      <h1 ref={title} tabIndex={-1} className="mb-[30px] text-[45px] leading-none outline-none md:text-[65px]">
+      <h1 ref={title} tabIndex={-1} className="mb-[30px] text-display-l outline-none">
         {t('titleStart')}
         <br />
         <em>{t('titleEnd')}</em>

@@ -142,7 +142,7 @@ The allowed moves are methods on `Plan`, for example `plan.request_quote(by=user
 
 | Module | Use cases | Endpoints | Ports |
 |---|---|---|---|
-| accounts | `StartSignIn`, `SignIn`, `Register`, `VerifyEmail`, `SignInWithPassword`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `SignOut`, `SignOutEverywhere`, `GetCurrentUser`, `UpdateMe`, `ListUsers`, `ChangeUserRole`, `DeleteAccount` | `/auth/{provider}/*` (Google), `/auth/register`, `/auth/login`, `/auth/email/*`, `/auth/password/*`, `/auth/logout`, `/auth/logout-all`, `GET /me`, `PATCH /me`, `DELETE /me`, `/admin/users` | UserRepository, PasswordCredentialRepository, OAuthIdentityRepository, SessionRepository, IdentityProvider, PasswordHasher, AuthMailer, RateLimiter, PersonalDataEraser |
+| accounts | `StartSignIn`, `SignIn`, `Register`, `VerifyEmail`, `SignInWithPassword`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `SignOut`, `SignOutEverywhere`, `GetCurrentUser`, `UpdateMe`, `ListUsers`, `ChangeUserRole`, `DeleteAccount`, `ListAdvisors`, `ListAgentAdvisors`, `UpdateAdvisorProfile` | `/auth/{provider}/*` (Google), `/auth/register`, `/auth/login`, `/auth/email/*`, `/auth/password/*`, `/auth/logout`, `/auth/logout-all`, `GET /me`, `PATCH /me`, `DELETE /me`, `/admin/users`, `GET /advisors`, `/admin/advisors` | UserRepository, AdvisorProfileRepository, PasswordCredentialRepository, OAuthIdentityRepository, SessionRepository, IdentityProvider, PasswordHasher, AuthMailer, RateLimiter, PersonalDataEraser |
 | catalog | `ListDestinations`, `SearchOffers`, `ManagePartners`, `ManageOffers`, `GetOfferDetail`, `ListFeaturedOffers`, `ListReviews`, `ListAllReviews`, `UpdateReview`, `ListExtras`, `GetExtras`, `ListAllExtras`, `UpdateExtra` | `GET /destinations`, `GET /offers/featured`, `GET /offers/{id}`, `GET /reviews`, `GET /extras`, `/admin/partners`, `/admin/offers`, `/admin/extras`, `/admin/reviews` | PartnerRepository, OfferRepository, ReviewRepository, ExtraRepository |
 | wishes | `SendWish`, `AnswerPanel`, `GetPanelLimits` | `POST /wishes`, `POST /wishes/{id}/answers`, `GET /wishes/{id}/limits` | WishRepository, Catalog, PanelBuilder, PlanStarter |
 | planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice`, `SetExtraPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
@@ -167,6 +167,22 @@ Every module also uses the shared `UnitOfWork` port: one use case is one transac
 
 ORM models are not entities. A repository maps rows to entities and back, so no SQLAlchemy object leaves a module's `infrastructure/`.
 
+### Database timeouts
+
+The app's engine (`shared/infrastructure/db/session.py`) sets three PostgreSQL timeouts on every connection, so a lock held too long or a transaction left open never makes the requests behind it wait forever and use up the pool:
+
+| Setting | Default | Bounds | PostgreSQL |
+|---|---|---|---|
+| `NOVOYA_DB_LOCK_TIMEOUT_MS` | 5 000 | 100 to 60 000 | `lock_timeout` |
+| `NOVOYA_DB_STATEMENT_TIMEOUT_MS` | 30 000 | 1 000 to 600 000 | `statement_timeout` |
+| `NOVOYA_DB_IDLE_IN_TRANSACTION_TIMEOUT_MS` | 60 000 | 1 000 to 3 600 000 | `idle_in_transaction_session_timeout` |
+
+They cannot be 0 (off). The CLI commands (DÉTOUR import, seed, `grant-role`) use the same engine; a one-off run that needs more raises a setting in its environment.
+
+Alembic builds its own engine with a lock timeout only, `NOVOYA_DB_MIGRATION_LOCK_TIMEOUT_MS` (10 000 by default, 1 000 to 600 000), and no statement timeout, so a long backfill still runs. The app's timeouts limit each statement and each idle gap, not a whole transaction: a DÉTOUR import holds its row locks until it commits. A migration waiting behind it for an `ACCESS EXCLUSIVE` lock would make every app query on that table queue too. With the lock timeout, the migration fails instead (`canceling statement due to lock timeout`, SQLSTATE `55P03`): nothing is half-applied, since Alembic runs the migrations in one transaction on PostgreSQL, and the deploy can be retried once the import is done. It applies to online runs (`alembic upgrade`) only: SQL printed with `--sql` (offline mode, which nothing in the repo uses) has no lock timeout.
+
+A request that hits a lock or statement timeout, or loses a deadlock, gets 503 `database_busy` with `Retry-After`; only the error's type and SQLSTATE are logged. Never wait on the LLM or other slow work inside a transaction: the use cases end their read (`uow.rollback()`) before calling the model.
+
 ### The LLM proposes, the use case decides
 
 The LLM is an adapter behind `PanelBuilder` (wishes) and `PlanGenerator` (planning):
@@ -188,6 +204,7 @@ Errors are defined once in `shared/domain/errors.py` and turned into HTTP codes 
 | `InvalidTransition`, `Conflict` | 409 |
 | `InvalidInput`, invalid input (Pydantic) | 422 |
 | `TooManyRequests` | 429, with `Retry-After` |
+| A database timeout or deadlock (SQLSTATE `55P03`, `57014`, `40P01`) | 503 `database_busy`, with `Retry-After` |
 
 Every error has a `code`, and the API answers `{code, detail}`, so the frontend can translate the message. Module errors extend these classes (for example `InvalidCredentials` extends `Unauthenticated`), so the one handler is enough.
 

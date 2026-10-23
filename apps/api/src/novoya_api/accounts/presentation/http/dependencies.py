@@ -21,6 +21,7 @@ from novoya_api.accounts.application.ports.identity_provider import (
 )
 from novoya_api.accounts.application.ports.mailer import AuthMailer
 from novoya_api.accounts.application.ports.repositories import (
+    AdvisorProfileRepository,
     OAuthIdentityRepository,
     OneTimeTokenRepository,
     PasswordCredentialRepository,
@@ -31,6 +32,11 @@ from novoya_api.accounts.application.ports.repositories import (
 from novoya_api.accounts.application.ports.security import PasswordHasher, TokenGenerator
 from novoya_api.accounts.application.ports.user_data import UserDataEraser
 from novoya_api.accounts.application.services.session_opener import SessionOpener, SessionPolicy
+from novoya_api.accounts.application.use_cases.advisor_profiles import (
+    ListAdvisors,
+    ListAgentAdvisors,
+    UpdateAdvisorProfile,
+)
 from novoya_api.accounts.application.use_cases.authenticate_session import AuthenticateSession
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import ChangeUserRole
@@ -57,6 +63,7 @@ from novoya_api.accounts.domain.policies import PasswordPolicy, RedirectPolicy
 from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.domain.value_objects import PasswordHash, PlainPassword
 from novoya_api.accounts.infrastructure.db.repositories import (
+    SqlAdvisorProfileRepository,
     SqlOAuthIdentityRepository,
     SqlOAuthStateStore,
     SqlOneTimeTokenRepository,
@@ -101,6 +108,7 @@ class AccountsStore:
     role_changes: RoleChangeRepository
     identities: OAuthIdentityRepository
     oauth_states: OAuthStateStore
+    advisor_profiles: AdvisorProfileRepository
     uow: UnitOfWork
 
 
@@ -113,6 +121,7 @@ def build_store(session: AsyncSession) -> AccountsStore:
         role_changes=SqlRoleChangeRepository(session),
         identities=SqlOAuthIdentityRepository(session),
         oauth_states=SqlOAuthStateStore(session),
+        advisor_profiles=SqlAdvisorProfileRepository(session),
         uow=SqlAlchemyUnitOfWork(session),
     )
 
@@ -401,6 +410,18 @@ def get_change_user_role(store: StoreDep, clock: ClockDep) -> ChangeUserRole:
 
 def get_change_user_status(store: StoreDep, clock: ClockDep) -> ChangeUserStatus:
     return ChangeUserStatus(store.users, store.sessions, store.uow, clock)
+
+
+def get_list_advisors(store: StoreDep) -> ListAdvisors:
+    return ListAdvisors(store.advisor_profiles)
+
+
+def get_list_agent_advisors(store: StoreDep) -> ListAgentAdvisors:
+    return ListAgentAdvisors(store.users, store.advisor_profiles)
+
+
+def get_update_advisor_profile(store: StoreDep, clock: ClockDep) -> UpdateAdvisorProfile:
+    return UpdateAdvisorProfile(store.users, store.advisor_profiles, store.uow, clock)
 
 
 def get_authenticate_session(

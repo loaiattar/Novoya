@@ -9,18 +9,18 @@
   "heroFoot": "Take a step aside.",
   "manifesto": {
     "eyebrow": "How we work",
-    "titleStart": "less noise.",
-    "titleEnd": "more care.",
+    "titleStart": "Less noise.",
+    "titleEnd": "More care.",
     "lead": "You tell us. The AI sketches a preview without prices. An advisor checks it, prices it and sends you the agency’s offer."
   },
   "popular": {
     "eyebrow": "Off the beaten track",
-    "title": "a few ideas to branch off.",
+    "title": "A few ideas to branch off.",
     "all": "All destinations"
   },
   "method": {
     "eyebrow": "The right détour, in three steps",
-    "titleStart": "simple,",
+    "titleStart": "Simple,",
     "titleEnd": "unhurried.",
     "steps": {
       "wish": {
@@ -37,15 +37,21 @@
       }
     }
   },
+  "advisors": {
+    "eyebrow": "Our advisors",
+    "title": "The people behind every detour.",
+    "defaultTitle": "Travel advisor",
+    "services": "Their specialities"
+  },
   "closing": {
     "eyebrow": "A wish is a great start",
-    "titleStart": "where would you like",
+    "titleStart": "Where would you like",
     "titleEnd": "to step aside?",
     "start": "Plan my weekend"
   },
   "reviews": {
     "eyebrow": "Travellers’ words",
-    "title": "they took the time to write to us.",
+    "title": "They took the time to write to us.",
     "rating": "Rated {{rating}} out of 5"
   }
 }

@@ -3,12 +3,14 @@ import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { listReviewsOptions } from '../../api/generated/@tanstack/react-query.gen'
+import type { AdvisorServiceResponse } from '../../api/generated'
+import { listAdvisorsOptions, listReviewsOptions } from '../../api/generated/@tanstack/react-query.gen'
 import { formatDay } from '../../lib/format'
+import { initials } from '../../lib/initials'
 import { Eyebrow } from '../atoms/Eyebrow'
 
-const display = 'm-0 text-[52px] leading-[0.96] md:text-[clamp(56px,7vw,104px)]'
-const sectionTitle = 'm-0 text-[44px] leading-[0.96] md:text-[clamp(48px,5vw,78px)]'
+const display = 'm-0 text-display-l'
+const sectionTitle = 'm-0 text-display-l'
 
 /** How the agency works, in two lines and a sentence. */
 export function Manifesto() {
@@ -70,7 +72,7 @@ export function Method() {
     >
       <div>
         <Eyebrow light>{t('method.eyebrow')}</Eyebrow>
-        <h2 className="m-0 text-[56px] leading-[0.96] md:text-[clamp(58px,6vw,92px)]">
+        <h2 className="m-0 text-display-l">
           {t('method.titleStart')}
           <br />
           {t('method.titleEnd')}
@@ -81,7 +83,7 @@ export function Method() {
           <li key={number} className="grid grid-cols-[56px_1fr] border-t border-ivory/60 py-[25px] md:grid-cols-[70px_1fr]">
             <span className="font-mono text-xs font-medium text-coral">{number}</span>
             <div>
-              <h3 className="m-0 font-serif text-[25px] leading-tight font-semibold lowercase">
+              <h3 className="m-0 font-serif text-[25px] leading-tight font-semibold">
                 {t(`method.steps.${step}.title`)}
               </h3>
               <p className="mt-1.5 mb-0 text-ivory/90">{t(`method.steps.${step}.copy`)}</p>
@@ -129,6 +131,76 @@ export function Reviews() {
                 {review.author}
               </figcaption>
             </figure>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** A service in the visitor's language, else in the other one: the admin may give only one. */
+function serviceLabel(service: AdvisorServiceResponse, language: string): { text: string; lang?: 'fr' | 'en' } {
+  const own = language.startsWith('fr') ? service.fr : service.en
+  if (own) return { text: own }
+  return service.fr ? { text: service.fr, lang: 'fr' } : { text: service.en ?? '', lang: 'en' }
+}
+
+/** The agents an admin chose to show, on navy. Hidden while they load or when there are none. */
+export function Advisors() {
+  const { t, i18n } = useTranslation('home')
+  const advisors = useQuery({ ...listAdvisorsOptions(), retry: false })
+  // Never let a section break the landing page: anything but a list shows nothing.
+  const shown = Array.isArray(advisors.data) ? advisors.data : []
+  if (shown.length === 0) return null
+  return (
+    <section
+      id="equipe"
+      aria-labelledby="advisors-title"
+      className="bg-ink px-6 py-[90px] text-ivory md:px-[5vw] md:py-[130px]"
+    >
+      <div className="mb-10 md:mx-[3vw] md:mb-[60px]">
+        <Eyebrow light>{t('advisors.eyebrow')}</Eyebrow>
+        <h2 id="advisors-title" className={sectionTitle}>
+          {t('advisors.title')}
+        </h2>
+      </div>
+      <ul className="m-0 grid list-none gap-6 p-0 md:mx-[3vw] md:grid-cols-2 lg:grid-cols-3">
+        {shown.map((advisor) => (
+          <li
+            key={advisor.id}
+            className="flex flex-col rounded-2xl border border-ivory/25 p-7 md:min-h-[360px] md:p-[35px]"
+          >
+            <span
+              aria-hidden="true"
+              className="grid size-[72px] place-items-center rounded-full bg-ivory font-serif text-2xl font-extrabold text-ink"
+            >
+              {initials(advisor.name)}
+            </span>
+            <div className="mt-10 md:mt-auto md:pt-12">
+              <p className="mb-3 font-mono text-xs font-medium tracking-eyebrow text-sky uppercase">
+                {advisor.title ?? t('advisors.defaultTitle')}
+              </p>
+              <h3 className="m-0 font-serif text-[32px] leading-[1.04] font-extrabold tracking-display break-words">
+                {advisor.name}
+              </h3>
+              {advisor.summary && <p className="mt-3 mb-0 text-ivory/80">{advisor.summary}</p>}
+              {advisor.services.length > 0 && (
+                <ul aria-label={t('advisors.services')} className="mt-5 flex list-none flex-wrap gap-2 p-0">
+                  {advisor.services.map((service, index) => {
+                    const label = serviceLabel(service, i18n.language)
+                    return (
+                      <li
+                        key={index}
+                        lang={label.lang}
+                        className="rounded-full border border-ivory/35 px-3 py-1 text-sm"
+                      >
+                        {label.text}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
           </li>
         ))}
       </ul>

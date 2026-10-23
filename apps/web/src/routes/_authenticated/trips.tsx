@@ -24,7 +24,7 @@ function TripsPage() {
       <main className="pb-22">
         <section className="relative px-5 pt-14 pb-12 md:px-[8vw] md:pt-20">
           <Eyebrow>{t('eyebrow')}</Eyebrow>
-          <h1 className="mb-3 text-[55px] leading-none md:text-[75px]">{t('title')}</h1>
+          <h1 className="mb-3 text-display-l">{t('title')}</h1>
           <p className="text-muted">{t('intro')}</p>
           <Button asChild className="mt-6 lg:absolute lg:right-[8vw] lg:bottom-15 lg:mt-0">
             <Link to="/wish">{t('newWish')}</Link>

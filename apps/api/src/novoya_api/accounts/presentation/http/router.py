@@ -7,6 +7,12 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 
 from novoya_api.accounts.application.dto import ClientInfo, CurrentUserView
+from novoya_api.accounts.application.use_cases.advisor_profiles import (
+    ListAdvisors,
+    ListAgentAdvisors,
+    UpdateAdvisorProfile,
+    UpdateAdvisorProfileCommand,
+)
 from novoya_api.accounts.application.use_cases.change_password import ChangePassword
 from novoya_api.accounts.application.use_cases.change_user_role import (
     ChangeUserRole,
@@ -60,6 +66,8 @@ from novoya_api.accounts.presentation.http.dependencies import (
     get_change_user_status,
     get_delete_account,
     get_get_account,
+    get_list_advisors,
+    get_list_agent_advisors,
     get_list_users,
     get_register,
     get_request_password_reset,
@@ -70,11 +78,14 @@ from novoya_api.accounts.presentation.http.dependencies import (
     get_sign_out,
     get_sign_out_everywhere,
     get_start_sign_in,
+    get_update_advisor_profile,
     get_update_me,
     get_verify_email,
     require_admin,
 )
 from novoya_api.accounts.presentation.http.schemas import (
+    AdvisorResponse,
+    AgentAdvisorResponse,
     ChangePasswordRequest,
     ChangeRoleRequest,
     ChangeStatusRequest,
@@ -85,6 +96,7 @@ from novoya_api.accounts.presentation.http.schemas import (
     RoleName,
     SignInRequest,
     TokenRequest,
+    UpdateAdvisorProfileRequest,
     UpdateMeRequest,
     UserDetailResponse,
     UserResponse,
@@ -110,6 +122,14 @@ auth_router = APIRouter(prefix="/auth", tags=["auth"], responses=ERRORS)
 me_router = APIRouter(prefix="/me", tags=["me"], responses=ERRORS)
 admin_users_router = APIRouter(
     prefix="/admin/users",
+    tags=["admin"],
+    responses=ERRORS,
+    dependencies=[Depends(require_admin)],
+)
+
+advisors_router = APIRouter(prefix="/advisors", tags=["advisors"])
+admin_advisors_router = APIRouter(
+    prefix="/admin/advisors",
     tags=["admin"],
     responses=ERRORS,
     dependencies=[Depends(require_admin)],
@@ -455,7 +475,53 @@ async def change_user_status(
     return UserResponse.of(user)
 
 
+@advisors_router.get("", operation_id="listAdvisors")
+async def list_advisors(
+    use_case: Annotated[ListAdvisors, Depends(get_list_advisors)],
+) -> list[AdvisorResponse]:
+    """The agency's advisors for the home page. Public. Only the agents an admin chose to show,
+    once they agreed to it, and only their public fields: never an email or an account id.
+    An empty list when nobody is shown: the home page then hides the section."""
+    return [AdvisorResponse.of(profile) for profile in await use_case()]
+
+
+@admin_advisors_router.get("", operation_id="listAgentAdvisors")
+async def list_agent_advisors(
+    use_case: Annotated[ListAgentAdvisors, Depends(get_list_agent_advisors)],
+) -> list[AgentAdvisorResponse]:
+    """Every agent with their public profile (null until filled in), newest first. Admin only."""
+    return [AgentAdvisorResponse.of(view) for view in await use_case()]
+
+
+@admin_advisors_router.put("/{user_id}", operation_id="updateAdvisorProfile")
+async def update_advisor_profile(
+    user_id: UUID,
+    body: UpdateAdvisorProfileRequest,
+    admin: Annotated[CurrentUserView, Depends(require_admin)],
+    use_case: Annotated[UpdateAdvisorProfile, Depends(get_update_advisor_profile)],
+) -> AgentAdvisorResponse:
+    """Fill in or replace an agent's public profile. Admin only. 409 not_an_agent for another
+    role, 409 advisor_consent_required to show an agent whose agreement is not recorded.
+    Each service is given in French, in English or both. The admin who records the agreement
+    and when are kept."""
+    view = await use_case(
+        UpdateAdvisorProfileCommand(
+            user_id=UserId(user_id),
+            public_name=body.public_name,
+            title=body.title,
+            summary=body.summary,
+            services=[(service.fr, service.en) for service in body.services],
+            consent=body.consent,
+            shown=body.shown,
+            by=admin.user_id,
+        )
+    )
+    return AgentAdvisorResponse.of(view)
+
+
 router = APIRouter()
 router.include_router(auth_router)
 router.include_router(me_router)
 router.include_router(admin_users_router)
+router.include_router(advisors_router)
+router.include_router(admin_advisors_router)

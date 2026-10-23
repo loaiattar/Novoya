@@ -55,7 +55,7 @@ function AdminPage() {
   return (
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
-      <h1 className="m-0 text-[39px] md:text-[50px]">{t('title')}</h1>
+      <h1 className="m-0 text-display-s">{t('title')}</h1>
 
       <div className="mt-10 mb-4 flex flex-col gap-2.5 md:flex-row">
         <label className="sr-only" htmlFor="admin-search">

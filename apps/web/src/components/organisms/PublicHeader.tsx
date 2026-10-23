@@ -1,6 +1,8 @@
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { listAdvisorsOptions } from '../../api/generated/@tanstack/react-query.gen'
 import { Button } from '../atoms/Button'
 import { HomeLink } from '../molecules/HomeLink'
 import { LanguageChoice } from './LanguageChoice'
@@ -8,6 +10,9 @@ import { LanguageChoice } from './LanguageChoice'
 /** The header over the landing page's photo, for visitors. */
 export function PublicHeader({ signedIn = false }: { signedIn?: boolean }) {
   const { t } = useTranslation('header')
+  // Same query as the advisors section: named only when the page shows it.
+  const advisors = useQuery({ ...listAdvisorsOptions(), retry: false })
+  const hasAdvisors = Array.isArray(advisors.data) && advisors.data.length > 0
   return (
     <header className="absolute inset-x-0 top-0 z-10 flex h-18 items-center justify-between px-5 md:h-22 md:px-[5vw]">
       <HomeLink light />
@@ -18,6 +23,8 @@ export function PublicHeader({ signedIn = false }: { signedIn?: boolean }) {
         <a href="#methode" className="hidden min-h-11 items-center rounded-full border border-ivory/45 px-5 text-ivory no-underline transition-colors hover:bg-ivory/10 md:inline-flex">
           {t('ourMethod')}
         </a>
+        {/* Text only, on purpose: not a link to the section. */}
+        {hasAdvisors && <span className="hidden min-h-11 items-center px-2 text-ivory md:inline-flex">{t('team')}</span>}
         <LanguageChoice light />
         <Button asChild variant="glass">
           {signedIn ? <Link to="/wish">{t('mySpace')}</Link> : <Link to="/login">{t('signIn')}</Link>}

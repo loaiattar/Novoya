@@ -63,7 +63,7 @@ function OfferPage({ offer }: { offer: OfferDetailResponse }) {
       <div>
         <Eyebrow>{t('place', { city: offer.city, country: localizeCountry(locale, offer.country) })}</Eyebrow>
         {/* The partner's texts are shown as written, in French (lang: read with a French voice). */}
-        <h1 lang="fr" className="mb-6 text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+        <h1 lang="fr" className="mb-6 text-display-m">
           {offer.title}
         </h1>
         <Chip>{t(`kind.${offer.kind}`)}</Chip>

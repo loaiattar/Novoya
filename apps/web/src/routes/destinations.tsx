@@ -55,7 +55,7 @@ function DestinationsPage() {
         </Link>
         <section className="px-5 pt-10 pb-10 md:px-[8vw] md:pt-16 md:pb-16">
           <Eyebrow>{t('eyebrow')}</Eyebrow>
-          <h1 className="m-0 text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+          <h1 className="m-0 text-display-m">
             {t('title')}
             <br />
             <em>{t('titleEnd')}</em>

@@ -128,6 +128,24 @@ class LastSuperAdminRequired(Conflict):
     code = "last_super_admin_required"
 
 
+class NotAnAgent(Conflict):
+    """Only an agent has a public advisor profile: give the user the agent role first."""
+
+    code = "not_an_agent"
+
+
+class AdvisorConsentRequired(Conflict):
+    """An advisor is shown on the home page only once the agent agreed to it."""
+
+    code = "advisor_consent_required"
+
+
+class InvalidAdvisorProfile(InvalidInput):
+    """A field of the advisor profile is empty or too long, or there are too many services."""
+
+    code = "invalid_advisor_profile"
+
+
 class InvalidEmail(InvalidInput):
     code = "invalid_email"
 

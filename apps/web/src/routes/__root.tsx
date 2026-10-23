@@ -10,6 +10,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { serverErrorKey } from '../api/errors'
 import { ErrorNote } from '../components/molecules/ErrorNote'
 import { HomeLink } from '../components/molecules/HomeLink'
 import { resolveLocale } from '../domain/i18n/locale'
@@ -50,7 +51,7 @@ function RootLayout() {
 }
 
 /** The page shown when a route fails for another reason than a missing session. */
-export function RouteError() {
+export function RouteError({ error }: { error?: unknown }) {
   const router = useRouter()
   const { t } = useTranslation('errors')
   // Inside the signed-in layout, its header is already on screen. Otherwise (the session
@@ -67,7 +68,7 @@ export function RouteError() {
         </header>
       )}
       <main className={layoutHeader ? 'pt-26 md:pt-30' : 'pt-8'}>
-        <ErrorNote message={t('serverUnreachable')} onRetry={() => router.invalidate()} />
+        <ErrorNote message={t(serverErrorKey(error))} onRetry={() => router.invalidate()} />
       </main>
     </>
   )

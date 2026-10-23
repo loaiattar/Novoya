@@ -69,7 +69,7 @@ describe('home page inspirations', () => {
   it('shows one card per featured offer, each opening that offer', async () => {
     renderAt('/')
 
-    const section = await screen.findByRole('region', { name: 'a few ideas to branch off.' })
+    const section = await screen.findByRole('region', { name: 'A few ideas to branch off.' })
     const links = within(section)
       .getAllByRole('link')
       .filter((link) => link.getAttribute('href')?.startsWith('/offers/'))
@@ -87,7 +87,7 @@ describe('home page inspirations', () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['fr-FR'])
     renderAt('/')
 
-    const section = await screen.findByRole('region', { name: 'quelques idées pour bifurquer.' })
+    const section = await screen.findByRole('region', { name: 'Quelques idées pour bifurquer.' })
     expect(within(section).getByText('Maroc · Marrakech')).toBeInTheDocument()
   })
 
@@ -105,7 +105,7 @@ describe('home page inspirations', () => {
     const { queryClient } = renderAt('/')
 
     await featuredSettled(queryClient)
-    expect(screen.queryByRole('region', { name: 'a few ideas to branch off.' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'A few ideas to branch off.' })).not.toBeInTheDocument()
   })
 
   it('has no inspirations section when the offers could not be loaded', async () => {
@@ -113,6 +113,6 @@ describe('home page inspirations', () => {
     const { queryClient } = renderAt('/')
 
     await featuredSettled(queryClient)
-    expect(screen.queryByRole('region', { name: 'a few ideas to branch off.' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'A few ideas to branch off.' })).not.toBeInTheDocument()
   })
 })

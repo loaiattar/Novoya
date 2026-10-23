@@ -60,6 +60,9 @@ describe('privacy page', () => {
     // The advisor chat (#169): what, who reads it, how long.
     expect(text).toContain('Your messages to our advisors')
     expect(text).toContain("The advisor chat: you, the agency's administrators")
+    // The advisors on the home page (#167): shown only with their agreement, no photo.
+    expect(screen.getByRole('heading', { level: 2, name: "Our advisors' public profile" })).toBeInTheDocument()
+    expect(text).toContain('only once they agreed to it')
     expect(text).toContain('Your chat messages: as long as the trip wish they belong to.')
     expect(text).toContain('12 rue des Écluses, 44000 Nantes')
     expect(screen.getAllByRole('link', { name: '02 40 00 00 00' })[0]).toHaveAttribute('href', 'tel:+33240000000')
@@ -77,6 +80,7 @@ describe('privacy page', () => {
     expect(document.body.textContent).toContain('Vos messages à nos conseillers')
     expect(document.body.textContent).toContain('La discussion avec un conseiller : vous, les administrateurs de l’agence')
     expect(document.body.textContent).toContain('Vos messages de discussion : aussi longtemps que l’envie de voyage')
+    expect(screen.getByRole('heading', { name: 'Le profil public de nos conseillers' })).toBeInTheDocument()
   })
 
   it('is linked from the sign-in page', async () => {

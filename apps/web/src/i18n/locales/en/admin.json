@@ -7,6 +7,7 @@
     "partners": "Partners",
     "extras": "Extras",
     "reviews": "Reviews",
+    "advisors": "Advisors",
     "activity": "Activity",
     "import": "Import"
   },
@@ -450,6 +451,53 @@
       "failed": "Nothing was imported: a row of the export was refused ({{detail}}). Fix it in {{agency}}, then import a new export.",
       "running": "Another import is running. Try again in a moment.",
       "unknown": "The export could not be imported. Please try again."
+    }
+  },
+  "advisors": {
+    "title": "Advisors",
+    "intro": "What the home page shows of each agent: a name, a title, one line and their specialities. Never their email. An agent appears only once their agreement is recorded here.",
+    "loading": "Loading the agents…",
+    "loadFailed": "The agents could not be loaded.",
+    "empty": "No agent yet. Give a user the agent role to fill in their profile.",
+    "edit": "Edit the profile",
+    "saved": "Profile saved.",
+    "status": {
+      "notFilled": "Profile to fill in",
+      "noConsent": "No agreement recorded: hidden",
+      "hidden": "Hidden from the home page",
+      "shown": "Shown on the home page",
+      "disabled": "account disabled: hidden"
+    },
+    "form": {
+      "publicName": "Public name",
+      "publicNameHint": "The name on the home page, for example a first name.",
+      "publicNameMissing": "Enter the public name.",
+      "title": "Title",
+      "titleHint": "For example “Founder and manager”. Empty: “Travel advisor”.",
+      "summary": "One-line introduction",
+      "summaryHint": "{{count}} / {{max}} characters.",
+      "services": "Specialities",
+      "servicesHint": "Up to {{max}}, in French, in English or both. One language is enough: the home page then shows that one.",
+      "serviceFr": "Speciality {{number}} in French",
+      "serviceEn": "Speciality {{number}} in English",
+      "serviceFrPlaceholder": "In French, e.g. Grèce",
+      "serviceEnPlaceholder": "In English, e.g. Greece",
+      "serviceMissing": "Write this speciality in French or in English, or remove it.",
+      "removeService": "Remove speciality {{number}}",
+      "addService": "Add a speciality",
+      "consent": "The agent agreed to appear on the site",
+      "consentHint": "Their name and introduction are public. Unticking hides the profile at once.",
+      "shown": "Show on the home page",
+      "shownHint": "Every visitor sees it.",
+      "shownNeedsConsent": "Record the agent’s agreement first.",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "consentRequired": "Record the agent’s agreement before showing them.",
+      "notAnAgent": "This user is no longer an agent: reload the page.",
+      "invalid": "A field is empty or too long. Check the form.",
+      "saveFailed": "Saving failed. Try again."
     }
   }
 }

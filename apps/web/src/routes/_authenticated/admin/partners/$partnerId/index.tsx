@@ -69,7 +69,7 @@ function PartnerDetails({ partner }: { partner: PartnerResponse }) {
   return (
     <>
       <Eyebrow className="mt-6">{t('partners.title')}</Eyebrow>
-      <h1 className="m-0 mb-8 text-[39px] break-words md:text-[50px]">{partner.name}</h1>
+      <h1 className="m-0 mb-8 text-display-s break-words">{partner.name}</h1>
       <PartnerForm
         mode="edit"
         imported={partner.imported}

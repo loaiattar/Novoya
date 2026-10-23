@@ -57,7 +57,7 @@ function QueuePage() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <Eyebrow>{t('eyebrow')}</Eyebrow>
-          <h1 className="m-0 text-[39px] md:text-[50px]">{t('title')}</h1>
+          <h1 className="m-0 text-display-s">{t('title')}</h1>
         </div>
         {/* Kept in place while loading, so the title does not wrap when the count arrives. */}
         <p className={`m-0 flex items-center gap-2 ${queues.unassigned.data ? '' : 'invisible'}`}>

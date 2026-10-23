@@ -15,6 +15,8 @@ async def health() -> Health:
     return Health(status="ok")
 
 
+# Its 503 is the Health body, not database_busy: it reports the database as down (main.py
+# leaves the shared database_busy 503 off the health router).
 @router.get("/db", operation_id="getDbHealth", responses={503: {"model": Health}})
 async def db_health(
     check_database: Annotated[CheckDatabase, Depends(get_check_database)], response: Response

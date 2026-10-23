@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -14,6 +15,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from novoya_api.shared.infrastructure.db.base import Base
@@ -153,3 +155,24 @@ class OAuthStateModel(Base):
     nonce: Mapped[str] = mapped_column(String(128))
     redirect_to: Mapped[str] = mapped_column(String(512))
     expires_at: Mapped[datetime] = mapped_column(Timestamp, index=True)
+
+
+class AdvisorProfileModel(Base):
+    """An agent's public profile on the home page (#167). Deleted with the account."""
+
+    __tablename__ = "advisor_profiles"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    public_name: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str | None] = mapped_column(String(60))
+    summary: Mapped[str | None] = mapped_column(String(140))
+    # [{"fr": "Grèce", "en": "Greece"}, ...]: one language at least, the other may be null.
+    services: Mapped[list[dict[str, str | None]]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    shown: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    # The agent's agreement to be shown: when, and the admin who recorded it.
+    consent_at: Mapped[datetime | None] = mapped_column(Timestamp)
+    consent_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    updated_at: Mapped[datetime] = mapped_column(Timestamp)

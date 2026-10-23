@@ -49,7 +49,7 @@ function ReviewsPage() {
   return (
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
-      <h1 className="m-0 text-[39px] md:text-[50px]">{t('reviews.title')}</h1>
+      <h1 className="m-0 text-display-s">{t('reviews.title')}</h1>
       {failedIds.size > 0 && (
         <p role="alert" className="mt-4 text-danger">
           {t('reviews.switchFailed')}

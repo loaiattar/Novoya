@@ -77,7 +77,7 @@ function OfferDetails({ partner, offer }: { partner: PartnerResponse; offer: Off
   return (
     <>
       <Eyebrow className="mt-6">{partner.name}</Eyebrow>
-      <h1 className="m-0 mb-8 text-[39px] break-words md:text-[50px]">{offer.title}</h1>
+      <h1 className="m-0 mb-8 text-display-s break-words">{offer.title}</h1>
       <OfferForm
         mode="edit"
         imported={partner.imported}
