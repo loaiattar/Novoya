@@ -111,7 +111,7 @@ describe('the language switch', () => {
 
     fireEvent.click(within(await languageSwitch('Language')).getByRole('button', { name: /Français/ }))
 
-    expect(await screen.findByRole('link', { name: 'Destinations et avis' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Week-ends surprises' })).toBeInTheDocument()
     expect(within(await languageSwitch('Langue')).getByRole('button', { name: /Français/ })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -123,14 +123,14 @@ describe('the language switch', () => {
   it('signed out: the choice is kept after a reload, over the browser language', async () => {
     renderAt('/destinations')
     fireEvent.click(within(await languageSwitch('Language')).getByRole('button', { name: /Français/ }))
-    await screen.findByRole('link', { name: 'Destinations et avis' })
+    await screen.findByRole('link', { name: 'Week-ends surprises' })
 
     // A reload: the page goes away and the app starts again in the browser's language.
     cleanup()
     await i18n.changeLanguage('en')
     renderAt('/destinations')
 
-    expect(await screen.findByRole('link', { name: 'Destinations et avis' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Week-ends surprises' })).toBeInTheDocument()
   })
 
   it('signed in: saves the language with PATCH /me, then switches', async () => {

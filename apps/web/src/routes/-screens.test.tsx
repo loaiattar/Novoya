@@ -607,7 +607,7 @@ describe('back-office and plan screens', () => {
       const footer = await screen.findByRole('contentinfo', {}, { timeout: 3000 })
       expect(screen.getAllByRole('contentinfo')).toHaveLength(1)
       expect(within(footer).getByRole('link', { name: 'Legal notices' })).toHaveAttribute('href', '/legal')
-      expect(within(footer).getByRole('link', { name: 'Destinations and reviews' })).toHaveAttribute(
+      expect(within(footer).getByRole('link', { name: 'Destinations' })).toHaveAttribute(
         'href',
         '/destinations',
       )
