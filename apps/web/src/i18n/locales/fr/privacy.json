@@ -1,6 +1,6 @@
 {
   "title": "Politique de confidentialité",
-  "updated": "Mise à jour le 22 octobre 2026.",
+  "updated": "Mise à jour le 23 octobre 2026.",
   "intro": "Cette page dit ce que {{name}} conserve sur vous sur ce site, pourquoi, qui d’autre le traite, combien de temps nous le gardons et comment le faire supprimer.",
   "controller": {
     "title": "Qui est responsable",
@@ -15,6 +15,7 @@
       "Vos sessions : une clé de connexion aléatoire et une courte description de votre navigateur (son user agent), pour que vous restiez connecté. Jamais votre adresse IP.",
       "Ce que vous écrivez : votre envie de voyage, vos réponses dans le panneau de préférences, votre budget, le nombre de voyageurs et vos dates. Pour trouver les offres qui conviennent et construire votre programme.",
       "Vos programmes et devis : le voyage proposé, les prix négociés par notre conseillère, le devis en PDF, et votre réponse au devis avec votre commentaire. Pour vous envoyer l’offre et réserver le voyage si vous l’acceptez.",
+      "Vos messages à nos conseillers : ce que vous écrivez dans la discussion pendant que vous préparez votre voyage et les réponses de l’agence, qui a écrit chaque message (vous ou l’agence) et quand. Chaque discussion est liée à une envie de voyage. Pour répondre à vos questions sur le voyage.",
       "Les liens que nous vous envoyons par e-mail pour confirmer votre adresse ou réinitialiser votre mot de passe."
     ]
   },
@@ -26,6 +27,7 @@
     "title": "Qui d’autre les traite",
     "items": [
       "Nos conseillers : un conseiller voit votre envie, votre programme et votre devis uniquement pour les programmes de sa file.",
+      "La discussion avec un conseiller : vous, les administrateurs de l’agence, et un conseiller uniquement tant que votre programme attend dans sa file ou une fois qu’il lui est attribué. Avant que vous demandiez un devis, seuls les administrateurs peuvent la lire.",
       "Render héberge le site et sa base de données à Francfort, dans l’Union européenne.",
       "Brevo, en France, envoie nos e-mails : la confirmation d’adresse, la réinitialisation du mot de passe et l’e-mail qui annonce votre devis.",
       "Mistral AI, en France, fait fonctionner le modèle d’IA qui lit votre envie et construit votre programme. Il reçoit la description de votre voyage, le nombre de voyageurs et vos dates, jamais votre nom ni votre adresse e-mail.",
@@ -36,6 +38,7 @@
     "title": "Combien de temps nous les gardons",
     "items": [
       "Votre compte et tout ce qui y est lié (envies, réponses, programmes, devis et leur PDF) : jusqu’à ce que vous supprimiez votre compte.",
+      "Vos messages de discussion : aussi longtemps que l’envie de voyage à laquelle ils sont liés. Supprimer votre compte supprime vos envies, et leurs messages avec elles. Si le compte d’un conseiller est supprimé, ses réponses restent dans votre discussion.",
       "Une session : 30 jours au plus. Elle se termine après 7 jours sans utilisation et est supprimée 30 jours après votre connexion.",
       "Un lien de confirmation d’adresse : 24 heures. Un lien de réinitialisation du mot de passe : 30 minutes. Chacun est supprimé une fois expiré.",
       "Pendant une connexion avec Google, un enregistrement temporaire de 10 minutes au plus.",

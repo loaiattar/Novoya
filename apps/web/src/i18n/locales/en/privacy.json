@@ -1,6 +1,6 @@
 {
   "title": "Privacy policy",
-  "updated": "Last updated on 22 October 2026.",
+  "updated": "Last updated on 23 October 2026.",
   "intro": "This page says what {{name}} stores about you on this website, why, who else handles it, how long we keep it, and how to have it deleted.",
   "controller": {
     "title": "Who is responsible",
@@ -15,6 +15,7 @@
       "Your sessions: a random sign-in key and a short description of your browser (its user agent), so you stay signed in. Never your IP address.",
       "What you type: your trip wish, your answers in the preference panel, your budget, the number of travellers and your dates. To find the offers that fit and build your plan.",
       "Your plans and quotes: the proposed trip, the prices our advisor negotiated, the quote PDF, and your answer to the quote with your comment. To send you the offer and book the trip if you accept it.",
+      "Your messages to our advisors: what you write in the chat while you prepare your trip and the agency's answers, whether each one came from you or from the agency, and when it was sent. Each conversation belongs to one trip wish. To answer your questions about the trip.",
       "The links we email you to confirm your address or reset your password."
     ]
   },
@@ -26,6 +27,7 @@
     "title": "Who else handles it",
     "items": [
       "Our advisors: an agent sees your wish, plan and quote only for the plans in their queue.",
+      "The advisor chat: you, the agency's administrators, and an agent only while your plan waits in their queue or once it is assigned to them. Before you ask for a quote, only the administrators can read it.",
       "Render hosts the website and its database in Frankfurt, in the European Union.",
       "Brevo, in France, sends our emails: the address confirmation, the password reset and the email that says your quote is ready.",
       "Mistral AI, in France, runs the AI model that reads your wish and builds your plan. It receives your trip description, the number of travellers and your dates, never your name or email address.",
@@ -36,6 +38,7 @@
     "title": "How long we keep it",
     "items": [
       "Your account and everything linked to it (wishes, answers, plans, quotes and their PDF): until you delete your account.",
+      "Your chat messages: as long as the trip wish they belong to. Deleting your account deletes your wishes, and their messages with them. If an advisor's account is deleted, their answers stay in your conversation.",
       "A session: 30 days at most. It ends after 7 days without use, and is deleted 30 days after you signed in.",
       "An email confirmation link: 24 hours. A password reset link: 30 minutes. Each is deleted once it has expired.",
       "During a Google sign-in, a temporary record of 10 minutes at most.",

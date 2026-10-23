@@ -57,6 +57,10 @@ describe('privacy page', () => {
     expect(text).toContain('A session: 30 days at most.')
     expect(text).toContain('Mistral AI, in France')
     expect(text).toContain('agreed to their publication')
+    // The advisor chat (#169): what, who reads it, how long.
+    expect(text).toContain('Your messages to our advisors')
+    expect(text).toContain("The advisor chat: you, the agency's administrators")
+    expect(text).toContain('Your chat messages: as long as the trip wish they belong to.')
     expect(text).toContain('12 rue des Écluses, 44000 Nantes')
     expect(screen.getAllByRole('link', { name: '02 40 00 00 00' })[0]).toHaveAttribute('href', 'tel:+33240000000')
     expect(screen.getByRole('link', { name: 'Open my account settings' })).toHaveAttribute('href', '/settings')
@@ -70,6 +74,9 @@ describe('privacy page', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Politique de confidentialité' })).toBeInTheDocument()
     expect(document.body.textContent).toContain('Nous ne lisons jamais votre messagerie')
+    expect(document.body.textContent).toContain('Vos messages à nos conseillers')
+    expect(document.body.textContent).toContain('La discussion avec un conseiller : vous, les administrateurs de l’agence')
+    expect(document.body.textContent).toContain('Vos messages de discussion : aussi longtemps que l’envie de voyage')
   })
 
   it('is linked from the sign-in page', async () => {
