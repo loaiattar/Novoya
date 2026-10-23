@@ -49,6 +49,10 @@
     "title": "Travellers' reviews",
     "body": "The reviews shown on the destinations come from travellers of {{name}} who agreed to their publication. They are signed with a first name and an initial, or shown as anonymous. If a traveller withdraws their consent, their review is removed at the next update of the catalogue, and the agency can take a review down at once on request."
   },
+  "advisors": {
+    "title": "Our advisors' public profile",
+    "body": "The home page can show some of {{name}}'s advisors: a public name, a title, a short introduction and the trips they handle, with their initials. Never their email address, their account or a photo. An advisor is shown only once they agreed to it; the agency records when and who noted the agreement. An advisor can withdraw it at any time: their profile is then hidden at once, and it is deleted with their account. We show it to tell you who looks after your trip, with the advisor's consent."
+  },
   "cookies": {
     "title": "Cookies and browser storage",
     "body": "We use only what the website needs to work, so there is nothing to accept: one cookie that keeps you signed in, one short-lived cookie during a Google sign-in, and your language choice saved in your browser."

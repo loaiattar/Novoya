@@ -270,6 +270,7 @@ Client:
 | GET | `/me/trips` | The signed-in client's wishes, newest first: destination, dates, travellers, status, and the ids and status of its plan and quote when they exist. Own wishes only: 401 without a session, 403 for an agent or an admin. Not cached (`private, no-store`) |
 | GET | `/destinations` | Destinations with at least one listed offer (active offer of an active partner) |
 | GET | `/reviews?country=&city=` | Published reviews, newest first. Public. Hidden reviews are omitted |
+| GET | `/advisors` | The agency's advisors for the home page, by public name. Public. Only the agents an admin chose to show once they agreed, active and still agents; only their public fields (profile id, name, title, summary, services in French and/or English), never an email or an account id. Empty when nobody is shown |
 | GET | `/offers/{id}` | A listed offer: indicative price, opening months, terms. Never the partner |
 | GET | `/extras` | The extras a client can add to a plan |
 | POST | `/wishes` | Send the wish. Returns the panel, or `not_covered` with suggested destinations |
@@ -300,6 +301,8 @@ Admin (role `admin` only; an admin can also use every agent route):
 |---|---|---|
 | GET | `/admin/users` | List users, filtered by email or role |
 | PATCH | `/admin/users/{id}/role` | Change a user's role |
+| GET | `/admin/advisors` | Every agent with their public profile (null until filled in) |
+| PUT | `/admin/advisors/{user_id}` | Fill in or replace an agent's public profile: public name, title (60), summary (140), up to 6 services each in French, English or both, the agent's agreement and whether the home page shows them. 409 `advisor_consent_required` to show without the agreement, 409 `not_an_agent` for another role. Who recorded the agreement and when are kept |
 | GET, PATCH | `/admin/reviews` | List published reviews, hide or show one |
 | GET | `/admin/wishes` | Every client's wishes with their status, searched by client or destination |
 | GET | `/admin/plans`, `/admin/plans/{id}` | Every plan with its client, status and agent; one plan read-only, as its agent sees it |
@@ -342,6 +345,7 @@ novoya/
 ## 9. Privacy (GDPR)
 
 - We store only the account (email, name, first name, last name, role, language), a hash of the password if the user has one, the sessions (with the browser's user agent, never the IP address, kept 30 days at most), what the client types (wishes, panel answers, budget, travellers, dates), the plans and the quotes. No mailbox, document or social media data, no avatar and no Google token.
+- An agent can appear on the home page (#167, [ADR 0017](adr/0017-advisor-public-profiles.md)) with a public name, a title, a one-line summary and their services, never their email, an account id or a photo. An admin fills the profile in and records the agent's agreement (who and when); the profile is shown only with that agreement, and unticking it hides the profile at once. A demoted or disabled agent drops out on their own, and the profile is deleted with the account. The privacy page says so.
 - Published reviews come from DÉTOUR's `avis_diffusables` only: the traveller agreed to publication, and the author is already pseudonymised ("First name I." or "Voyageur anonyme", kept as given). Raw reviews and consents are never imported, and a review whose consent is withdrawn is deleted at the next import ([ADR 0014](adr/0014-indicative-prices-and-detour-import.md)). An admin can hide a review at once (`PATCH /admin/reviews/{id}`); the import never shows it again. The privacy page says so.
 - The privacy page (`/privacy`, public, English and French) says what we store, why, who else handles it, and for how long. It is linked from every account page (sign-in, sign-up...), from the footer and from the Google consent screen.
 - Sessions and one-time links are deleted once expired: each sign-in deletes the sessions past their absolute expiry (30 days), each new link deletes the expired links (24 hours at most), and the API's startup deletes both, which covers a quiet spell. No worker is needed; `sessions.absolute_expires_at` and `one_time_tokens.expires_at` are indexed for it.
