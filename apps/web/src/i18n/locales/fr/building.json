@@ -1,0 +1,14 @@
+{
+  "eyebrow": "Votre plan prend forme",
+  "titleStart": "On cale les soirées",
+  "titleEnd": "au bon rythme…",
+  "progressLabel": "Composition de votre plan",
+  "progressValue": "En cours",
+  "steps": {
+    "answers": "Nous lisons vos réponses",
+    "offers": "Nous choisissons parmi les offres de nos partenaires",
+    "days": "Nous organisons vos journées"
+  },
+  "wait": "Cela peut prendre jusqu’à une minute. Gardez cette page ouverte : votre plan s’ouvrira tout seul.",
+  "status": "Nous parcourons uniquement les offres de nos partenaires actifs."
+}

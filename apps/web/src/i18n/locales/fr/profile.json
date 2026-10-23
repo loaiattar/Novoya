@@ -1,0 +1,11 @@
+{
+  "title": "Informations personnelles",
+  "firstName": "Prénom",
+  "lastName": "Nom de famille",
+  "email": "E-mail",
+  "emailHint": "Vous vous connectez avec cette adresse : elle ne peut pas être changée ici.",
+  "language": "Langue",
+  "save": "Enregistrer",
+  "saving": "Enregistrement…",
+  "saved": "Vos informations sont enregistrées."
+}

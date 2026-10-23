@@ -1,0 +1,11 @@
+{
+  "title": "Personal information",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "email": "E-mail",
+  "emailHint": "You sign in with this address, so it cannot be changed here.",
+  "language": "Language",
+  "save": "Save",
+  "saving": "Saving…",
+  "saved": "Your details are saved."
+}

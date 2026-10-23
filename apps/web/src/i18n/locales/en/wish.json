@@ -1,0 +1,42 @@
+{
+  "placeholder": "A quiet week by the sea in May, with good breakfasts…",
+  "send": "Send",
+  "sending": "Sending",
+  "progress": {
+    "read": "Reading your wish",
+    "destinations": "Finding destinations",
+    "preferences": "Preparing your preferences"
+  },
+  "composerLabel": "Your travel wish",
+  "shortcut": "<0>{{key}}</0> + <1>Enter</1> to send",
+  "greeting": "Hello {{name}}",
+  "greetingNoName": "Hello",
+  "titleStart": "What would you",
+  "titleEnd": "really like?",
+  "subtitle": "A place, a feeling, a pace… Write it the way it comes to you.",
+  "askPlace": "Where would you like to go? Add a city or a country to your wish.",
+  "sparksLabel": "Need a spark?",
+  "ourDestinations": "Our destinations:",
+  "sparks": {
+    "cultureCalm": {
+      "label": "Culture & calm",
+      "wish": "A few days in the sun, between culture and calm"
+    },
+    "oceanMove": {
+      "label": "Ocean & movement",
+      "wish": "A sporty break facing the ocean"
+    }
+  },
+  "suggestionWish": "A few days in {{place}}, ",
+  "privacy": "✦ Your words stay with {{agency}}. No import, ever.",
+  "coverage": {
+    "eyebrow": "{{agency}} coverage",
+    "titleStart": "{{place}} makes us dream too.",
+    "titleEnd": "But not yet.",
+    "unknownPlace": "This destination",
+    "introWithSuggestions": "We don't have an active partner for this destination yet. Rather than make something up, here are destinations our agency can really put together for you.",
+    "introWithoutSuggestions": "We don't have an active partner for this destination yet. Rather than make something up, our advice: rephrase your wish with another destination.",
+    "composeHere": "Plan it here",
+    "rephrase": "← Rephrase my wish"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "loading": "Chargement de l’offre…",
+  "loadFailed": "L’offre n’a pas pu être chargée.",
+  "notFound": "Cette offre n’existe pas.",
+  "place": "{{city}}, {{country}}",
+  "kind": {
+    "hotel": "Séjour",
+    "guide": "Guide",
+    "transport": "Transport",
+    "activity": "Activité",
+    "agency": "Agence"
+  },
+  "price": {
+    "label": "Prix indicatif",
+    "unit": {
+      "person/night": "par personne et par nuit",
+      "person/trip": "par personne et par trajet",
+      "person/activity": "par personne et par activité"
+    },
+    "note": "Votre conseiller négocie le prix du voyage entier : le devis donne le montant final.",
+    "none": "Le prix viendra dans votre devis."
+  },
+  "details": {
+    "label": "Détails",
+    "dates": "Disponible",
+    "persons": "Taille du groupe",
+    "personsRange": "De {{min}} à {{max}} personnes",
+    "personsExact_one": "{{count}} personne",
+    "personsExact_other": "{{count}} personnes",
+    "months": "Ouvert en",
+    "conditions": "Conditions",
+    "restrictions": "Restrictions",
+    "cancellation": "Annulation",
+    "confirmation": "Confirmation",
+    "confirmationDelay_one": "Sous {{count}} heure",
+    "confirmationDelay_other": "Sous {{count}} heures",
+    "confirmationImmediate": "Immédiate"
+  },
+  "inFrench": "Détails de l’offre en français"
+}

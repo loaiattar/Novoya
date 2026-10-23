@@ -1,0 +1,57 @@
+{
+  "titleStart": "Le meilleur du voyage,",
+  "titleEnd": "c’est le détour.",
+  "describeTrip": "Composer mon week-end",
+  "heroImageAlt": "Voyageuse lisant dans un train",
+  "heroEyebrow": "Voyages composés par des humains, éclairés par l’IA",
+  "heroIntro": "Une envie suffit. Nous lui donnons une forme, puis un conseiller DÉTOUR la rend possible avec les bonnes adresses.",
+  "continueWithGoogle": "Continuer avec Google",
+  "heroFoot": "Prenez le pas de côté.",
+  "manifesto": {
+    "eyebrow": "Notre façon de faire",
+    "titleStart": "Moins de bruit.",
+    "titleEnd": "Plus de justesse.",
+    "lead": "Vous racontez. L’IA dessine un aperçu sans prix. Un conseiller vérifie, chiffre et vous adresse l’offre de l’agence."
+  },
+  "popular": {
+    "eyebrow": "À contre-courant",
+    "title": "Quelques idées pour bifurquer.",
+    "all": "Toutes les destinations"
+  },
+  "method": {
+    "eyebrow": "Le bon détour, en trois temps",
+    "titleStart": "Simple,",
+    "titleEnd": "pas pressé.",
+    "steps": {
+      "wish": {
+        "title": "Une envie",
+        "copy": "Quelques mots, vos dates, votre rythme. Rien n’est importé d’ailleurs."
+      },
+      "preview": {
+        "title": "Un aperçu",
+        "copy": "Un itinéraire jour par jour, sans prix et sans fausse promesse."
+      },
+      "offer": {
+        "title": "Une offre humaine",
+        "copy": "Votre conseiller négocie, vérifie et chiffre avant de vous l’envoyer."
+      }
+    }
+  },
+  "advisors": {
+    "eyebrow": "L’équipe",
+    "title": "Des humains derrière chaque détour.",
+    "defaultTitle": "Conseiller voyage",
+    "services": "Ses spécialités"
+  },
+  "closing": {
+    "eyebrow": "L’envie est un excellent début",
+    "titleStart": "Où voulez-vous faire",
+    "titleEnd": "un pas de côté ?",
+    "start": "Composer mon week-end"
+  },
+  "reviews": {
+    "eyebrow": "Paroles de voyageurs",
+    "title": "Ils ont pris le temps de nous écrire.",
+    "rating": "Note : {{rating}} sur 5"
+  }
+}

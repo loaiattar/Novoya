@@ -1,9 +1,10 @@
 name: Branch rules
 
 # Enforces the team's git flow on every pull request:
-#   - main only accepts pull requests from dev
+#   - main only accepts pull requests from dev or hotfix/*
 #   - dev only accepts pull requests from isolated work branches
-#     (feature/*, fix/*, chore/*, docs/*, refactor/*, test/*)
+#     (feature/*, fix/*, chore/*, docs/*, refactor/*, test/*), plus main
+#     itself so a hotfix merged into main can be brought back into dev
 # Branch protection makes this check required, so a PR that breaks the
 # rules cannot be merged.
 
@@ -28,12 +29,12 @@ jobs:
           echo "Pull request: $HEAD -> $BASE"
 
           if [ "$BASE" = "main" ]; then
-            if [ "$HEAD" != "dev" ]; then
-              echo "::error::main only accepts pull requests from dev. Open your PR against dev instead."
+            if [ "$HEAD" != "dev" ] && ! echo "$HEAD" | grep -Eq '^hotfix/[a-z0-9._-]+$'; then
+              echo "::error::main only accepts pull requests from dev or hotfix/<name>. Open your PR against dev instead."
               exit 1
             fi
           elif [ "$BASE" = "dev" ]; then
-            if ! echo "$HEAD" | grep -Eq '^(feature|fix|chore|docs|refactor|test)/[a-z0-9._-]+$'; then
+            if [ "$HEAD" != "main" ] && ! echo "$HEAD" | grep -Eq '^(feature|fix|chore|docs|refactor|test)/[a-z0-9._-]+$'; then
               echo "::error::Branch '$HEAD' does not follow the naming rule. Use feature/<name>, fix/<name>, chore/<name>, docs/<name>, refactor/<name> or test/<name> (lowercase, digits, . _ -)."
               exit 1
             fi

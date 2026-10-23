@@ -1,0 +1,23 @@
+{
+  "title": "Mentions légales",
+  "intro": "Ce site est le site internet de {{name}}. Il a été conçu et développé par l’équipe Novoya.",
+  "publisher": "Éditeur",
+  "company": "Raison sociale",
+  "legalForm": "Forme juridique",
+  "shareCapital": "Capital social",
+  "siren": "SIREN",
+  "siret": "SIRET",
+  "rcs": "RCS",
+  "vat": "N° de TVA intracommunautaire",
+  "atoutFrance": "Immatriculation Atout France",
+  "guarantor": "Garant financier",
+  "insurer": "Assureur responsabilité civile professionnelle",
+  "publicationDirector": "Directeur de la publication",
+  "host": "Hébergeur",
+  "email": "E-mail",
+  "address": "Siège social",
+  "phone": "Téléphone",
+  "madeBy": "Réalisation",
+  "madeByValue": "L’équipe Novoya, pour {{agency}}",
+  "intellectualProperty": "Le nom, le logo et les textes de l’agence appartiennent à {{name}}. Le site a été réalisé par l’équipe Novoya."
+}

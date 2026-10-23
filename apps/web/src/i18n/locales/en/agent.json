@@ -1,0 +1,88 @@
+{
+  "area": "Agency",
+  "nav": {
+    "queue": "Request queue",
+    "files": "My files",
+    "sent": "Quotes sent",
+    "partners": "Partners & offers"
+  },
+  "eyebrow": "Agency queue",
+  "title": "Quote requests",
+  "toTake": "to take",
+  "filters": {
+    "unassigned": "To take",
+    "in_progress": "In progress",
+    "decided": "Decided"
+  },
+  "filterTab": "{{label}} · {{count}}",
+  "empty": "No requests in this tab.",
+  "loading": "Loading the queue…",
+  "loadFailed": "We couldn't load the queue.",
+  "status": {
+    "proposed": "Proposed",
+    "requested": "Requested",
+    "negotiating": "In progress",
+    "quoted": "Quoted",
+    "accepted": "Accepted",
+    "rejected": "Declined"
+  },
+  "request": {
+    "place": "{{city}}, {{country}}",
+    "budgetMax": "Max budget",
+    "noBudget": "No budget given",
+    "datesTravellers_one": "{{dates}} · {{count}} traveller",
+    "datesTravellers_other": "{{dates}} · {{count}} travellers",
+    "take": "Take the plan",
+    "taken": "Another agent took this plan.",
+    "takeFailed": "We couldn't take this plan. Please try again."
+  },
+  "plan": {
+    "back": "Back to the queue",
+    "loading": "Loading the plan…",
+    "loadFailed": "We couldn't load the plan.",
+    "notFound": "This plan doesn't exist or isn't yours.",
+    "wish": "The client's wish",
+    "day": "Day {{day}}",
+    "removed": "Removed",
+    "priceOf": "Price of {{title}}",
+    "noPrice": "No price yet",
+    "remove": "Remove {{title}}",
+    "putBack": "Put back {{title}}",
+    "priceNotSaved": "This price was not saved. Check the amount.",
+    "changeFailed": "This change was not saved. Please try again.",
+    "extras": "Extras",
+    "included": "Included",
+    "checkQuantity": "Check the quantity with the partner, then enter the price.",
+    "total": "Total",
+    "budget": "Client's budget",
+    "overBudget": "The total is over the client's budget.",
+    "confirm": "Confirm {{title}}"
+  },
+  "quote": {
+    "send": "Send the quote",
+    "missing": "Still to price",
+    "missingItem": "Day {{day}} · {{title}}",
+    "confirmTitle": "Send the quote?",
+    "confirmBody": "The client gets the quote by email and can download the PDF from their account.",
+    "total": "Total",
+    "budget": "Client's budget",
+    "validUntil": "Valid until {{date}}",
+    "cancel": "Cancel",
+    "confirm": "Send",
+    "number": "Quote number",
+    "sentOn": "Sent on {{date}}",
+    "download": "Download the quote (PDF)",
+    "notReady": "Some lines still have no price. The plan was read again: check it and try once more.",
+    "alreadySent": "This quote was already sent, or the plan is no longer being negotiated.",
+    "failed": "The quote was not sent. Please try again.",
+    "loadFailed": "We couldn't load the quote.",
+    "answer": {
+      "open": "Waiting for the client's answer.",
+      "accepted": "The client accepted the quote on {{date}}.",
+      "rejected": "The client declined the quote on {{date}}.",
+      "expired": "The quote expired on {{date}} without an answer.",
+      "comment": "Client's comment:",
+      "noComment": "none."
+    }
+  }
+}

@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - '@tanstack/router-generator@1.167.44'
+  - '@tanstack/router-utils@1.162.4'

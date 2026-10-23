@@ -1,0 +1,19 @@
+{
+  "open": "Discuter avec un conseiller",
+  "close": "Fermer la discussion",
+  "title": "Votre conseiller",
+  "intro": "Posez vos questions à {{agency}} sur ce voyage. Un conseiller vous répond ici, en général dans la journée.",
+  "agentTitle": "Conversation avec le client",
+  "agentIntro": "Le client écrit depuis ses pages de souhait et de programme. Votre réponse s'affiche dans sa fenêtre de discussion.",
+  "empty": "Aucun message pour l'instant.",
+  "you": "Vous",
+  "agency": "{{agency}}",
+  "client": "Client",
+  "label": "Votre message",
+  "placeholder": "Écrivez un message…",
+  "send": "Envoyer",
+  "sending": "Envoi…",
+  "sendFailed": "Le message n'est pas parti. Réessayez.",
+  "loadFailed": "La conversation n'a pas pu être chargée.",
+  "conversation": "Messages"
+}

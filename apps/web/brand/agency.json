@@ -1,0 +1,193 @@
+{
+  "$schema": "./agency.schema.json",
+  "extracted_from": "detour-main (old showcase site, static HTML, © 2013)",
+  "extracted_on": "2026-10-21",
+
+  "identity": {
+    "trade_name": {
+      "value": "DÉTOUR",
+      "source": "site/index.html (<title>, logo alt, headings)",
+      "status": "confirmed"
+    },
+    "display_name": {
+      "value": "DÉTOUR Voyages",
+      "source": "site/index.html (footer contact block, © line)",
+      "status": "confirmed"
+    },
+    "founded_year": {
+      "value": 2012,
+      "source": "site/agence.html (« Créée en 2012 à Nantes ») and site/index.html footer (« depuis 2012 »)",
+      "status": "confirmed"
+    },
+    "website": {
+      "value": "https://www.detour-voyages.fr",
+      "source": "README.md (« Site vitrine public (www.detour-voyages.fr) »)",
+      "status": "confirmed",
+      "note": "HTTPS not verified; the old README only gives the host name."
+    },
+    "tagline": {
+      "value": {
+        "fr": "Voyages insolites et week-ends sur mesure",
+        "en": "Offbeat trips and tailor-made weekends"
+      },
+      "source": "site/index.html (<title>, footer « L'agence DÉTOUR »)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" }
+    },
+    "logo_baseline": {
+      "value": {
+        "fr": "Voyages insolites",
+        "en": "Offbeat trips"
+      },
+      "source": "brand/logo.png (text under the wordmark), site/index.html (logo alt)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" },
+      "note": "Baked into the logo image; the EN value is only for alt text."
+    },
+    "slogan": {
+      "value": {
+        "fr": "Partez autrement !",
+        "en": "Travel differently!"
+      },
+      "source": "site/index.html (slider, slide 1 heading)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" }
+    },
+    "description_short": {
+      "value": {
+        "fr": "Voyages insolites et week-ends sur mesure depuis 2012. Nos conseillers passionnés composent votre séjour selon vos envies.",
+        "en": "Offbeat trips and tailor-made weekends since 2012. Our passionate advisers put your stay together around what you want."
+      },
+      "source": "site/index.html (footer, column « L'agence DÉTOUR »)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" }
+    },
+    "description_long": {
+      "value": {
+        "fr": "DÉTOUR est une agence de voyages insolites spécialisée dans les week-ends sur mesure. Vous nous dites vos envies, vos dates et votre budget : nos conseillers vous concoctent un séjour unique, transport, hébergement et activités compris !",
+        "en": "DÉTOUR is an offbeat travel agency specialising in tailor-made weekends. Tell us what you'd like, your dates and your budget: our advisers put together a one-of-a-kind stay, with transport, accommodation and activities included!"
+      },
+      "source": "site/index.html (block « Bienvenue chez DÉTOUR »)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" }
+    },
+    "meta_description": {
+      "value": {
+        "fr": "DÉTOUR, agence de voyages insolites : week-ends sur mesure en train à Nantes, Lyon, Lille. Devis gratuit !",
+        "en": "DÉTOUR, offbeat travel agency: tailor-made weekends by train in Nantes, Lyon and Lille. Free quote!"
+      },
+      "source": "site/index.html (<meta name=\"description\">)",
+      "status": "confirmed",
+      "translation_status": { "en": "to_check" },
+      "note": "The list of cities reflects the 2013 catalogue; check it against the current offer."
+    }
+  },
+
+  "contact": {
+    "address": {
+      "value": {
+        "street": "12 rue des Écluses",
+        "postal_code": "44000",
+        "city": "Nantes",
+        "country": "FR"
+      },
+      "source": "site/*.html (footer, column « Contact »)",
+      "status": "confirmed",
+      "note": "Taken from a 2013 site; confirmed by the team on 2026-10-22."
+    },
+    "phone": {
+      "value": "+33240000000",
+      "display": "02 40 00 00 00",
+      "source": "site/*.html (header « Appelez-nous ! » and footer)",
+      "status": "confirmed",
+      "note": "Confirmed by the team on 2026-10-22. The old site also says « Appel non surtaxé »."
+    },
+    "email": {
+      "value": "contact@detour-voyages.fr",
+      "source": "site/*.html (footer mailto), site/contact.html (form action), README.md",
+      "status": "confirmed",
+      "note": "Generic agency mailbox, not a staff address."
+    },
+    "opening_hours": {
+      "value": [
+        {
+          "days": ["Tu", "We", "Th", "Fr", "Sa"],
+          "opens": "10:00",
+          "closes": "19:00"
+        }
+      ],
+      "source": "site/*.html (top bar « Agence ouverte du mardi au samedi, 10h-19h »)",
+      "status": "to_check",
+      "note": "2013 hours; confirm they are still current."
+    }
+  },
+
+  "legal": {
+    "atout_france_registration": {
+      "value": "IM044120000",
+      "source": "site/*.html (footer © line « Licence IM044120000 (fictive) »)",
+      "status": "to_check",
+      "note": "The old site itself marks this number as « fictive ». Must be replaced by the real Atout France registration number before going live (required for a travel agency in France)."
+    }
+  },
+
+  "credits": {
+    "web_agency": {
+      "value": "WebCréa Ouest",
+      "source": "site/*.html (footer « Site réalisé par WebCréa Ouest »)",
+      "status": "to_check",
+      "note": "Built the old site. This is NOT the host, and it is not to be credited on the new site unless it is involved again."
+    }
+  },
+
+  "brand": {
+    "colors": {
+      "value": {
+        "primary": "#FF7A00",
+        "secondary": "#1A7FB5",
+        "secondary_dark": "#0F5A83",
+        "heading": "#1A6FA0",
+        "text": "#444444"
+      },
+      "source": "site/css/style.css (most used colours: #ff7a00 ×15 buttons/active nav, #1a7fb5 ×7 links/nav, #0f5a83 ×3, h1-h3 #1a6fa0, body #444)",
+      "status": "to_check",
+      "note": "Compare with the Figma mockup; the Figma values win if they differ. The logo uses the same orange and blue."
+    },
+    "fonts": {
+      "value": {
+        "heading": "Lobster",
+        "body": "Open Sans"
+      },
+      "source": "site/css/style.css (@import Google Fonts; h1-h3 « Lobster », body « Open Sans »)",
+      "status": "to_check",
+      "note": "Compare with the Figma mockup; the Figma values win if they differ."
+    }
+  },
+
+  "images": {
+    "logo": {
+      "value": "images/logo.png",
+      "format": "png",
+      "width": 1536,
+      "height": 512,
+      "alt": {
+        "fr": "DÉTOUR – Voyages insolites",
+        "en": "DÉTOUR – Offbeat trips"
+      },
+      "source": "brand/logo.png (« Logo et visuels sources » per README.md; site/img/logo.png is a 600×200 copy)",
+      "status": "confirmed",
+      "rights": "agency",
+      "note": "No SVG version exists in the old repository."
+    },
+    "favicon": {
+      "value": "images/favicon.png",
+      "format": "png",
+      "width": 512,
+      "height": 512,
+      "source": "brand/favicon.png (site/img/favicon.png is a 64×64 copy)",
+      "status": "confirmed",
+      "rights": "agency",
+      "note": "« D » symbol from the logo."
+    }
+  }
+}

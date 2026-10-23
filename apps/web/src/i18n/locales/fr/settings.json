@@ -1,0 +1,33 @@
+{
+  "eyebrow": "Votre compte",
+  "title": "Réglages du compte",
+  "email": "E-mail",
+  "passwordTitle": "Mot de passe",
+  "currentPassword": "Mot de passe actuel",
+  "newPassword": "Nouveau mot de passe",
+  "passwordHint": "Au moins 12 caractères.",
+  "submit": "Changer le mot de passe",
+  "submitting": "Enregistrement…",
+  "changed": "Votre mot de passe est changé. Vos autres appareils sont déconnectés.",
+  "googleOnly": "Vous vous connectez avec Google : il n’y a pas de mot de passe à changer.",
+  "setPassword": "Définir un mot de passe par e-mail",
+  "storedTitle": "Ce que {{agency}} garde sur vous",
+  "stored": {
+    "account": "Votre compte : e-mail, nom, langue, et votre façon de vous connecter (un mot de passe chiffré ou votre compte Google).",
+    "wishes": "Vos envies : ce que vous avez écrit, les préférences choisies, votre budget, les voyageurs et les dates.",
+    "plans": "Vos programmes : les voyages construits à partir de vos envies, jour par jour.",
+    "quotes": "Vos devis : les prix, leur durée de validité et le PDF.",
+    "sessions": "Vos sessions, pour rester connecté : 30 jours au plus, jamais votre adresse IP."
+  },
+  "storedNever": "Nous ne lisons jamais votre messagerie, vos documents ni vos réseaux sociaux.",
+  "deleteTitle": "Supprimer mon compte",
+  "deleteBody": "Votre compte et tout ce qui est listé ci-dessus sont effacés d’un coup, et vous êtes déconnecté.",
+  "deleteButton": "Supprimer mon compte",
+  "confirmTitle": "Supprimer votre compte ?",
+  "confirmBody": "Votre compte, vos envies, vos programmes et vos devis seront effacés. C’est définitif.",
+  "confirmCancel": "Garder mon compte",
+  "confirmAction": "Oui, tout supprimer",
+  "deleting": "Suppression…",
+  "staffAccount": "Un compte de l’agence ne peut pas être supprimé ici : les programmes et devis que vous avez traités renvoient vers vous.",
+  "deleteFailed": "Votre compte n’a pas pu être supprimé. Réessayez."
+}

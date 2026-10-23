@@ -1,0 +1,17 @@
+{
+  "signOut": "Se déconnecter",
+  "signingOut": "Déconnexion…",
+  "signOutFailed": "La déconnexion a échoué. Veuillez réessayer.",
+  "mainNav": "Navigation principale",
+  "compose": "Composer",
+  "myTrips": "Mes voyages",
+  "agencySpace": "Espace agence",
+  "administration": "Administration",
+  "accountMenu": "Menu du compte",
+  "signIn": "Se connecter",
+  "mySpace": "Mon espace",
+  "inspirations": "Inspirations",
+  "ourMethod": "Notre méthode",
+  "team": "L’équipe",
+  "settings": "Réglages du compte"
+}

@@ -1,0 +1,26 @@
+{
+  "tryAgain": "Réessayer",
+  "loading": "Chargement…",
+  "comingSoon": "Bientôt",
+  "homeLink": "{{name}}, accueil",
+  "footer": {
+    "contact": "Contact",
+    "nav": "Liens du pied de page",
+    "destinations": "Destinations",
+    "legalNotices": "Mentions légales",
+    "copyright": "© {{year}} {{name}}",
+    "privacy": "Confidentialité",
+    "about": "À propos",
+    "weekends": "Week-ends surprises",
+    "newsletterLabel": "Recevez une destination surprise chaque mois",
+    "newsletterPlaceholder": "votre@email.fr",
+    "newsletterSubmit": "S’inscrire",
+    "newsletterSoon": "La lettre d’information ouvre bientôt. Merci de votre patience.",
+    "localTime": "Heure locale · {{time}}",
+    "backToTop": "Retour en haut"
+  },
+  "language": {
+    "label": "Langue",
+    "failed": "La langue n’a pas pu être changée."
+  }
+}

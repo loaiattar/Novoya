@@ -1,0 +1,33 @@
+{
+  "eyebrow": "Your account",
+  "title": "Account settings",
+  "email": "E-mail",
+  "passwordTitle": "Password",
+  "currentPassword": "Current password",
+  "newPassword": "New password",
+  "passwordHint": "At least 12 characters.",
+  "submit": "Change the password",
+  "submitting": "Saving…",
+  "changed": "Your password is changed. Your other devices are signed out.",
+  "googleOnly": "You sign in with Google, so there is no password to change.",
+  "setPassword": "Set a password by e-mail",
+  "storedTitle": "What {{agency}} stores about you",
+  "stored": {
+    "account": "Your account: e-mail, name, language, and how you sign in (a hashed password or your Google account).",
+    "wishes": "Your wishes: what you wrote, the preferences you picked, your budget, travellers and dates.",
+    "plans": "Your plans: the trips built from your wishes, day by day.",
+    "quotes": "Your quotes: the prices, how long they are valid, and the PDF.",
+    "sessions": "Your sessions, to keep you signed in: 30 days at most, never your IP address."
+  },
+  "storedNever": "We never read your mailbox, your documents or your social media.",
+  "deleteTitle": "Delete my account",
+  "deleteBody": "Your account and everything listed above are erased at once, and you are signed out.",
+  "deleteButton": "Delete my account",
+  "confirmTitle": "Delete your account?",
+  "confirmBody": "Your account, wishes, plans and quotes will be erased. This cannot be undone.",
+  "confirmCancel": "Keep my account",
+  "confirmAction": "Yes, delete everything",
+  "deleting": "Deleting…",
+  "staffAccount": "Agency staff accounts cannot be deleted here: the plans and quotes you handled point to you.",
+  "deleteFailed": "Your account could not be deleted. Please try again."
+}

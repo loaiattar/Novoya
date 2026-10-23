@@ -1,0 +1,72 @@
+{
+  "serverUnreachable": "{{agency}} can't reach the server right now. Please try again in a moment.",
+  "databaseBusy": "The service is busy. Try again in a moment.",
+  "wishFailed": "Something went wrong, please try again.",
+  "rateLimit": {
+    "waitSeconds_one": "Try again in {{count}} second",
+    "waitSeconds_other": "Try again in {{count}} seconds",
+    "waitMinutes_one": "Try again in {{count}} minute",
+    "waitMinutes_other": "Try again in {{count}} minutes"
+  },
+  "signIn": {
+    "oauth_cancelled": "You cancelled the Google sign-in.",
+    "oauth_failed": "Google sign-in did not work. Please try again.",
+    "oauth_state_invalid": "Your sign-in took too long or was started in another browser. Please try again.",
+    "oauth_email_not_verified": "Your Google email address is not verified yet.",
+    "oauth_link_not_allowed": "This Google account cannot be linked to your {{agency}} account.",
+    "identity_already_linked": "This Google account is already linked to another {{agency}} account.",
+    "account_disabled": "This account is disabled.",
+    "user_not_found": "We could not find your account. Please sign in again.",
+    "too_many_attempts": "Too many attempts. Please wait a moment and try again.",
+    "unknown_provider": "Sign-in with Google is not available right now.",
+    "unknown": "Something went wrong while signing you in. Please try again."
+  },
+  "password": {
+    "invalid_credentials": "Wrong e-mail or password.",
+    "email_not_verified": "Please confirm your e-mail address first: open the link we sent you.",
+    "no_password_set": "This account signs in with Google. Use the “Continue with Google” button.",
+    "account_disabled": "This account is disabled.",
+    "too_many_attempts": "Too many attempts. Please wait a moment and try again.",
+    "unknown": "Something went wrong while signing you in. Please try again."
+  },
+  "wish": {
+    "empty": "Describe what you'd like in a few words.",
+    "tooLong": "Your wish is a little long: {{max}} characters at most.",
+    "invalid": "We couldn't read this wish. Please put it in one sentence.",
+    "tooManyRequests": "Too many requests at once. Please wait a moment and try again.",
+    "unknown": "Your wish couldn't be sent. Please try again in a moment."
+  },
+  "answers": {
+    "budget": "Enter a budget in euros, for example 3,500.",
+    "persons": "Between {{min}} and {{max}} travellers.",
+    "startDate": "Choose a departure date.",
+    "endDate": "Choose a return date.",
+    "endBeforeStart": "The return must be after the departure.",
+    "invalid": "Some answers don't fit. Check the dates and the budget, then try again.",
+    "wishNotFound": "We can't find this wish any more. Please start again.",
+    "alreadyAnswered": "You have already answered for this wish.",
+    "noOfferFits": "No offer fits these dates and this group. Try other dates or another number of travellers.",
+    "tooManyRequests": "Too many requests at once. Please wait a moment and try again.",
+    "unknown": "Your preferences couldn't be sent. Please try again in a moment.",
+    "startInPast": "The departure cannot be in the past.",
+    "tripTooLong": "A trip lasts 366 days at most.",
+    "planFailed": "We couldn't compose your plan. Your answers are still here: try again in a moment.",
+    "connectionLost": "The connection was lost while your plan was being composed. It may still be ready: wait a minute, then send again.",
+    "inProgress": "Your plan is still being composed. Wait a moment, then send again."
+  },
+  "account": {
+    "invalid_email": "This e-mail address doesn't look right.",
+    "weak_password": "Choose a stronger password: at least 12 characters, not a common one, and without your e-mail.",
+    "email_already_used": "This e-mail already has an account. Sign in, or reset your password.",
+    "invalid_credentials": "Your current password is wrong.",
+    "invalid_token": "This link has expired or was already used.",
+    "no_password_set": "This account has no password yet.",
+    "account_disabled": "This account is disabled.",
+    "too_many_attempts": "Too many attempts. Please wait a moment and try again.",
+    "first_name_required": "Enter your first name.",
+    "first_name_too_long": "A first name is 100 characters at most.",
+    "last_name_required": "Enter your last name.",
+    "last_name_too_long": "A last name is 100 characters at most.",
+    "unknown": "Something went wrong. Please try again in a moment."
+  }
+}

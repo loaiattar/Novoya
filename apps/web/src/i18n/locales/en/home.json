@@ -1,0 +1,57 @@
+{
+  "titleStart": "The best part of travel",
+  "titleEnd": "is the détour.",
+  "describeTrip": "Plan my weekend",
+  "heroImageAlt": "A traveller reading on a train",
+  "heroEyebrow": "Trips put together by people, guided by AI",
+  "heroIntro": "A wish is enough. We give it a shape, then a DÉTOUR advisor makes it happen with the right places.",
+  "continueWithGoogle": "Continue with Google",
+  "heroFoot": "Take a step aside.",
+  "manifesto": {
+    "eyebrow": "How we work",
+    "titleStart": "Less noise.",
+    "titleEnd": "More care.",
+    "lead": "You tell us. The AI sketches a preview without prices. An advisor checks it, prices it and sends you the agency’s offer."
+  },
+  "popular": {
+    "eyebrow": "Off the beaten track",
+    "title": "A few ideas to branch off.",
+    "all": "All destinations"
+  },
+  "method": {
+    "eyebrow": "The right détour, in three steps",
+    "titleStart": "Simple,",
+    "titleEnd": "unhurried.",
+    "steps": {
+      "wish": {
+        "title": "A wish",
+        "copy": "A few words, your dates, your pace. Nothing is imported from elsewhere."
+      },
+      "preview": {
+        "title": "A preview",
+        "copy": "A day-by-day itinerary, without prices and without false promises."
+      },
+      "offer": {
+        "title": "A human offer",
+        "copy": "Your advisor negotiates, checks and prices it before sending it to you."
+      }
+    }
+  },
+  "advisors": {
+    "eyebrow": "Our advisors",
+    "title": "The people behind every detour.",
+    "defaultTitle": "Travel advisor",
+    "services": "Their specialities"
+  },
+  "closing": {
+    "eyebrow": "A wish is a great start",
+    "titleStart": "Where would you like",
+    "titleEnd": "to step aside?",
+    "start": "Plan my weekend"
+  },
+  "reviews": {
+    "eyebrow": "Travellers’ words",
+    "title": "They took the time to write to us.",
+    "rating": "Rated {{rating}} out of 5"
+  }
+}

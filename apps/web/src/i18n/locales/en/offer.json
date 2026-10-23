@@ -1,0 +1,40 @@
+{
+  "loading": "Loading the offer…",
+  "loadFailed": "The offer could not be loaded.",
+  "notFound": "This offer doesn't exist.",
+  "place": "{{city}}, {{country}}",
+  "kind": {
+    "hotel": "Stay",
+    "guide": "Guide",
+    "transport": "Transport",
+    "activity": "Activity",
+    "agency": "Agency"
+  },
+  "price": {
+    "label": "Indicative price",
+    "unit": {
+      "person/night": "per person, per night",
+      "person/trip": "per person, per trip",
+      "person/activity": "per person, per activity"
+    },
+    "note": "Your advisor negotiates the price of the whole trip: the quote has the final amount.",
+    "none": "The price will come in your quote."
+  },
+  "details": {
+    "label": "Details",
+    "dates": "Available",
+    "persons": "Group size",
+    "personsRange": "{{min}} to {{max}} people",
+    "personsExact_one": "{{count}} person",
+    "personsExact_other": "{{count}} people",
+    "months": "Open in",
+    "conditions": "Conditions",
+    "restrictions": "Restrictions",
+    "cancellation": "Cancellation",
+    "confirmation": "Confirmation",
+    "confirmationDelay_one": "Within {{count}} hour",
+    "confirmationDelay_other": "Within {{count}} hours",
+    "confirmationImmediate": "Immediate"
+  },
+  "inFrench": "Offer details are in French"
+}

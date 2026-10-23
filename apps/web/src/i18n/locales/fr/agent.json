@@ -1,0 +1,88 @@
+{
+  "area": "Espace agence",
+  "nav": {
+    "queue": "File des demandes",
+    "files": "Mes dossiers",
+    "sent": "Devis envoyés",
+    "partners": "Partenaires & offres"
+  },
+  "eyebrow": "File agence",
+  "title": "Demandes de devis",
+  "toTake": "à prendre",
+  "filters": {
+    "unassigned": "À prendre",
+    "in_progress": "En cours",
+    "decided": "Décidés"
+  },
+  "filterTab": "{{label}} · {{count}}",
+  "empty": "Aucune demande dans cet onglet.",
+  "loading": "Chargement de la file…",
+  "loadFailed": "Impossible de charger la file.",
+  "status": {
+    "proposed": "Proposé",
+    "requested": "Demandé",
+    "negotiating": "En cours",
+    "quoted": "Devis envoyé",
+    "accepted": "Accepté",
+    "rejected": "Refusé"
+  },
+  "request": {
+    "place": "{{city}}, {{country}}",
+    "budgetMax": "Budget max",
+    "noBudget": "Pas de budget indiqué",
+    "datesTravellers_one": "{{dates}} · {{count}} voyageur",
+    "datesTravellers_other": "{{dates}} · {{count}} voyageurs",
+    "take": "Prendre le plan",
+    "taken": "Un autre agent a pris ce plan.",
+    "takeFailed": "Impossible de prendre ce plan. Réessayez."
+  },
+  "plan": {
+    "back": "Retour à la file",
+    "loading": "Chargement du plan…",
+    "loadFailed": "Impossible de charger le plan.",
+    "notFound": "Ce plan n’existe pas ou ne vous est pas attribué.",
+    "wish": "Le souhait du client",
+    "day": "Jour {{day}}",
+    "removed": "Retiré",
+    "priceOf": "Prix de {{title}}",
+    "noPrice": "Pas encore de prix",
+    "remove": "Retirer {{title}}",
+    "putBack": "Remettre {{title}}",
+    "priceNotSaved": "Ce prix n’a pas été enregistré. Vérifiez le montant.",
+    "changeFailed": "Ce changement n’a pas été enregistré. Réessayez.",
+    "extras": "Extras",
+    "included": "Inclus",
+    "checkQuantity": "Vérifiez la quantité avec le partenaire, puis saisissez le prix.",
+    "total": "Total",
+    "budget": "Budget du client",
+    "overBudget": "Le total dépasse le budget du client.",
+    "confirm": "Confirmer {{title}}"
+  },
+  "quote": {
+    "send": "Envoyer le devis",
+    "missing": "Reste à chiffrer",
+    "missingItem": "Jour {{day}} · {{title}}",
+    "confirmTitle": "Envoyer le devis ?",
+    "confirmBody": "Le client reçoit le devis par e-mail et peut télécharger le PDF depuis son compte.",
+    "total": "Total",
+    "budget": "Budget du client",
+    "validUntil": "Valable jusqu’au {{date}}",
+    "cancel": "Annuler",
+    "confirm": "Envoyer",
+    "number": "Numéro du devis",
+    "sentOn": "Envoyé le {{date}}",
+    "download": "Télécharger le devis (PDF)",
+    "notReady": "Certaines lignes n’ont pas encore de prix. Le plan a été relu : vérifiez-le et réessayez.",
+    "alreadySent": "Ce devis a déjà été envoyé, ou le plan n’est plus en négociation.",
+    "failed": "Le devis n’a pas été envoyé. Réessayez.",
+    "loadFailed": "Impossible de charger le devis.",
+    "answer": {
+      "open": "En attente de la réponse du client.",
+      "accepted": "Le client a accepté le devis le {{date}}.",
+      "rejected": "Le client a refusé le devis le {{date}}.",
+      "expired": "Le devis a expiré le {{date}} sans réponse.",
+      "comment": "Commentaire du client :",
+      "noComment": "aucun."
+    }
+  }
+}

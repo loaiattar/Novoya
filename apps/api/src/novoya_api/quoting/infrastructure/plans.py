@@ -1,0 +1,88 @@
+from collections.abc import Sequence
+from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from novoya_api.planning.public import (
+    PricedPlan,
+    find_plan_ids,
+    mark_accepted,
+    mark_rejected,
+    plan_trip,
+    plan_trips,
+    priced_plan,
+    quote_plan,
+)
+from novoya_api.quoting.application.dto import QuotedExtra, QuotedItem, QuotedPlan, QuoteTrip
+
+
+class PlanningPlans:
+    """PlanQuoting through planning.public, in the request's session: the plan's new status
+    and the quote are committed together."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def quote(self, plan_id: UUID, agent_id: UUID) -> QuotedPlan:
+        return _quoted(await quote_plan(plan_id, agent_id, session=self._session))
+
+    async def priced(self, plan_id: UUID) -> QuotedPlan | None:
+        priced = await priced_plan(plan_id, session=self._session)
+        return None if priced is None else _quoted(priced)
+
+    async def record_answer(self, plan_id: UUID, accepted: bool) -> None:
+        mark = mark_accepted if accepted else mark_rejected
+        await mark(plan_id, session=self._session)
+
+    async def trip(self, plan_id: UUID) -> QuoteTrip | None:
+        brief = await plan_trip(plan_id, session=self._session)
+        if brief is None:
+            return None
+        return QuoteTrip(brief.country, brief.city, brief.start_date, brief.end_date)
+
+    async def find_ids(self, query: str, user_ids: Sequence[UUID]) -> list[UUID]:
+        return await find_plan_ids(query, user_ids, session=self._session)
+
+    async def trips(self, plan_ids: Sequence[UUID]) -> dict[UUID, QuoteTrip]:
+        found = await plan_trips(plan_ids, session=self._session)
+        return {
+            plan_id: QuoteTrip(trip.country, trip.city, trip.start_date, trip.end_date)
+            for plan_id, trip in found.items()
+        }
+
+
+def _quoted(priced: PricedPlan) -> QuotedPlan:
+    return QuotedPlan(
+        plan_id=priced.plan_id,
+        wish_id=priced.wish_id,
+        client_id=priced.client_id,
+        agent_id=priced.agent_id,
+        summary=priced.summary,
+        items=tuple(
+            QuotedItem(
+                day=item.day,
+                kind=item.kind,
+                title=item.title,
+                description=item.description,
+                quantity=item.quantity,
+                price=item.price,
+            )
+            for item in priced.items
+        ),
+        extras=tuple(
+            QuotedExtra(
+                label=extra.label, unit=extra.unit, pricing=extra.pricing, price=extra.price
+            )
+            for extra in priced.extras
+        ),
+        total=priced.total,
+        wish_text=priced.wish_text,
+        country=priced.country,
+        city=priced.city,
+        persons=priced.persons,
+        start_date=priced.start_date,
+        end_date=priced.end_date,
+        budget_max=priced.budget_max,
+        currency=priced.currency,
+        tags=priced.tags,
+    )

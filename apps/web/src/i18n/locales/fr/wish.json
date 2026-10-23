@@ -1,0 +1,42 @@
+{
+  "placeholder": "Une semaine calme au bord de la mer en mai, avec de bons petits-déjeuners…",
+  "send": "Envoyer",
+  "sending": "Envoi en cours",
+  "progress": {
+    "read": "Nous lisons votre envie",
+    "destinations": "Nous cherchons les destinations",
+    "preferences": "Nous préparons vos préférences"
+  },
+  "composerLabel": "Votre envie de voyage",
+  "shortcut": "<0>{{key}}</0> + <1>Entrée</1> pour envoyer",
+  "greeting": "Bonjour {{name}}",
+  "greetingNoName": "Bonjour",
+  "titleStart": "De quoi avez-vous",
+  "titleEnd": "envie, vraiment ?",
+  "subtitle": "Un lieu, une sensation, un rythme… Écrivez comme cela vous vient.",
+  "askPlace": "Où aimeriez-vous partir ? Ajoutez une ville ou un pays à votre envie.",
+  "sparksLabel": "Besoin d’une étincelle ?",
+  "ourDestinations": "Nos destinations :",
+  "sparks": {
+    "cultureCalm": {
+      "label": "Culture & calme",
+      "wish": "Quelques jours au soleil, entre culture et calme"
+    },
+    "oceanMove": {
+      "label": "Océan & mouvement",
+      "wish": "Une parenthèse sportive face à l’océan"
+    }
+  },
+  "suggestionWish": "Quelques jours : {{place}}, ",
+  "privacy": "✦ Vos mots restent chez {{agency}}. Aucun import, jamais.",
+  "coverage": {
+    "eyebrow": "Couverture {{agency}}",
+    "titleStart": "{{place}} nous fait rêver aussi.",
+    "titleEnd": "Mais pas encore.",
+    "unknownPlace": "Cette destination",
+    "introWithSuggestions": "Nous n’avons pas encore de partenaire actif pour cette destination. Plutôt que d’inventer, voici des destinations que notre agence peut réellement composer pour vous.",
+    "introWithoutSuggestions": "Nous n’avons pas encore de partenaire actif pour cette destination. Plutôt que d’inventer, voici notre conseil : reformulez votre envie avec une autre destination.",
+    "composeHere": "Composer ici",
+    "rephrase": "← Reformuler mon envie"
+  }
+}

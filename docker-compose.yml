@@ -1,0 +1,78 @@
+# Local development stack. Start everything with: docker compose up --build
+#   web  http://localhost:5173  (the browser reaches the API through it, at /api)
+#   api  http://localhost:8000  (docs at /docs)
+#   mail http://localhost:8025  (Mailpit: the emails sent by the API)
+# Bind mounts use :z so they also work with SELinux (Fedora, RHEL).
+# If a port is taken on your machine, override it, for example: API_PORT=8001 docker compose up
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: novoya
+      POSTGRES_PASSWORD: novoya
+      POSTGRES_DB: novoya
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novoya -d novoya"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./apps/api
+    environment:
+      NOVOYA_DATABASE_URL: postgresql+asyncpg://novoya:novoya@db:5432/novoya
+      PYTHONDONTWRITEBYTECODE: "1"
+      NOVOYA_CORS_ORIGINS: '["http://localhost:${WEB_PORT:-5173}"]'
+      NOVOYA_FRONTEND_URL: http://localhost:${WEB_PORT:-5173}
+      # Google comes back through the web app's proxy. Register this + /auth/google/callback at Google.
+      NOVOYA_API_PUBLIC_URL: http://localhost:${WEB_PORT:-5173}/api
+      # Trust X-Forwarded-For from the proxy, so rate limits see the browser's IP. Locally only:
+      # in production, set it to the proxy's address.
+      FORWARDED_ALLOW_IPS: "*"
+      NOVOYA_SMTP_HOST: mailpit
+      NOVOYA_SMTP_PORT: "1025"
+    # NOVOYA_OPENROUTER_API_KEY and the LLM models come from the root .env (not committed).
+    env_file:
+      - path: .env
+        required: false
+    command: sh -c "alembic upgrade head && uvicorn novoya_api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir src"
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./apps/api/src:/app/src:z
+      - ./apps/api/alembic:/app/alembic:z
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # Catches every email the API sends; nothing leaves the machine. Inbox: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+
+  web:
+    build: ./apps/web
+    environment:
+      # Same-origin API (docs/adr/0011-same-origin-api-proxy.md): Vite proxies /api to the api service.
+      VITE_API_URL: /api
+      API_PROXY_TARGET: http://api:8000
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - ./apps/web:/app:z
+      - /app/node_modules
+      - ./apps/api/openapi.json:/api/openapi.json:ro,z
+    depends_on:
+      - api
+
+volumes:
+  db-data:

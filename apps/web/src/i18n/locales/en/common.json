@@ -1,0 +1,26 @@
+{
+  "tryAgain": "Try again",
+  "loading": "Loading…",
+  "comingSoon": "Coming soon",
+  "homeLink": "{{name}}, home",
+  "footer": {
+    "contact": "Contact",
+    "nav": "Footer links",
+    "destinations": "Destinations",
+    "legalNotices": "Legal notices",
+    "copyright": "© {{year}} {{name}}",
+    "privacy": "Privacy policy",
+    "about": "About us",
+    "weekends": "Surprise weekends",
+    "newsletterLabel": "Get a surprise destination every month",
+    "newsletterPlaceholder": "you@email.com",
+    "newsletterSubmit": "Sign up",
+    "newsletterSoon": "The newsletter opens soon. Thank you for your patience.",
+    "localTime": "Local time · {{time}}",
+    "backToTop": "Back to top"
+  },
+  "language": {
+    "label": "Language",
+    "failed": "The language could not be changed."
+  }
+}

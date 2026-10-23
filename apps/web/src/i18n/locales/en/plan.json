@@ -1,0 +1,54 @@
+{
+  "eyebrow": "Your preview · version {{version}}",
+  "updated": "Updated {{date}}",
+  "travellers_one": "{{count}} traveller",
+  "travellers_other": "{{count}} travellers",
+  "wishesLabel": "Your wishes",
+  "daysLabel": "Day by day",
+  "dayDate": "Day {{number}} · {{date}}",
+  "cta": {
+    "eyebrow": "The next step",
+    "title": "Does this preview feel like you?",
+    "text": "When it suits you, hand it to a {{agency}} advisor. They will send a quote.",
+    "button": "Send to the agency",
+    "demo": "The demo trip cannot be sent.",
+    "confirmTitle": "Send this trip to the agency?",
+    "confirmBody_one": "An advisor checks each day, negotiates the prices and sends you a quote. They answer within {{count}} day, and we confirm by email.",
+    "confirmBody_other": "An advisor checks each day, negotiates the prices and sends you a quote. They answer within {{count}} days, and we confirm by email.",
+    "confirmCancel": "Cancel",
+    "confirmAction": "Send",
+    "sending": "Sending…",
+    "failed": "Your trip could not be sent. Try again.",
+    "sent_one": "Sent to the agency. An advisor will answer within {{count}} day.",
+    "sent_other": "Sent to the agency. An advisor will answer within {{count}} days.",
+    "inProgress": "An advisor is working on it.",
+    "followOnTrips": "Follow it on My trips"
+  },
+  "notFound": "This preview doesn't exist.",
+  "day": {
+    "back": "← Back to the preview",
+    "notFound": "This day doesn't exist.",
+    "previous": "← Day {{number}}",
+    "next": "Day {{number}} →"
+  },
+  "placeHeading": "{{place}},",
+  "priceNote": "The price will come in a quote from a {{agency}} advisor.",
+  "live": {
+    "eyebrow": "Your plan",
+    "titleStart": "Your trip,",
+    "titleEnd": "day by day.",
+    "noPreferences": "You picked no preference: this plan follows your wish and the offers of our partners.",
+    "loading": "Loading your plan…",
+    "loadFailed": "Your plan could not be loaded.",
+    "day": "Day {{number}}",
+    "quantity": "× {{count}}",
+    "unavailable": "This offer is no longer available.",
+    "kind": {
+      "hotel": "Stay",
+      "guide": "Guide",
+      "transport": "Transport",
+      "activity": "Activity",
+      "agency": "Agency"
+    }
+  }
+}

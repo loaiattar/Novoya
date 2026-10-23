@@ -1,0 +1,40 @@
+{
+  "eyebrow": "Votre espace",
+  "title": "Mes voyages",
+  "intro": "Chaque envie, et où elle en est.",
+  "newWish": "+ Nouvelle envie",
+  "tabs": {
+    "trips": "Voyages",
+    "profile": "Informations personnelles",
+    "preferences": "Préférences"
+  },
+  "soon": {
+    "profile": "Bientôt : vos informations personnelles.",
+    "preferences": "Bientôt : vos préférences de voyage."
+  },
+  "listLabel": "Vos voyages",
+  "status": {
+    "draft": "Brouillon",
+    "not_covered": "Destination non couverte",
+    "panel_shown": "Préférences à choisir",
+    "answered": "Plan en préparation",
+    "plan_proposed": "Plan proposé",
+    "sent": "Envoyé à l’agence",
+    "in_progress": "Un conseiller s’en occupe",
+    "quoted": "Devis prêt",
+    "accepted": "Acceptée",
+    "rejected": "Refusée"
+  },
+  "answerWithin_one": "Réponse sous {{count}} jour",
+  "answerWithin_other": "Réponse sous {{count}} jours",
+  "placeAndDates": "{{place}} · {{dates}}",
+  "noDestination": "Destination à préciser",
+  "datesToBeSet": "Dates à préciser",
+  "travellers": "Voyageurs : {{count}}",
+  "sentOn": "Envoyée le {{date}}",
+  "loading": "Chargement de vos voyages…",
+  "error": "Impossible de charger vos voyages.",
+  "retry": "Réessayer",
+  "empty": "Aucun voyage pour l’instant. Décrivez le premier, il apparaîtra ici.",
+  "emptyCta": "Décrire un voyage"
+}

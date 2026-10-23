@@ -1,0 +1,72 @@
+{
+  "serverUnreachable": "{{agency}} ne parvient pas à joindre le serveur pour le moment. Veuillez réessayer dans un instant.",
+  "databaseBusy": "Le service est très sollicité. Réessayez dans un instant.",
+  "wishFailed": "Une erreur est survenue, veuillez réessayer.",
+  "rateLimit": {
+    "waitSeconds_one": "Réessayez dans {{count}} seconde",
+    "waitSeconds_other": "Réessayez dans {{count}} secondes",
+    "waitMinutes_one": "Réessayez dans {{count}} minute",
+    "waitMinutes_other": "Réessayez dans {{count}} minutes"
+  },
+  "signIn": {
+    "oauth_cancelled": "Vous avez annulé la connexion avec Google.",
+    "oauth_failed": "La connexion avec Google n'a pas fonctionné. Veuillez réessayer.",
+    "oauth_state_invalid": "Votre connexion a pris trop de temps ou a été commencée dans un autre navigateur. Veuillez réessayer.",
+    "oauth_email_not_verified": "Votre adresse e-mail Google n'est pas encore vérifiée.",
+    "oauth_link_not_allowed": "Ce compte Google ne peut pas être associé à votre compte {{agency}}.",
+    "identity_already_linked": "Ce compte Google est déjà associé à un autre compte {{agency}}.",
+    "account_disabled": "Ce compte est désactivé.",
+    "user_not_found": "Nous n'avons pas trouvé votre compte. Veuillez vous reconnecter.",
+    "too_many_attempts": "Trop de tentatives. Patientez un instant, puis réessayez.",
+    "unknown_provider": "La connexion avec Google n'est pas disponible pour le moment.",
+    "unknown": "Une erreur est survenue pendant la connexion. Veuillez réessayer."
+  },
+  "password": {
+    "invalid_credentials": "E-mail ou mot de passe incorrect.",
+    "email_not_verified": "Confirmez d’abord votre adresse e-mail : ouvrez le lien que nous vous avons envoyé.",
+    "no_password_set": "Ce compte se connecte avec Google. Utilisez le bouton « Continuer avec Google ».",
+    "account_disabled": "Ce compte est désactivé.",
+    "too_many_attempts": "Trop de tentatives. Patientez un instant, puis réessayez.",
+    "unknown": "Une erreur est survenue pendant la connexion. Veuillez réessayer."
+  },
+  "wish": {
+    "empty": "Décrivez votre envie en quelques mots.",
+    "tooLong": "Votre envie est un peu longue : {{max}} caractères au plus.",
+    "invalid": "Nous n’avons pas pu lire cette envie. Reformulez-la en une phrase.",
+    "tooManyRequests": "Trop de demandes d’un coup. Patientez un instant, puis réessayez.",
+    "unknown": "Votre envie n’a pas pu être envoyée. Réessayez dans un instant."
+  },
+  "answers": {
+    "budget": "Indiquez un budget en euros, par exemple 3 500.",
+    "persons": "Entre {{min}} et {{max}} voyageurs.",
+    "startDate": "Choisissez une date de départ.",
+    "endDate": "Choisissez une date de retour.",
+    "endBeforeStart": "Le retour doit être après le départ.",
+    "invalid": "Certaines réponses ne conviennent pas. Vérifiez les dates et le budget, puis réessayez.",
+    "wishNotFound": "Nous ne retrouvons pas cette envie. Recommencez depuis le début.",
+    "alreadyAnswered": "Vous avez déjà répondu pour cette envie.",
+    "noOfferFits": "Aucune offre ne correspond à ces dates et à ce groupe. Essayez d’autres dates ou un autre nombre de voyageurs.",
+    "tooManyRequests": "Trop de demandes d’un coup. Patientez un instant, puis réessayez.",
+    "unknown": "Vos préférences n’ont pas pu être envoyées. Réessayez dans un instant.",
+    "startInPast": "Le départ ne peut pas être dans le passé.",
+    "tripTooLong": "Un voyage dure 366 jours au plus.",
+    "planFailed": "Nous n’avons pas pu composer votre plan. Vos réponses sont toujours là : réessayez dans un instant.",
+    "connectionLost": "La connexion a été perdue pendant la composition de votre plan. Il est peut-être prêt malgré tout : patientez une minute, puis renvoyez.",
+    "inProgress": "Votre plan est encore en cours de composition. Patientez un instant, puis renvoyez."
+  },
+  "account": {
+    "invalid_email": "Cette adresse e-mail ne semble pas valide.",
+    "weak_password": "Choisissez un mot de passe plus solide : au moins 12 caractères, pas un mot de passe courant, et sans votre e-mail.",
+    "email_already_used": "Cet e-mail a déjà un compte. Connectez-vous, ou réinitialisez votre mot de passe.",
+    "invalid_credentials": "Votre mot de passe actuel est incorrect.",
+    "invalid_token": "Ce lien a expiré ou a déjà servi.",
+    "no_password_set": "Ce compte n’a pas encore de mot de passe.",
+    "account_disabled": "Ce compte est désactivé.",
+    "too_many_attempts": "Trop de tentatives. Patientez un instant, puis réessayez.",
+    "first_name_required": "Indiquez votre prénom.",
+    "first_name_too_long": "Un prénom fait 100 caractères au plus.",
+    "last_name_required": "Indiquez votre nom de famille.",
+    "last_name_too_long": "Un nom de famille fait 100 caractères au plus.",
+    "unknown": "Une erreur est survenue. Réessayez dans un instant."
+  }
+}

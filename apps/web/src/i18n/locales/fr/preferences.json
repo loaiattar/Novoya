@@ -1,0 +1,59 @@
+{
+  "steps": {
+    "preferences": "Préférences",
+    "preview": "Aperçu",
+    "quote": "Devis"
+  },
+  "stepsLabel": "Étapes",
+  "intention": "Votre intention",
+  "wishQuote": "« {{wish}} »",
+  "stepOf": "Étape {{current}} sur {{total}}",
+  "titleStart": "Ce qui compte",
+  "titleEnd": "pour vous.",
+  "intro": "Choisissez ce qui vous parle. Vous pouvez aussi ne rien sélectionner.",
+  "singleChoice": "un seul choix",
+  "lastMarkers": "Derniers repères",
+  "budget": "Budget maximum (€)",
+  "budgetHint": "Partagé uniquement avec votre agent",
+  "budgetPlaceholder": "3 500",
+  "travellers": "Voyageurs",
+  "departure": "Départ",
+  "return": "Retour",
+  "fewerTravellers": "Un voyageur de moins",
+  "moreTravellers": "Un voyageur de plus",
+  "persons_one": "{{count}} voyageur",
+  "persons_other": "{{count}} voyageurs",
+  "noFit_one": "Aucune offre à {{place}} pour {{count}} voyageur à ces dates.",
+  "noFit_other": "Aucune offre à {{place}} pour {{count}} voyageurs à ces dates.",
+  "openMonths": "Les offres sont ouvertes en {{months}}.",
+  "picked_one": "{{count}} préférence",
+  "picked_other": "{{count}} préférences",
+  "submit": "Composer mon aperçu",
+  "lost": {
+    "title": "Reprenons depuis votre envie.",
+    "text": "Nous ne retrouvons pas le panneau de cette envie sur cette page. Décrivez-la à nouveau : cela ne prend qu’un instant.",
+    "cta": "Décrire mon voyage"
+  },
+  "saved": {
+    "label": "Vos préférences",
+    "intro": "Ce que vous avez choisi sur le panneau de préférences de vos envies. L’agence voit ces étiquettes ; retirez celles qui ne vous correspondent plus.",
+    "remove": "Retirer {{tag}}",
+    "removeFailed": "Nous n’avons pas pu retirer cette préférence. Réessayez.",
+    "loading": "Chargement de vos préférences…",
+    "loadFailed": "Nous n’avons pas pu charger vos préférences. Rechargez la page pour réessayer.",
+    "empty": "Pas encore de préférences. Elles viennent du panneau de préférences que vous remplissez après avoir décrit un voyage.",
+    "emptyCta": "Décrire un voyage",
+    "locked": "Fait partie d’un voyage envoyé à l’agence"
+  },
+  "noFitOptions": {
+    "title": "Ce que vous pouvez faire",
+    "closest": "Dates les plus proches pour le même voyage :",
+    "dates_one": "{{dates}} · {{count}} offre disponible",
+    "dates_other": "{{dates}} · {{count}} offres disponibles",
+    "noCloseDates": "Aucune autre date ne convient dans les trois mois.",
+    "anywayText": "Ou envoyez votre voyage à l’agence tel quel : un conseiller le construit avec vous.",
+    "anyway": "Envoyer quand même à l’agence",
+    "sending": "Envoi…",
+    "failed": "Votre voyage n’a pas pu être envoyé. Réessayez."
+  }
+}

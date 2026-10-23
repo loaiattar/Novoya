@@ -1,0 +1,54 @@
+{
+  "eyebrow": "Votre aperçu · version {{version}}",
+  "updated": "Mis à jour le {{date}}",
+  "travellers_one": "{{count}} voyageur",
+  "travellers_other": "{{count}} voyageurs",
+  "wishesLabel": "Vos envies",
+  "daysLabel": "Jour par jour",
+  "dayDate": "Jour {{number}} · {{date}}",
+  "cta": {
+    "eyebrow": "La suite",
+    "title": "Cet aperçu vous ressemble ?",
+    "text": "Lorsqu’il vous convient, transmettez-le à un conseiller {{agency}}. Il établira un devis.",
+    "button": "Envoyer à l’agence",
+    "demo": "Le voyage de démonstration ne peut pas être envoyé.",
+    "confirmTitle": "Envoyer ce voyage à l’agence ?",
+    "confirmBody_one": "Un conseiller vérifie chaque journée, négocie les prix et vous envoie un devis. Il répond sous {{count}} jour, et nous vous le confirmons par e-mail.",
+    "confirmBody_other": "Un conseiller vérifie chaque journée, négocie les prix et vous envoie un devis. Il répond sous {{count}} jours, et nous vous le confirmons par e-mail.",
+    "confirmCancel": "Annuler",
+    "confirmAction": "Envoyer",
+    "sending": "Envoi…",
+    "failed": "Votre voyage n’a pas pu être envoyé. Réessayez.",
+    "sent_one": "Envoyé à l’agence. Un conseiller vous répondra sous {{count}} jour.",
+    "sent_other": "Envoyé à l’agence. Un conseiller vous répondra sous {{count}} jours.",
+    "inProgress": "Un conseiller s’en occupe.",
+    "followOnTrips": "Suivre sur Mes voyages"
+  },
+  "notFound": "Cet aperçu n’existe pas.",
+  "day": {
+    "back": "← Retour à l’aperçu",
+    "notFound": "Cette journée n’existe pas.",
+    "previous": "← Jour {{number}}",
+    "next": "Jour {{number}} →"
+  },
+  "placeHeading": "{{place}},",
+  "priceNote": "Le prix viendra dans un devis, établi par un conseiller {{agency}}.",
+  "live": {
+    "eyebrow": "Votre plan",
+    "titleStart": "Votre voyage,",
+    "titleEnd": "jour par jour.",
+    "noPreferences": "Vous n’avez choisi aucune préférence : ce plan suit votre envie et les offres de nos partenaires.",
+    "loading": "Chargement de votre plan…",
+    "loadFailed": "Votre plan n’a pas pu être chargé.",
+    "day": "Jour {{number}}",
+    "quantity": "× {{count}}",
+    "unavailable": "Cette offre n’est plus disponible.",
+    "kind": {
+      "hotel": "Hébergement",
+      "guide": "Guide",
+      "transport": "Transport",
+      "activity": "Activité",
+      "agency": "Agence"
+    }
+  }
+}

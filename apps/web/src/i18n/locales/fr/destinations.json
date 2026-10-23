@@ -1,0 +1,15 @@
+{
+  "back": "← Retour à l’accueil",
+  "eyebrow": "Destinations",
+  "title": "Là où nos voyageurs sont allés,",
+  "titleEnd": "avec leurs mots.",
+  "intro": "Les avis publiés par des voyageurs qui ont accepté de les partager, par destination.",
+  "loading": "Chargement des avis…",
+  "loadFailed": "Les avis n’ont pas pu être chargés.",
+  "empty": "Aucun avis n’a encore été publié.",
+  "place": "{{city}}, {{country}}",
+  "count_one": "{{count}} avis",
+  "count_other": "{{count}} avis",
+  "rating": "Noté {{rating}} sur 5",
+  "inFrench": "Avis en français"
+}

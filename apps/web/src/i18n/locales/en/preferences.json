@@ -1,0 +1,59 @@
+{
+  "steps": {
+    "preferences": "Preferences",
+    "preview": "Preview",
+    "quote": "Quote"
+  },
+  "stepsLabel": "Steps",
+  "intention": "Your intention",
+  "wishQuote": "“{{wish}}”",
+  "stepOf": "Step {{current}} of {{total}}",
+  "titleStart": "What matters",
+  "titleEnd": "to you.",
+  "intro": "Choose what speaks to you. You can also leave everything unselected.",
+  "singleChoice": "one choice only",
+  "lastMarkers": "Final details",
+  "budget": "Maximum budget (€)",
+  "budgetHint": "Shared only with your agent",
+  "budgetPlaceholder": "3,500",
+  "travellers": "Travellers",
+  "departure": "Departure",
+  "return": "Return",
+  "fewerTravellers": "One traveller fewer",
+  "moreTravellers": "One more traveller",
+  "persons_one": "{{count}} traveller",
+  "persons_other": "{{count}} travellers",
+  "noFit_one": "No offer in {{place}} for {{count}} traveller on these dates.",
+  "noFit_other": "No offer in {{place}} for {{count}} travellers on these dates.",
+  "openMonths": "Offers are open in {{months}}.",
+  "picked_one": "{{count}} preference",
+  "picked_other": "{{count}} preferences",
+  "submit": "Compose my preview",
+  "lost": {
+    "title": "Let's start again from your wish.",
+    "text": "We can't find this wish's panel on this page. Describe it again: it only takes a moment.",
+    "cta": "Describe my trip"
+  },
+  "saved": {
+    "label": "Your preferences",
+    "intro": "What you picked on the preference panel of your wishes. The agency sees these tags; remove any that no longer fit you.",
+    "remove": "Remove {{tag}}",
+    "removeFailed": "We could not remove this preference. Try again.",
+    "loading": "Loading your preferences…",
+    "loadFailed": "We could not load your preferences. Reload the page to try again.",
+    "empty": "No preferences yet. They come from the preference panel you fill in after describing a trip.",
+    "emptyCta": "Describe a trip",
+    "locked": "Part of a trip sent to the agency"
+  },
+  "noFitOptions": {
+    "title": "What you can do",
+    "closest": "Closest dates for the same trip:",
+    "dates_one": "{{dates}} · {{count}} offer fits",
+    "dates_other": "{{dates}} · {{count}} offers fit",
+    "noCloseDates": "No other dates work within three months.",
+    "anywayText": "Or send your trip to the agency as it is: an advisor builds it with you.",
+    "anyway": "Send to the agency anyway",
+    "sending": "Sending…",
+    "failed": "Your trip could not be sent. Try again."
+  }
+}

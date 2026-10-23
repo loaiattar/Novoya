@@ -1,0 +1,40 @@
+{
+  "eyebrow": "Your space",
+  "title": "My trips",
+  "intro": "Every wish, and where it stands.",
+  "newWish": "+ New wish",
+  "tabs": {
+    "trips": "Trips",
+    "profile": "Personal information",
+    "preferences": "Preferences"
+  },
+  "soon": {
+    "profile": "Coming soon: your personal information.",
+    "preferences": "Coming soon: your travel preferences."
+  },
+  "listLabel": "Your trips",
+  "status": {
+    "draft": "Draft",
+    "not_covered": "Destination not covered",
+    "panel_shown": "Preferences to choose",
+    "answered": "Plan on its way",
+    "plan_proposed": "Plan proposed",
+    "sent": "Sent to the agency",
+    "in_progress": "An advisor is working on it",
+    "quoted": "Quote ready",
+    "accepted": "Accepted",
+    "rejected": "Declined"
+  },
+  "answerWithin_one": "Answer within {{count}} day",
+  "answerWithin_other": "Answer within {{count}} days",
+  "placeAndDates": "{{place}} · {{dates}}",
+  "noDestination": "Destination to be set",
+  "datesToBeSet": "Dates to be set",
+  "travellers": "Travellers: {{count}}",
+  "sentOn": "Sent {{date}}",
+  "loading": "Loading your trips…",
+  "error": "Your trips could not be loaded.",
+  "retry": "Try again",
+  "empty": "No trips yet. Describe your first one and it will appear here.",
+  "emptyCta": "Describe a trip"
+}

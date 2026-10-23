@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource/instrument-sans/400.css';
+@import '@fontsource/instrument-sans/600.css';
+@import '@fontsource/instrument-sans/700.css';
+@import '@fontsource/bricolage-grotesque/600.css';
+@import '@fontsource/bricolage-grotesque/800.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/*
+ * Novoya's design tokens, from the marketing team's Figma Make site (2026-10-22,
+ * https://spiral-lift-96881120.figma.site/). The names stay from the first mockup so every
+ * screen takes the new look: ink is the navy, ivory and paper the chalk, coral the yellow,
+ * sage the sky blue. The site is light only, so the app is too (color-scheme: light).
+ */
+@theme {
+  --color-ink: #16233f;
+  --color-ink-2: #22325a;
+  --color-ivory: #f6f1e7;
+  --color-paper: #f6f1e7;
+  --color-sand: #e6dccb;
+  --color-coral: #f2b705;
+  --color-coral-light: #f7c935;
+  /* The site's brick (#c4553a), darkened for small text on chalk (4.5:1). */
+  --color-coral-text: #a8432b;
+  --color-sage: #bcd3ea;
+  --color-sky: #bcd3ea;
+  /* The site's ballast (#6b7385) is 4.2:1 on chalk: one step darker passes 4.5:1. */
+  --color-muted: #5c6476;
+  --color-line: rgb(22 35 63 / 0.16);
+  --color-ok: #65a77a;
+  --color-pending: #dba652;
+  --color-danger: #b42318;
+
+  /*
+   * One colour per preference panel section (#165, domain/panel/sectionTone.ts). The strong
+   * tone marks the section (a border, 3:1 at least on paper); the soft one is behind ink
+   * text (over 10:1). The app is light only, so there is no dark set yet.
+   */
+  --color-section-1: #1f7a6d;
+  --color-section-1-soft: #d6ebe6;
+  --color-section-2: #7a3e8a;
+  --color-section-2-soft: #ecdcf1;
+  --color-section-3: #a8432b;
+  --color-section-3-soft: #f4ddd4;
+  --color-section-4: #2f5d9e;
+  --color-section-4-soft: #d9e4f3;
+  --color-section-5: #5f6b1f;
+  --color-section-5-soft: #e4e8c9;
+  --color-section-6: #8a5a00;
+  --color-section-6-soft: #f2e2bf;
+  --color-section-7: #9b2f5a;
+  --color-section-7-soft: #f3d9e3;
+  --color-section-8: #4a5565;
+  --color-section-8-soft: #e1e4ea;
+
+  --font-sans: 'Instrument Sans', Arial, sans-serif;
+  --font-serif: 'Bricolage Grotesque', 'Instrument Sans', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* The display headings, from the hero down to a back office page. Each one grows with the
+   * screen between a phone and a wide desktop, so no breakpoint has to repeat the sizes. */
+  --text-display-xl: clamp(2.625rem, 6vw, 5.25rem); /* 42px to 84px: the home page's hero */
+  --text-display-xl--line-height: 0.96;
+  --text-display-l: clamp(2.25rem, 4.6vw, 4rem); /* 36px to 64px: a landing section */
+  --text-display-l--line-height: 0.98;
+  --text-display-m: clamp(2rem, 3.6vw, 3.25rem); /* 32px to 52px: a page's title */
+  --text-display-m--line-height: 1;
+  --text-display-s: clamp(1.875rem, 2.8vw, 2.5rem); /* 30px to 40px: a back office page */
+  --text-display-s--line-height: 1.05;
+
+  --tracking-display: -0.025em;
+  --tracking-eyebrow: 0.16em;
+
+  --shadow-card: 0 22px 70px rgb(22 35 63 / 0.09);
+  --shadow-float: 0 18px 70px rgb(22 35 63 / 0.2);
+  --shadow-menu: 0 15px 50px rgb(22 35 63 / 0.15);
+
+  --animate-zoom: zoom 16s ease-out both;
+  --animate-reveal: reveal 0.9s 0.2s both;
+  --animate-spin-slow: spin 2s linear infinite;
+  --animate-grow: grow 3.2s ease-out;
+
+  @keyframes zoom {
+    from {
+      transform: scale(1.05);
+    }
+  }
+  @keyframes grow {
+    from {
+      width: 5%;
+    }
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+    }
+  }
+}
+
+/* The names shadcn/ui components use, mapped onto Novoya's palette. */
+@theme inline {
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-popover: #fff;
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ink);
+  --color-primary-foreground: #fff;
+  --color-accent: var(--color-ivory);
+  --color-accent-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-muted);
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-ink);
+  --color-destructive: var(--color-danger);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-serif);
+    font-weight: 800;
+    letter-spacing: var(--tracking-display);
+  }
+
+  em {
+    font-style: normal;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Two tones so the ring shows on paper, on photos and on the ink sections alike. */
+  :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 0;
+    box-shadow: 0 0 0 4px var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
