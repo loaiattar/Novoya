@@ -89,7 +89,7 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
   const post = usePostMessage(wishId)
   const [draft, setDraft] = useState('')
   const box = useRef<HTMLTextAreaElement>(null)
-  const end = useRef<HTMLLIElement>(null)
+  const log = useRef<HTMLOListElement>(null)
   const inputId = useId()
   const errorId = useId()
   const count = messages.data?.length ?? 0
@@ -97,8 +97,11 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
   useEffect(() => {
     if (autoFocus) box.current?.focus()
   }, [autoFocus])
+  // Scroll the log itself, never the page: scrollIntoView would pull the agent's page down
+  // to the chat on every poll.
   useEffect(() => {
-    end.current?.scrollIntoView?.({ block: 'end' })
+    const list = log.current
+    if (list) list.scrollTop = list.scrollHeight
   }, [count])
 
   const send = (event?: FormEvent) => {
@@ -106,6 +109,8 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
     const body = draft.trim()
     if (!body || post.isPending) return
     post.mutate(body, { onSuccess: () => setDraft('') })
+    // The button is disabled while sending: keep focus in the box, so Escape still closes.
+    box.current?.focus()
   }
   const author = (message: ChatMessage) =>
     message.mine ? t('you') : message.from_agency ? t('agency') : t('client')
@@ -114,6 +119,7 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ol
+        ref={log}
         role="log"
         aria-label={t('conversation')}
         aria-live="polite"
@@ -136,7 +142,6 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
             </li>
           )
         })}
-        <li ref={end} aria-hidden="true" />
       </ol>
       <form onSubmit={send} className="grid gap-2 border-t border-line p-3">
         <label htmlFor={inputId} className="sr-only">
@@ -152,8 +157,8 @@ export function ChatThread({ wishId, side, autoFocus = false }: { wishId: string
           aria-describedby={post.isError ? errorId : undefined}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
-            // Enter sends, Shift+Enter goes to a new line.
-            if (event.key === 'Enter' && !event.shiftKey) send(event)
+            // Enter sends, Shift+Enter goes to a new line. Not while an IME composes a word.
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) send(event)
           }}
           className="w-full resize-none rounded-xl border border-line px-3 py-2 text-sm"
         />

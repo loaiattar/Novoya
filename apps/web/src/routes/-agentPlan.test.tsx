@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../api/client'
 import { getPlanQuoteQueryKey } from '../api/generated/@tanstack/react-query.gen'
 import { client } from '../api/generated/client.gen'
-import type { AgentPlan, AgentPlanExtra, AgentPlanItem, MeResponse, PlanQuote, Quote } from '../api/generated/types.gen'
+import type { AgentPlan, ChatMessage, AgentPlanExtra, AgentPlanItem, MeResponse, PlanQuote, Quote } from '../api/generated/types.gen'
 import { createAppRouter } from '../router'
 
 const AGENT: MeResponse = {
@@ -121,6 +121,7 @@ let itemAnswer: Answer
 let extraAnswer: Answer
 let quoteAnswer: () => Response | Promise<Response>
 let planQuote: PlanQuote
+let chat: ChatMessage[]
 let requests: { method: string; path: string; search: string; body?: unknown }[]
 
 function mockApi() {
@@ -134,6 +135,7 @@ function mockApi() {
     if (url.pathname.startsWith(`/agent/plans/${PLAN_ID}/items/`) && request.method === 'PATCH') return itemAnswer(body)
     if (url.pathname.startsWith(`/agent/plans/${PLAN_ID}/extras/`) && request.method === 'PATCH') return extraAnswer(body)
     if (url.pathname === `/agent/plans/${PLAN_ID}/quote` && request.method === 'POST') return quoteAnswer()
+    if (url.pathname === `/wishes/${NOT_READY.wish_id}/messages` && request.method === 'GET') return Response.json(chat)
     if (url.pathname === `/agent/plans/${PLAN_ID}/quote` && request.method === 'GET') {
       return ['quoted', 'accepted', 'rejected'].includes(plan.status)
         ? Response.json(planQuote)
@@ -176,6 +178,7 @@ describe('agent plan page', () => {
       return Response.json(QUOTE, { status: 201 })
     }
     planQuote = OPEN_QUOTE
+    chat = []
     requests = []
     mockApi()
   })
@@ -197,6 +200,17 @@ describe('agent plan page', () => {
       'href',
       'mailto:contact@maison-port.example',
     )
+  })
+
+  it("shows the client's chat under the plan, where the agent answers", async () => {
+    chat = [{ id: 'm1', body: 'Can the hotel be on the beach?', from_agency: false, mine: false, sent_at: '2026-10-23T09:00:00Z' }]
+    renderAt(`/agent/plans/${PLAN_ID}`)
+
+    const section = await screen.findByRole('region', { name: 'Conversation with the client' })
+    const log = within(section).getByRole('log', { name: 'Messages' })
+    expect(await within(log).findByText('Can the hotel be on the beach?')).toBeInTheDocument()
+    expect(within(log).getByText('Client')).toBeInTheDocument()
+    expect(within(section).getByLabelText('Your message')).toBeInTheDocument()
   })
 
   it('saves an item price on blur and shows the new total', async () => {

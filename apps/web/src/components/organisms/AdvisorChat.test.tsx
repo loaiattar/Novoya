@@ -62,9 +62,27 @@ describe('AdvisorChat', () => {
     expect(opener).toHaveFocus()
   })
 
-  it('does not read the conversation while closed', () => {
+  it('does not read the conversation while closed', async () => {
     wrap(<AdvisorChat wishId={WISH_ID} />)
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
+  it('keeps focus in the message box after Send, so Escape still closes', async () => {
+    wrap(<AdvisorChat wishId={WISH_ID} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Chat with an advisor' }))
+    const dialog = screen.getByRole('dialog', { name: 'Your advisor' })
+    const box = within(dialog).getByLabelText('Your message')
+
+    fireEvent.change(box, { target: { value: 'And a ryokan?' } })
+    const send = within(dialog).getByRole('button', { name: 'Send' })
+    send.focus()
+    fireEvent.click(send)
+
+    expect(box).toHaveFocus()
+    expect(await within(dialog).findByText('And a ryokan?')).toBeInTheDocument()
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
 
@@ -80,6 +98,19 @@ describe('ChatThread', () => {
     expect(await within(log).findByText('And a ryokan?')).toBeInTheDocument()
     expect(posted).toEqual([{ body: 'And a ryokan?' }])
     expect(screen.getByLabelText('Your message')).toHaveValue('')
+  })
+
+  it('sends on Enter, but not while an IME is composing', async () => {
+    wrap(<ChatThread wishId={WISH_ID} side="client" />)
+    const box = screen.getByLabelText('Your message')
+    fireEvent.change(box, { target: { value: 'こんにちは' } })
+
+    fireEvent.keyDown(box, { key: 'Enter', isComposing: true })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(posted).toEqual([])
+
+    fireEvent.keyDown(box, { key: 'Enter' })
+    await waitFor(() => expect(posted).toEqual([{ body: 'こんにちは' }]))
   })
 
   it('does not send an empty message', () => {
