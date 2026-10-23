@@ -40,7 +40,7 @@ function SettingsPage() {
     <AppShell>
       <main className="px-5 pt-14 pb-22 md:px-[8vw] md:pt-20">
         <Eyebrow>{t('eyebrow')}</Eyebrow>
-        <h1 className="mb-3 text-[55px] leading-none md:text-[75px]">{t('title')}</h1>
+        <h1 className="mb-3 text-display-l">{t('title')}</h1>
         <p className="text-muted">
           <span className="sr-only">{t('email')} </span>
           {me.email}

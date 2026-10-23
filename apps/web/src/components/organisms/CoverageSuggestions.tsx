@@ -19,7 +19,7 @@ export function CoverageSuggestions({ place, suggestions, onRephrase }: Props) {
   return (
     <section aria-labelledby="coverage-title" className="px-5 py-[70px] md:px-[8vw] md:py-[110px]">
       <Eyebrow>{t('coverage.eyebrow')}</Eyebrow>
-      <h1 id="coverage-title" className="mb-[23px] text-[47px] leading-[0.98] md:text-[clamp(56px,5.6vw,82px)]">
+      <h1 id="coverage-title" className="mb-[23px] text-display-m">
         {t('coverage.titleStart', { place })}
         <br />
         <em>{t('coverage.titleEnd')}</em>

@@ -9,8 +9,8 @@ import { formatDay } from '../../lib/format'
 import { initials } from '../../lib/initials'
 import { Eyebrow } from '../atoms/Eyebrow'
 
-const display = 'm-0 text-[52px] leading-[0.96] md:text-[clamp(56px,7vw,104px)]'
-const sectionTitle = 'm-0 text-[44px] leading-[0.96] md:text-[clamp(48px,5vw,78px)]'
+const display = 'm-0 text-display-l'
+const sectionTitle = 'm-0 text-display-l'
 
 /** How the agency works, in two lines and a sentence. */
 export function Manifesto() {
@@ -72,7 +72,7 @@ export function Method() {
     >
       <div>
         <Eyebrow light>{t('method.eyebrow')}</Eyebrow>
-        <h2 className="m-0 text-[56px] leading-[0.96] md:text-[clamp(58px,6vw,92px)]">
+        <h2 className="m-0 text-display-l">
           {t('method.titleStart')}
           <br />
           {t('method.titleEnd')}
@@ -83,7 +83,7 @@ export function Method() {
           <li key={number} className="grid grid-cols-[56px_1fr] border-t border-ivory/60 py-[25px] md:grid-cols-[70px_1fr]">
             <span className="font-mono text-xs font-medium text-coral">{number}</span>
             <div>
-              <h3 className="m-0 font-serif text-[25px] leading-tight font-semibold lowercase">
+              <h3 className="m-0 font-serif text-[25px] leading-tight font-semibold">
                 {t(`method.steps.${step}.title`)}
               </h3>
               <p className="mt-1.5 mb-0 text-ivory/90">{t(`method.steps.${step}.copy`)}</p>

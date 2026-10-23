@@ -45,7 +45,7 @@ function ExtrasPage() {
   return (
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
-      <h1 className="m-0 text-[39px] md:text-[50px]">{t('extras.title')}</h1>
+      <h1 className="m-0 text-display-s">{t('extras.title')}</h1>
       <p className="mt-3 mb-8 max-w-[60ch] text-muted">{t('extras.intro')}</p>
 
       {failedIds.size > 0 && (

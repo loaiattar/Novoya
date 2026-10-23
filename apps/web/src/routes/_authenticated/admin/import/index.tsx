@@ -56,7 +56,7 @@ function ImportPage() {
   return (
     <>
       <Eyebrow>{t('eyebrow')}</Eyebrow>
-      <h1 className="m-0 text-[39px] md:text-[50px]">{t('import.title')}</h1>
+      <h1 className="m-0 text-display-s">{t('import.title')}</h1>
       <p className="mt-4 max-w-2xl text-muted">{t('import.intro')}</p>
       <form onSubmit={submit} className="mt-8 max-w-xl">
         <Field

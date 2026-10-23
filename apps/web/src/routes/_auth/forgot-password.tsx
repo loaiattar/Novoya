@@ -21,7 +21,7 @@ function ForgotPasswordPage() {
       <Eyebrow>{t('forgot.eyebrow')}</Eyebrow>
       {forgot.isSuccess ? (
         <>
-          <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('forgot.sentTitle')}</h1>
+          <h1 className="mb-2.5 text-display-m">{t('forgot.sentTitle')}</h1>
           {/* The same answer whether the account exists or not: the API says nothing either. */}
           <p role="status" className="text-muted">
             {t('forgot.sentBody')}
@@ -29,7 +29,7 @@ function ForgotPasswordPage() {
         </>
       ) : (
         <>
-          <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('forgot.title')}</h1>
+          <h1 className="mb-2.5 text-display-m">{t('forgot.title')}</h1>
           <p className="text-muted">{t('forgot.intro')}</p>
           <EmailForm
             submitLabel={t('forgot.submit')}

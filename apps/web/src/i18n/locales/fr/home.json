@@ -9,13 +9,13 @@
   "heroFoot": "Prenez le pas de côté.",
   "manifesto": {
     "eyebrow": "Notre façon de faire",
-    "titleStart": "moins de bruit.",
-    "titleEnd": "plus de justesse.",
+    "titleStart": "Moins de bruit.",
+    "titleEnd": "Plus de justesse.",
     "lead": "Vous racontez. L’IA dessine un aperçu sans prix. Un conseiller vérifie, chiffre et vous adresse l’offre de l’agence."
   },
   "popular": {
     "eyebrow": "À contre-courant",
-    "title": "trois idées pour bifurquer.",
+    "title": "Trois idées pour bifurquer.",
     "all": "Toutes les destinations"
   },
   "trips": {
@@ -37,7 +37,7 @@
   },
   "method": {
     "eyebrow": "Le bon détour, en trois temps",
-    "titleStart": "simple,",
+    "titleStart": "Simple,",
     "titleEnd": "pas pressé.",
     "steps": {
       "wish": {
@@ -62,13 +62,13 @@
   },
   "closing": {
     "eyebrow": "L’envie est un excellent début",
-    "titleStart": "où voulez-vous faire",
+    "titleStart": "Où voulez-vous faire",
     "titleEnd": "un pas de côté ?",
     "start": "Composer mon week-end"
   },
   "reviews": {
     "eyebrow": "Paroles de voyageurs",
-    "title": "ils ont pris le temps de nous écrire.",
+    "title": "Ils ont pris le temps de nous écrire.",
     "rating": "Note : {{rating}} sur 5"
   }
 }

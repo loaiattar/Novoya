@@ -33,7 +33,7 @@ export function LandingHero({ image, imageAlt, signedIn, actions }: Props) {
       <div className="absolute inset-x-6 top-[52%] -translate-y-1/2 md:right-auto md:left-[8vw] md:max-w-[900px]">
         <div className="animate-reveal">
           <Eyebrow light>{t('heroEyebrow')}</Eyebrow>
-          <h1 className="mb-7 text-[56px] leading-[0.96] md:text-[clamp(64px,7.6vw,120px)]">
+          <h1 className="mb-7 text-display-xl">
             {t('titleStart')}
             <br />
             <Jump text={t('titleEnd')} />

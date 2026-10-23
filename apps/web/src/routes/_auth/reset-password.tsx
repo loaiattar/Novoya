@@ -40,7 +40,7 @@ function ResetPasswordPage() {
   return (
     <>
       <Eyebrow>{t('reset.eyebrow')}</Eyebrow>
-      <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('reset.title')}</h1>
+      <h1 className="mb-2.5 text-display-m">{t('reset.title')}</h1>
       {expired ? (
         <>
           <p role="alert" className="mb-6 text-danger">

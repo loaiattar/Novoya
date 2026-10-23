@@ -28,7 +28,7 @@ function LegalPage() {
         <HomeLink />
       </header>
       <main className="mx-auto w-full max-w-[640px] flex-1 px-5 py-10 md:px-8 md:py-16">
-        <h1 className="mb-8 font-serif text-[40px] leading-none md:text-[56px]">{t('title')}</h1>
+        <h1 className="mb-8 font-serif text-display-m">{t('title')}</h1>
         <p className="mb-10 text-sm leading-relaxed">{t('intro', { name: agency.displayName })}</p>
         <dl className="grid gap-6 text-sm">
           {agency.legalLines.map((line) => (

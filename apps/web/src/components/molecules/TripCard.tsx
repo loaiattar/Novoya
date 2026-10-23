@@ -39,7 +39,7 @@ export function TripCard({ image, imageAlt, badge, place, title, copy, renderLin
             </span>
           </div>
           <p className="m-0 font-mono text-xs font-medium tracking-[0.12em] uppercase">{place}</p>
-          <h3 className="mt-1.5 mb-2.5 font-serif text-[30px] leading-[1.04] font-extrabold tracking-[-0.025em] lowercase md:text-[34px]">
+          <h3 className="mt-1.5 mb-2.5 font-serif text-[30px] leading-[1.04] font-extrabold tracking-[-0.025em] md:text-[34px]">
             {title}
           </h3>
           <p className="m-0 text-sm text-muted">{copy}</p>

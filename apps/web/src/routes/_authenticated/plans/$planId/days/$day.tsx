@@ -66,7 +66,7 @@ function LiveDay({ plan, day }: { plan: Plan; day: string }) {
       </Link>
       <section className="pt-8 md:pt-12">
         <Eyebrow>{t('live.eyebrow')}</Eyebrow>
-        <h1 className="m-0 text-[55px] leading-[0.95] md:text-[75px]">{t('live.day', { number })}</h1>
+        <h1 className="m-0 text-display-l">{t('live.day', { number })}</h1>
       </section>
       <ul className="mt-10 grid gap-8 border-t border-line pt-8 md:mt-14 md:grid-cols-2 md:gap-10">
         {items.map((item) => (

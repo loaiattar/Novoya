@@ -54,7 +54,7 @@ function LoginPage() {
   return (
     <>
       <Eyebrow>{t('welcomeBack')}</Eyebrow>
-      <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('title')}</h1>
+      <h1 className="mb-2.5 text-display-m">{t('title')}</h1>
       <p className="text-muted">{t('intro')}</p>
       {notice === 'password_reset' && (
         <p role="status" className="mt-4 text-sm">

@@ -50,7 +50,7 @@ function VerifyEmailPage() {
     return (
       <>
         <Eyebrow>{t('verifyEmail.eyebrow')}</Eyebrow>
-        <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('verifyEmail.expiredTitle')}</h1>
+        <h1 className="mb-2.5 text-display-m">{t('verifyEmail.expiredTitle')}</h1>
         <p className="mb-2 text-muted">{t('verifyEmail.expiredBody')}</p>
         {resend.isSuccess ? (
           <p role="status" className="mt-4">
@@ -87,7 +87,7 @@ function VerifyEmailPage() {
   return (
     <>
       <Eyebrow>{t('verifyEmail.eyebrow')}</Eyebrow>
-      <h1 className="mb-2.5 text-[45px] leading-none md:text-[55px]">{t('verifyEmail.doneTitle')}</h1>
+      <h1 className="mb-2.5 text-display-m">{t('verifyEmail.doneTitle')}</h1>
       <p role="status" className="mb-6 text-muted">
         {t('verifyEmail.doneBody')}
       </p>

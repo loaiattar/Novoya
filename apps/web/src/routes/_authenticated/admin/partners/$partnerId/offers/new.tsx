@@ -68,7 +68,7 @@ function NewOffer({ partner }: { partner: PartnerResponse }) {
   return (
     <>
       <Eyebrow className="mt-6">{partner.name}</Eyebrow>
-      <h1 className="m-0 mb-8 text-[39px] md:text-[50px]">{t('offers.new')}</h1>
+      <h1 className="m-0 mb-8 text-display-s">{t('offers.new')}</h1>
       <OfferForm
         mode="create"
         initialValues={newOfferFormValues(partner)}
