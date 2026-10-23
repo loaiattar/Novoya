@@ -187,13 +187,17 @@ describe('the preferences panel within the catalogue limits', () => {
     expect(screen.getByRole('button', { name: 'One more traveller' })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('offers dates from the first to the last offer day when the first is to come', async () => {
+  // The plan needs one open day in the trip (#182): the pickers allow every trip that overlaps
+  // the offers' season, so the departure goes up to the last open day and the return starts at
+  // the first one (review of #189).
+  it('lets the trip overlap the offers: departure up to the last open day, return from the first', async () => {
     renderPreferences()
     await openPanel()
 
-    await waitFor(() => expect(screen.getByLabelText('Departure')).toHaveAttribute('min', '2027-05-01'))
-    expect(screen.getByLabelText('Departure')).toHaveAttribute('max', '2027-07-31')
-    expect(screen.getByLabelText('Return')).toHaveAttribute('max', '2027-07-31')
+    await waitFor(() => expect(screen.getByLabelText('Departure')).toHaveAttribute('max', '2027-07-31'))
+    expect(screen.getByLabelText('Departure')).toHaveAttribute('min', TODAY)
+    expect(screen.getByLabelText('Return')).toHaveAttribute('min', '2027-05-01')
+    expect(screen.getByLabelText('Return')).not.toHaveAttribute('max')
   })
 
   it('offers dates from today when the first offer day is past', async () => {
@@ -203,7 +207,7 @@ describe('the preferences panel within the catalogue limits', () => {
 
     await waitFor(() => expect(screen.getByLabelText('Departure')).toHaveAttribute('max', '2027-07-31'))
     expect(screen.getByLabelText('Departure')).toHaveAttribute('min', TODAY)
-    expect(screen.getByLabelText('Return')).toHaveAttribute('max', '2027-07-31')
+    expect(screen.getByLabelText('Return')).toHaveAttribute('min', TODAY)
   })
 
   it('keeps the return after the departure within the limits', async () => {
@@ -213,7 +217,33 @@ describe('the preferences panel within the catalogue limits', () => {
     fireEvent.change(screen.getByLabelText('Departure'), { target: { value: '2027-06-02' } })
 
     expect(screen.getByLabelText('Return')).toHaveAttribute('min', '2027-06-02')
-    await waitFor(() => expect(screen.getByLabelText('Return')).toHaveAttribute('max', '2027-07-31'))
+    expect(screen.getByLabelText('Return')).not.toHaveAttribute('max')
+  })
+
+  it('lets a trip depart before the first open day if it returns in the season', async () => {
+    renderPreferences()
+    await openPanel()
+    await waitFor(() => expect(screen.getByLabelText('Departure')).toHaveAttribute('max', '2027-07-31'))
+
+    fireEvent.change(screen.getByLabelText('Departure'), { target: { value: '2027-04-30' } })
+
+    expect(screen.getByLabelText('Return')).toHaveAttribute('min', '2027-05-01')
+  })
+
+  it('checks once when the travellers change quickly', async () => {
+    // Review of #189: each click used to send its own check.
+    renderPreferences()
+    await openPanel()
+    fill(SUMMER)
+    await waitFor(() => expect(fitReads()).toHaveLength(1))
+
+    const more = screen.getByRole('button', { name: 'One more traveller' })
+    for (let click = 0; click < 5; click++) fireEvent.click(more)
+
+    await waitFor(() => expect(fitReads()).toHaveLength(2))
+    expect(fitReads()[1]!.search.get('persons')).toBe('7')
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(fitReads()).toHaveLength(2)
   })
 
   it('keeps the usual bounds and still sends when the limits cannot be read', async () => {

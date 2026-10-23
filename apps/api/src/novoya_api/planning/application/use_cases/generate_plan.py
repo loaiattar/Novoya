@@ -112,7 +112,11 @@ def _fallback_items(
     hotel = next((offer for offer in hotels if nights <= offer.open_days), None)
     if hotel:
         items.append(DraftItem(hotel.id, 1, stay, None))
-    others = [offer for offer in ranked or allowed if offer.kind != "hotel"]
+    # The tagged offers first; when the tags matched only hotels, any fitting offer, so the
+    # plan never gives up while one fits (#189 review), and plannable() stays exact.
+    others = [offer for offer in ranked if offer.kind != "hotel"] or [
+        offer for offer in allowed if offer.kind != "hotel"
+    ]
     used: set[UUID] = set()
     for day in range(1, trip_days + 1):
         offer = next((o for o in others if o.id not in used and day in o.open_days), None)

@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { localIsoDate } from '@/lib/dates'
+import { useDebounced } from '@/hooks/ui/useDebounced'
 import { formatList, formatMonthName } from '@/lib/format'
 
 import { ApiError } from '../../../../api/errors'
@@ -103,8 +104,13 @@ function PreferencesForm({
   // rule the plan uses. Only a "no" holds the sending; a check still running or failed does not.
   const datesErrors = constraintsErrors(constraints, localIsoDate())
   const ready = !datesErrors.persons && !datesErrors.startDate && !datesErrors.endDate
-  const fit = usePanelLimits(wishId, ready ? constraints : undefined)
-  const checked = ready && fit.data?.fits !== undefined && fit.data.fits !== null
+  // Asked once the values stop changing (300 ms), not on every click (review of #189). A text
+  // key, so the same values never restart the wait.
+  const asked = ready ? `${constraints.persons}|${constraints.startDate}|${constraints.endDate}` : ''
+  const settled = useDebounced(asked, 300)
+  const fit = usePanelLimits(wishId, settled ? toCheck(settled) : undefined)
+  // Only an answer for what the form holds now counts: during the wait, the last one is old.
+  const checked = ready && settled === asked && fit.data?.fits !== undefined && fit.data.fits !== null
   const noFit = checked && fit.data?.fits === false ? noFitMessage(fit.data.open_months) : undefined
 
   function noFitMessage(months: number[]): string {
@@ -252,4 +258,10 @@ function tripMonths(start: string, end: string): number[] {
     ;[year, month] = month === 12 ? [year + 1, 1] : [year, month + 1]
   }
   return months
+}
+
+/** The travellers and dates of a check key, as usePanelLimits takes them. */
+function toCheck(key: string): { persons: number; startDate: string; endDate: string } {
+  const [persons, startDate, endDate] = key.split('|') as [string, string, string]
+  return { persons: Number(persons), startDate, endDate }
 }

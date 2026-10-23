@@ -8,7 +8,7 @@ import pytest
 
 from novoya_api.planning.application.dto import OfferSummary, PlanRequest
 from novoya_api.planning.application.ports.plan_writer import DraftPlan
-from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan
+from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan, plannable
 from novoya_api.planning.domain.errors import NoOfferFits
 from novoya_api.planning.domain.plan import DraftItem, Plan, PlanStatus
 
@@ -674,3 +674,22 @@ def test_a_trip_with_only_hotels_not_open_every_night_is_not_plannable():
 
     assert plannable([GAP_HOTEL], trip_days=4) is False
     assert plannable([], trip_days=4) is False
+
+
+async def test_when_the_tags_match_only_a_hotel_the_fallback_still_uses_the_other_offers():
+    # Review of #189: the tags matched only GAP_HOTEL, which can't take every night. The
+    # fallback gave up although WALK fits, and the panel had said the trip fits.
+    setup = Setup(FakeCatalog([GAP_HOTEL, WALK], ranked=[GAP_HOTEL]), None)
+
+    view = await setup.generate(plan_request(tags=("style:beach",), days=4))
+
+    assert [(i.offer_id, i.day) for i in view.items] == [(WALK.id, 1)]
+    assert plannable([GAP_HOTEL, WALK], trip_days=4) is True  # what the panel said
+
+
+async def test_the_tagged_activities_still_come_first_in_the_fallback():
+    setup = Setup(FakeCatalog([WALK, LATE_BOAT], ranked=[LATE_BOAT]), None)
+
+    view = await setup.generate(plan_request(tags=("style:beach",), days=4))
+
+    assert [(i.offer_id, i.day) for i in view.items] == [(LATE_BOAT.id, 3)]

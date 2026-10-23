@@ -44,10 +44,13 @@ export function ConstraintsFields({
   const set = <K extends keyof ConstraintsValues>(key: K, value: ConstraintsValues[K]) =>
     onChange({ ...values, [key]: value })
   const today = localIsoDate()
-  // ISO dates compare as text: the later of today and the first day an offer serves.
-  const earliest = firstDate && firstDate > today ? firstDate : today
+  // The plan needs one open day in the trip (#182), so the pickers allow every trip that
+  // overlaps the offers' season (review of #189): the departure up to the last open day, the
+  // return from the first one. ISO dates compare as text.
   // The server's day is UTC: its last date can be yesterday here. Then no end is set.
-  const latest = lastDate && lastDate >= earliest ? lastDate : undefined
+  const latest = lastDate && lastDate >= today ? lastDate : undefined
+  const departure = values.startDate || today
+  const earliestReturn = firstDate && firstDate > departure ? firstDate : departure
   const noFitId = `${personsId}-no-fit`
   const withNoFit = (ids?: string) => [ids, noFit ? noFitId : undefined].filter(Boolean).join(' ') || undefined
 
@@ -104,7 +107,7 @@ export function ConstraintsFields({
               type="date"
               aria-describedby={withNoFit(describedBy)}
               aria-invalid={invalid}
-              min={earliest}
+              min={today}
               max={latest}
               value={values.startDate}
               onChange={(event) => set('startDate', event.target.value)}
@@ -116,8 +119,7 @@ export function ConstraintsFields({
             <Input
               id={id}
               type="date"
-              min={values.startDate || earliest}
-              max={latest}
+              min={earliestReturn}
               aria-describedby={describedBy}
               aria-invalid={invalid}
               value={values.endDate}
