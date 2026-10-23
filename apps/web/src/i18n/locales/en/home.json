@@ -54,6 +54,12 @@
       }
     }
   },
+  "advisors": {
+    "eyebrow": "Our advisors",
+    "title": "The people behind every detour.",
+    "defaultTitle": "Travel advisor",
+    "services": "Their specialities"
+  },
   "closing": {
     "eyebrow": "A wish is a great start",
     "titleStart": "where would you like",

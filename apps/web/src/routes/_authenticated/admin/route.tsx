@@ -6,7 +6,7 @@ import { AppShell } from '../../../components/templates/AppShell'
 import { canOpen } from '../../../domain/auth/roles'
 
 // The admin area: the overview, users, partners and their offers, the extras, the reviews,
-// the agency's activity and the import of a new DÉTOUR export. Admins only, like /admin/users
+// the advisors on the home page, the agency's activity and the import of a new DÉTOUR export. Admins only, like /admin/users
 // in the API; the others go back to /wish before anything is requested.
 export const Route = createFileRoute('/_authenticated/admin')({
   beforeLoad: ({ context }) => {
@@ -30,6 +30,7 @@ function AdminArea() {
           { label: t('nav.partners'), to: '/admin/partners' },
           { label: t('nav.extras'), to: '/admin/extras' },
           { label: t('nav.reviews'), to: '/admin/reviews' },
+          { label: t('nav.advisors'), to: '/admin/advisors' },
           { label: t('nav.activity'), to: '/admin/activity' },
           { label: t('nav.import'), to: '/admin/import' },
         ]}

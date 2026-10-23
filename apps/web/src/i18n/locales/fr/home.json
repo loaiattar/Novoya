@@ -54,6 +54,12 @@
       }
     }
   },
+  "advisors": {
+    "eyebrow": "L’équipe",
+    "title": "Des humains derrière chaque détour.",
+    "defaultTitle": "Conseiller voyage",
+    "services": "Ses spécialités"
+  },
   "closing": {
     "eyebrow": "L’envie est un excellent début",
     "titleStart": "où voulez-vous faire",

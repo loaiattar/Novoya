@@ -8,7 +8,7 @@ import { Button } from '../components/atoms/Button'
 import { GoogleLogo } from '../components/atoms/GoogleLogo'
 import { TripCard } from '../components/molecules/TripCard'
 import { LandingHero } from '../components/organisms/LandingHero'
-import { Closing, Manifesto, Method, PopularTrips, Reviews } from '../components/organisms/LandingSections'
+import { Advisors, Closing, Manifesto, Method, PopularTrips, Reviews } from '../components/organisms/LandingSections'
 import { SiteFooter } from '../components/organisms/SiteFooter'
 
 export const Route = createFileRoute('/')({
@@ -74,6 +74,7 @@ function LandingPage() {
         </PopularTrips>
         <Method />
         <Reviews />
+        <Advisors />
         <Closing
           action={
             <Button asChild variant="ink" size="lg">

@@ -7,6 +7,7 @@
     "partners": "Partenaires",
     "extras": "Extras",
     "reviews": "Avis",
+    "advisors": "Conseillers",
     "activity": "Activité",
     "import": "Import"
   },
@@ -450,6 +451,53 @@
       "failed": "Rien n’a été importé : une ligne de l’export a été refusée ({{detail}}). Corrigez-la dans {{agency}}, puis importez un nouvel export.",
       "running": "Un autre import est en cours. Réessayez dans un instant.",
       "unknown": "L’export n’a pas pu être importé. Veuillez réessayer."
+    }
+  },
+  "advisors": {
+    "title": "Conseillers",
+    "intro": "Ce que la page d’accueil montre de chaque agent : un nom, un intitulé, une phrase et ses spécialités. Jamais son e-mail. Un agent n’apparaît qu’une fois son accord noté ici.",
+    "loading": "Chargement des agents…",
+    "loadFailed": "Les agents n’ont pas pu être chargés.",
+    "empty": "Aucun agent pour l’instant. Donnez le rôle agent à un utilisateur pour remplir son profil.",
+    "edit": "Modifier le profil",
+    "saved": "Profil enregistré.",
+    "status": {
+      "notFilled": "Profil à remplir",
+      "noConsent": "Accord non noté : masqué",
+      "hidden": "Masqué de la page d’accueil",
+      "shown": "Affiché sur la page d’accueil",
+      "disabled": "compte désactivé : masqué"
+    },
+    "form": {
+      "publicName": "Nom public",
+      "publicNameHint": "Le nom affiché sur la page d’accueil, par exemple un prénom.",
+      "publicNameMissing": "Indiquez le nom public.",
+      "title": "Intitulé",
+      "titleHint": "Par exemple « Fondatrice et responsable ». Vide : « Conseiller voyage ».",
+      "summary": "Phrase de présentation",
+      "summaryHint": "{{count}} / {{max}} caractères.",
+      "services": "Spécialités",
+      "servicesHint": "Jusqu’à {{max}}, en français, en anglais ou les deux. Une seule langue suffit : la page d’accueil montre alors celle-là.",
+      "serviceFr": "Spécialité {{number}} en français",
+      "serviceEn": "Spécialité {{number}} en anglais",
+      "serviceFrPlaceholder": "En français, ex. Grèce",
+      "serviceEnPlaceholder": "En anglais, ex. Greece",
+      "serviceMissing": "Écrivez cette spécialité en français ou en anglais, ou retirez-la.",
+      "removeService": "Retirer la spécialité {{number}}",
+      "addService": "Ajouter une spécialité",
+      "consent": "L’agent a donné son accord pour apparaître sur le site",
+      "consentHint": "Son nom et sa présentation sont publics. Décocher masque aussitôt le profil.",
+      "shown": "Afficher sur la page d’accueil",
+      "shownHint": "Visible par tous les visiteurs.",
+      "shownNeedsConsent": "Notez d’abord l’accord de l’agent.",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "errors": {
+      "consentRequired": "Notez l’accord de l’agent avant de l’afficher.",
+      "notAnAgent": "Cet utilisateur n’est plus agent : rechargez la page.",
+      "invalid": "Un champ est vide ou trop long. Vérifiez le formulaire.",
+      "saveFailed": "L’enregistrement a échoué. Réessayez."
     }
   }
 }
