@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, Ref } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -33,6 +33,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & {
     /** Render the child (a router `Link`, an `<a>`) with the button's look. */
     asChild?: boolean
+    ref?: Ref<HTMLButtonElement>
   }
 
 export function Button({ variant, size, asChild = false, className, ...props }: Props) {

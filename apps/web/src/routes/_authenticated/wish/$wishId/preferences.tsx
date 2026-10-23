@@ -12,6 +12,7 @@ import { type CachedWish, wishQueryKey } from '../../../../api/wishes'
 import { Button } from '../../../../components/atoms/Button'
 import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { TagGroup } from '../../../../components/molecules/TagGroup'
+import { AdvisorChat } from '../../../../components/organisms/AdvisorChat'
 import { ConstraintsFields, type ConstraintsValues } from '../../../../components/organisms/ConstraintsFields'
 import { IntentAside } from '../../../../components/organisms/IntentAside'
 import { PlanBuilding } from '../../../../components/organisms/PlanBuilding'
@@ -180,6 +181,7 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
             </Button>
           }
         />
+        <AdvisorChat wishId={wishId} raised />
       </div>
     </AppShell>
   )

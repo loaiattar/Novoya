@@ -1,0 +1,19 @@
+{
+  "open": "Chat with an advisor",
+  "close": "Close the chat",
+  "title": "Your advisor",
+  "intro": "Ask {{agency}} anything about this trip. An advisor answers here, usually within the day.",
+  "agentTitle": "Conversation with the client",
+  "agentIntro": "The client writes from their wish and plan pages. Your answer shows in their chat window.",
+  "empty": "No messages yet.",
+  "you": "You",
+  "agency": "{{agency}}",
+  "client": "Client",
+  "label": "Your message",
+  "placeholder": "Write a message…",
+  "send": "Send",
+  "sending": "Sending…",
+  "sendFailed": "The message was not sent. Try again.",
+  "loadFailed": "The conversation could not be loaded.",
+  "conversation": "Messages"
+}

@@ -19,6 +19,7 @@ import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { StatusPill } from '../../../../components/atoms/StatusPill'
 import { ErrorNote } from '../../../../components/molecules/ErrorNote'
 import { PriceField } from '../../../../components/molecules/PriceField'
+import { ChatThread } from '../../../../components/organisms/AdvisorChat'
 import { SendQuoteDialog } from '../../../../components/organisms/SendQuoteDialog'
 import { groupByDay } from '../../../../domain/plan/days'
 import { missingPrices } from '../../../../domain/plan/quoteReadiness'
@@ -151,6 +152,8 @@ function PlanView({ plan }: { plan: AgentPlan }) {
       </section>
 
       <QuoteSection plan={plan} />
+
+      <ClientChat wishId={plan.wish_id} />
     </article>
   )
 }
@@ -425,5 +428,23 @@ function ClientAnswer({ quote }: { quote: PlanQuote }) {
         </p>
       )}
     </div>
+  )
+}
+
+/** The advisor chat of the plan's wish (#169): the agent answers the client here. */
+function ClientChat({ wishId }: { wishId: string }) {
+  const { t } = useTranslation('chat')
+  return (
+    <section aria-labelledby="client-chat-title" className="grid gap-3 border-t border-line pt-6">
+      <div>
+        <h2 id="client-chat-title" className="m-0 text-xs font-semibold tracking-[0.15em] text-muted uppercase">
+          {t('agentTitle')}
+        </h2>
+        <p className="m-0 mt-1 text-sm text-muted">{t('agentIntro')}</p>
+      </div>
+      <div className="flex max-h-[480px] flex-col rounded-2xl border border-line bg-white">
+        <ChatThread wishId={wishId} side="agency" />
+      </div>
+    </section>
   )
 }

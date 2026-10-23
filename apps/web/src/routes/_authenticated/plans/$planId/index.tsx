@@ -8,6 +8,7 @@ import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { DemoBanner } from '../../../../components/molecules/DemoBanner'
 import { ErrorNote } from '../../../../components/molecules/ErrorNote'
 import { QuoteNote } from '../../../../components/molecules/QuoteNote'
+import { AdvisorChat } from '../../../../components/organisms/AdvisorChat'
 import { DayTimeline } from '../../../../components/organisms/DayTimeline'
 import { PlanDays } from '../../../../components/organisms/PlanDays'
 import { PlanHeader } from '../../../../components/organisms/PlanHeader'
@@ -70,6 +71,7 @@ function LivePlan({ plan }: { plan: Plan }) {
       <PlanDays planId={plan.id} items={plan.items} />
       <QuoteNote />
       <QuoteCall />
+      <AdvisorChat wishId={plan.wish_id} />
     </main>
   )
 }

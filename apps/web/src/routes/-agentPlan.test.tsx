@@ -538,6 +538,7 @@ describe('agent plan page', () => {
         return quoteReads === 1 ? Response.json({ code: 'internal', detail: 'boom' }, { status: 500 }) : Response.json(QUOTE)
       }
       if (url.pathname === '/me') return Response.json(me)
+      if (url.pathname.endsWith('/messages')) return Response.json([])
       return answer()
     })
     renderAt(`/agent/plans/${PLAN_ID}`)
