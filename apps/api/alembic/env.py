@@ -12,7 +12,7 @@ from novoya_api.shared.infrastructure.db.base import Base
 
 # Every module keeps its tables in <module>/infrastructure/db/models.py.
 # Import them all so Base.metadata knows every table.
-MODULES = ("accounts", "catalog", "planning", "quoting", "wishes")
+MODULES = ("accounts", "catalog", "messaging", "planning", "quoting", "wishes")
 for module in MODULES:
     importlib.import_module(f"novoya_api.{module}.infrastructure.db.models")
 

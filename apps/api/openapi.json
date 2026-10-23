@@ -1062,6 +1062,41 @@
         "title": "ChangeStatusRequest",
         "type": "object"
       },
+      "ChatMessage": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "from_agency": {
+            "title": "From Agency",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mine": {
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "from_agency",
+          "mine",
+          "sent_at"
+        ],
+        "title": "ChatMessage",
+        "type": "object"
+      },
       "CreateOfferRequest": {
         "properties": {
           "active": {
@@ -2482,6 +2517,20 @@
         ],
         "title": "PlanStatus",
         "type": "string"
+      },
+      "PostMessageRequest": {
+        "properties": {
+          "body": {
+            "maxLength": 8000,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "PostMessageRequest",
+        "type": "object"
       },
       "QueueEntry": {
         "description": "A plan waiting for a quote. Wish text, place, dates, travellers and budget. No prices.",
@@ -9192,6 +9241,146 @@
         "summary": "Answer Panel",
         "tags": [
           "wishes"
+        ]
+      }
+    },
+    "/wishes/{wish_id}/messages": {
+      "get": {
+        "description": "The advisor chat of this wish, oldest first (the last 500). For the client who sent\nthe wish, an agent or an admin; 404 for anyone else, so the id stays hidden. The pages\npoll it, and no cache keeps it.",
+        "operationId": "listWishMessages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wish_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Wish Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChatMessage"
+                  },
+                  "title": "Response Listwishmessages",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Messages",
+        "tags": [
+          "messaging"
+        ]
+      },
+      "post": {
+        "description": "Write in the advisor chat of this wish: its client, an agent or an admin. 404 for\nanyone else. 422 invalid_message when it is empty or longer than 2000 characters.",
+        "operationId": "postWishMessage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wish_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Wish Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatMessage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Post Message",
+        "tags": [
+          "messaging"
         ]
       }
     }
