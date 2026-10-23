@@ -27,3 +27,24 @@ class AdminWishView:
     created_at: datetime
     updated_at: datetime
     client: Client | None
+
+
+@dataclass(frozen=True)
+class PanelLimits:
+    """What the destination's listed offers can serve from today on (#183): the panel's
+    travellers stepper and date fields offer only these."""
+
+    persons_min: int
+    persons_max: int
+    first_date: date
+    last_date: date
+    open_months: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class PanelLimitsView:
+    """The limits (None when no listed offer is left there) and, when the client gave the
+    travellers and both dates, whether at least one offer fits them (else None)."""
+
+    limits: PanelLimits | None
+    fits: bool | None

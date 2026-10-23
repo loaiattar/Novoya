@@ -6,6 +6,8 @@
 - search_offers(country, city, tags, persons, start, end) -> listed offers that fit the group
   and are open on at least one day of the trip, as OfferView with open_days (#182). OfferView
   carries partner name and contact; other modules decide who may see them.
+- limits_at(country, city, today) -> LimitsView of what the listed offers there can serve from
+  today on (group sizes, first and last dates, open months), or None (#183)
 - get_offers(ids) -> OfferView for those ids, including inactive (a saved plan still
   needs titles). Callers drop partner fields when the client must not see them.
 - get_extras(ids) -> ExtraView for the listed extras (active, not hidden) among those ids,
@@ -31,8 +33,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from novoya_api.catalog.application.dto import CatalogCounts, ExtraView, OfferView
+from novoya_api.catalog.application.dto import CatalogCounts, ExtraView, LimitsView, OfferView
 from novoya_api.catalog.application.dto import RowCounts as RowCounts
+from novoya_api.catalog.application.use_cases.destination_limits import DestinationLimits
 from novoya_api.catalog.application.use_cases.get_extras import GetExtras
 from novoya_api.catalog.application.use_cases.get_offers import GetOffers
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
@@ -81,6 +84,22 @@ async def search_offers(
         return await SearchOffers(SqlOfferRepository(reading))(
             country, city, tags, persons, start, end
         )
+
+
+async def limits_at(
+    country: str,
+    city: str | None,
+    today: date,
+    persons: int | None = None,
+    *,
+    session: AsyncSession | None = None,
+) -> LimitsView | None:
+    """What the listed offers at this destination can serve from today on (#183): group
+    sizes, first and last open days, months with an open day. With persons, only the offers
+    taking that group. None when no such offer has an open day left. city None = the whole
+    country."""
+    async with _reading(session) as reading:
+        return await DestinationLimits(SqlOfferRepository(reading))(country, city, today, persons)
 
 
 async def get_offers(

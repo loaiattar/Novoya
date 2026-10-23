@@ -4,13 +4,18 @@ PostgreSQL, reading through the caller's session.
 Uses the database fixtures of test_catalog_sql.py: skipped when Postgres does not answer.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.catalog import public
+from novoya_api.catalog.domain import OfferKind
+from novoya_api.catalog.infrastructure.db.repositories import (
+    SqlOfferRepository,
+    SqlPartnerRepository,
+)
 from novoya_api.catalog.infrastructure.seed.data import OFFERS, PARTNERS, SEASON_START
 from novoya_api.catalog.infrastructure.seed.run import seed_catalog
 from novoya_api.planning.infrastructure.llm.tools import travel_tools
@@ -22,6 +27,7 @@ from novoya_api.wishes.domain.wish import Destination, WishStatus
 from novoya_api.wishes.infrastructure.catalog import PartnerCatalog
 from novoya_api.wishes.infrastructure.llm.panel_builder import TagsFromOffersBuilder
 from tests.accounts.fakes import NoopRateLimiter
+from tests.test_catalog_public import _offer, _partner
 from tests.test_catalog_sql import database_url, session  # noqa: F401  (fixtures)
 
 pytestmark = pytest.mark.usefixtures("session")
@@ -268,3 +274,43 @@ async def test_the_request_session_holds_no_transaction_while_the_builder_runs(s
 
     assert builder.in_transaction is False
     assert result.wish.status == WishStatus.PANEL_SHOWN
+
+
+# PartnerCatalog.fits: the per-day rule of the plan (#182, #183)
+
+
+async def add_june_only_offer(session, kind=OfferKind.ACTIVITY) -> Destination:  # noqa: F811
+    """A listed offer in Seville, available all season but open only in June."""
+    hotel = _partner(country="Spain", city="Seville")
+    june = _offer(hotel, kind=kind, min_persons=1, max_persons=4, opening_months=(6,))
+    await SqlPartnerRepository(session).add(hotel)
+    await session.flush()
+    await SqlOfferRepository(session).add(june)
+    await session.flush()
+    return Destination("Spain", "Seville")
+
+
+async def test_partner_catalog_fits_a_trip_with_one_open_day(session):  # noqa: F811
+    seville = await add_june_only_offer(session)
+
+    fits = await PartnerCatalog(session).fits(seville, 2, date(2026, 5, 28), date(2026, 6, 4))
+
+    assert fits is True
+
+
+async def test_partner_catalog_does_not_fit_a_trip_with_no_open_day(session):  # noqa: F811
+    seville = await add_june_only_offer(session)
+
+    fits = await PartnerCatalog(session).fits(seville, 2, date(2026, 7, 6), date(2026, 7, 13))
+
+    assert fits is False
+
+
+async def test_partner_catalog_does_not_fit_a_hotel_closed_on_some_nights(session):  # noqa: F811
+    # The plan can't book a bed for the May nights and has nothing else: the panel says no,
+    # instead of letting the client wait for the model and get no_offer_fits (#183).
+    seville = await add_june_only_offer(session, kind=OfferKind.HOTEL)
+
+    fits = await PartnerCatalog(session).fits(seville, 2, date(2026, 5, 28), date(2026, 6, 4))
+
+    assert fits is False

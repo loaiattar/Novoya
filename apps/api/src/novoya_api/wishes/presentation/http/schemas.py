@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from novoya_api.wishes.application.dto import AdminWishView
+from novoya_api.wishes.application.dto import AdminWishView, PanelLimitsView
 from novoya_api.wishes.application.ports.planner import ProposedPlan
 from novoya_api.wishes.application.use_cases.preferences import PreferenceSection
 from novoya_api.wishes.application.use_cases.send_wish import SendWishResult
@@ -220,4 +220,29 @@ class PreferenceSectionOut(BaseModel):
                 PreferenceTagOut(id=tag.id, label=tag.label, removable=tag.removable)
                 for tag in section.tags
             ],
+        )
+
+
+class PanelLimitsOut(BaseModel):
+    """What the panel may offer, from the destination's listed offers (#183). The fields are
+    null and open_months empty when no listed offer is left there. fits is given only with
+    persons, start_date and end_date: whether at least one offer fits them."""
+
+    persons_min: int | None
+    persons_max: int | None
+    first_date: date | None
+    last_date: date | None
+    open_months: list[int]
+    fits: bool | None
+
+    @classmethod
+    def of(cls, view: PanelLimitsView) -> "PanelLimitsOut":
+        limits = view.limits
+        return cls(
+            persons_min=limits.persons_min if limits else None,
+            persons_max=limits.persons_max if limits else None,
+            first_date=limits.first_date if limits else None,
+            last_date=limits.last_date if limits else None,
+            open_months=list(limits.open_months) if limits else [],
+            fits=view.fits,
         )

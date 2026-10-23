@@ -24,6 +24,11 @@ export function formatMonthName(locale: string, month: number): string {
   return new Intl.DateTimeFormat(locale, { ...utc, month: 'long' }).format(Date.UTC(2026, month - 1, 1))
 }
 
+/** May, June and July / mai, juin et juillet. */
+export function formatList(locale: string, items: string[]): string {
+  return new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(items)
+}
+
 /** 19 Oct, 10:42 / 19 oct., 10:42, in the browser's time zone. */
 export function formatDateTime(locale: string, iso: string): string {
   return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))

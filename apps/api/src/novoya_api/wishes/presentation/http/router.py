@@ -1,12 +1,15 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 from novoya_api.accounts.public import require_admin
+from novoya_api.shared.domain.errors import InvalidInput
 from novoya_api.shared.presentation.http.errors import ErrorResponse
 from novoya_api.wishes.application.ports.wish_repository import ADMIN_CAP, ADMIN_PAGE
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel, AnswerPanelCommand
+from novoya_api.wishes.application.use_cases.get_panel_limits import GetPanelLimits
 from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.preferences import ListPreferences, RemovePreference
 from novoya_api.wishes.application.use_cases.send_wish import SendWish, SendWishCommand
@@ -16,12 +19,14 @@ from novoya_api.wishes.presentation.http.dependencies import (
     get_current_user_id,
     get_list_admin_wishes,
     get_list_preferences,
+    get_panel_limits,
     get_remove_preference,
     get_send_wish,
 )
 from novoya_api.wishes.presentation.http.schemas import (
     AdminWish,
     AnswerPanelRequest,
+    PanelLimitsOut,
     PlanResponse,
     PreferenceSectionOut,
     SendWishRequest,
@@ -66,6 +71,36 @@ async def answer_panel(
     dates."""
     command = AnswerPanelCommand(user_id=user_id, wish_id=wish_id, answers=body.to_answers())
     return PlanResponse.of((await use_case(command)).plan)
+
+
+@router.get(
+    "/{wish_id}/limits",
+    operation_id="getPanelLimits",
+    responses={404: {"model": ErrorResponse}},
+)
+async def get_limits(
+    wish_id: UUID,
+    response: Response,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    use_case: Annotated[GetPanelLimits, Depends(get_panel_limits)],
+    persons: Annotated[int | None, Query(ge=1, le=50)] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> PanelLimitsOut:
+    """What the panel of this wish may offer, from the destination's listed offers today
+    (#183): travellers (at most 50), first and last open days, months with an open offer.
+    With persons, start_date and end_date (all three or none), also whether a plan can be
+    built for them, by the plan's own rule, and the limits of the offers taking that group.
+    422 invalid_answers for dates the answer would refuse (end not after start, departure in
+    the past, over 366 days). 404 if the wish is not theirs or has no destination yet. 429
+    past the client's limit of reads."""
+    given = [value is not None for value in (persons, start_date, end_date)]
+    if any(given) and not all(given):
+        raise InvalidInput("give persons, start_date and end_date together, or none")
+    view = await use_case(wish_id, user_id, persons, start_date, end_date)
+    # The catalog changes at any time, and the limits are the client's own trip.
+    response.headers["Cache-Control"] = PRIVATE
+    return PanelLimitsOut.of(view)
 
 
 # The client's own tastes: no shared or browser cache keeps them.

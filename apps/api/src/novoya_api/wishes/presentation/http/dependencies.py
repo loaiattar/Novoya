@@ -23,6 +23,7 @@ from novoya_api.shared.infrastructure.system_clock import SystemClock
 from novoya_api.wishes.application.ports.destination_reader import DestinationReader
 from novoya_api.wishes.application.ports.panel_builder import PanelBuilder
 from novoya_api.wishes.application.use_cases.answer_panel import AnswerPanel
+from novoya_api.wishes.application.use_cases.get_panel_limits import GetPanelLimits
 from novoya_api.wishes.application.use_cases.list_admin_wishes import ListAdminWishes
 from novoya_api.wishes.application.use_cases.preferences import ListPreferences, RemovePreference
 from novoya_api.wishes.application.use_cases.send_wish import SendWish
@@ -134,4 +135,13 @@ def get_remove_preference(
         PlanningPlanStatuses(session),
         SqlAlchemyUnitOfWork(session),
         SystemClock(),
+    )
+
+
+def get_panel_limits(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    rate_limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+) -> GetPanelLimits:
+    return GetPanelLimits(
+        SqlWishRepository(session), PartnerCatalog(session), SystemClock(), rate_limiter
     )

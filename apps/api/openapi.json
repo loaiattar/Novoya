@@ -2071,6 +2071,85 @@
         "title": "OfferResponse",
         "type": "object"
       },
+      "PanelLimitsOut": {
+        "description": "What the panel may offer, from the destination's listed offers (#183). The fields are\nnull and open_months empty when no listed offer is left there. fits is given only with\npersons, start_date and end_date: whether at least one offer fits them.",
+        "properties": {
+          "first_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Date"
+          },
+          "fits": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fits"
+          },
+          "last_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Date"
+          },
+          "open_months": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Open Months",
+            "type": "array"
+          },
+          "persons_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons Max"
+          },
+          "persons_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons Min"
+          }
+        },
+        "required": [
+          "persons_min",
+          "persons_max",
+          "first_date",
+          "last_date",
+          "open_months",
+          "fits"
+        ],
+        "title": "PanelLimitsOut",
+        "type": "object"
+      },
       "PanelOut": {
         "description": "The preference panel (ARCHITECTURE.md section 3). Render it with generic components.",
         "properties": {
@@ -9731,6 +9810,142 @@
           }
         },
         "summary": "Answer Panel",
+        "tags": [
+          "wishes"
+        ]
+      }
+    },
+    "/wishes/{wish_id}/limits": {
+      "get": {
+        "description": "What the panel of this wish may offer, from the destination's listed offers today\n(#183): travellers (at most 50), first and last open days, months with an open offer.\nWith persons, start_date and end_date (all three or none), also whether a plan can be\nbuilt for them, by the plan's own rule, and the limits of the offers taking that group.\n422 invalid_answers for dates the answer would refuse (end not after start, departure in\nthe past, over 366 days). 404 if the wish is not theirs or has no destination yet. 429\npast the client's limit of reads.",
+        "operationId": "getPanelLimits",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wish_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Wish Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "persons",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 50,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Persons"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PanelLimitsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Limits",
         "tags": [
           "wishes"
         ]

@@ -55,14 +55,8 @@ class Answers:
             raise InvalidAnswers("a tag is selected twice")
 
     def check_dates(self, today: date) -> None:
-        """New answers: the departure is not in the past and the trip is not too long.
-
-        `today` is the server's day (UTC): one day earlier is still accepted, because it can be
-        today for the client."""
-        if self.start_date < today - START_TOLERANCE:
-            raise InvalidAnswers("the start date is in the past")
-        if (self.end_date - self.start_date).days + 1 > MAX_TRIP_DAYS:
-            raise InvalidAnswers(f"a trip lasts {MAX_TRIP_DAYS} days at most")
+        """New answers: the departure is not in the past and the trip is not too long."""
+        check_trip_dates(self.start_date, self.end_date, today)
 
     def check_against(self, panel: Panel) -> None:
         """Every tag must come from the panel shown, at most one in a single-choice section."""
@@ -74,3 +68,18 @@ class Answers:
             picked[section.id] += 1
             if not section.multi and picked[section.id] > 1:
                 raise InvalidAnswers(f"only one tag can be picked in {section.id}")
+
+
+def check_trip_dates(start: date, end: date, today: date) -> None:
+    """The dates of a new trip: the end after the start, the departure not in the past, at
+    most MAX_TRIP_DAYS. The answer and the panel's fit check (#183) both use it, so the panel
+    never says yes to dates the answer refuses.
+
+    `today` is the server's day (UTC): one day earlier is still accepted, because it can be
+    today for the client."""
+    if end <= start:
+        raise InvalidAnswers("the end date must be after the start date")
+    if start < today - START_TOLERANCE:
+        raise InvalidAnswers("the start date is in the past")
+    if (end - start).days + 1 > MAX_TRIP_DAYS:
+        raise InvalidAnswers(f"a trip lasts {MAX_TRIP_DAYS} days at most")

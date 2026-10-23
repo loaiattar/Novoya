@@ -25,6 +25,8 @@
   wishes, for the client's list of trips. Wishes without a plan are left out.
 - plans_of_wish(wish_id) -> [WishPlanAccess]: the status and assigned agent of each plan of
   this wish, for the advisor chat's read rule (messaging). Empty when the wish has no plan.
+- trip_fits(country, city, persons, start, end) -> whether a plan can be built for this trip
+  whatever the model does: the rule the preference panel checks before sending (#183).
 - plan_statuses(wish_ids) -> {wish_id: (status, ...)}: where the plans of these wishes stand,
   so wishes knows which answers the agency already works from (#165).
 - delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
@@ -34,6 +36,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,7 +51,7 @@ from novoya_api.planning.application.dto import (
     TripBrief,
 )
 from novoya_api.planning.application.ports.plan_writer import PlanWriter
-from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan
+from novoya_api.planning.application.use_cases.generate_plan import GeneratePlan, plannable
 from novoya_api.planning.application.use_cases.get_priced_plan import GetPricedPlan
 from novoya_api.planning.application.use_cases.quote_plan import QuotePlan
 from novoya_api.planning.application.use_cases.record_answer import RecordAnswer
@@ -88,6 +91,7 @@ __all__ = [
     "mark_accepted",
     "mark_rejected",
     "plan_statuses",
+    "trip_fits",
     "plan_trip",
     "plans_of_wish",
     "plan_trips",
@@ -252,3 +256,18 @@ async def plans_for_wishes(
     """The plan of each of these wishes, keyed by wish id. Wishes without a plan are left out."""
     rows = await SqlPlanRepository(session).summaries_for_wishes(wish_ids)
     return {wish_id: WishPlan(plan_id, wish_id, status) for plan_id, wish_id, status in rows}
+
+
+async def trip_fits(
+    country: str,
+    city: str | None,
+    persons: int,
+    start: date,
+    end: date,
+    *,
+    session: AsyncSession,
+) -> bool:
+    """Whether generate_plan can build a plan for this trip whatever the model writes: the
+    same fitting offers and fallback rule, so a "yes" never ends in no_offer_fits (#183)."""
+    offers = await PartnerOffers(session).fitting_offers(country, city, (), persons, start, end)
+    return plannable(offers, (end - start).days + 1)

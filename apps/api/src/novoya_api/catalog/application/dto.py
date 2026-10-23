@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
 from novoya_api.catalog.domain import Extra, Offer, OfferKind, Partner
@@ -99,3 +100,15 @@ class CatalogCounts:
     extras: RowCounts
     reviews_published: int
     reviews_hidden: int
+
+
+@dataclass(frozen=True, slots=True)
+class LimitsView:
+    """What a destination's listed offers can serve, from today on (#183): the group sizes,
+    the first and last dates, and the months with at least one open day."""
+
+    persons_min: int
+    persons_max: int
+    first_date: date
+    last_date: date
+    open_months: tuple[int, ...]

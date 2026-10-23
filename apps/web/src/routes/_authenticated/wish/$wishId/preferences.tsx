@@ -4,11 +4,12 @@ import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { localIsoDate } from '@/lib/dates'
+import { formatList, formatMonthName } from '@/lib/format'
 
 import { ApiError } from '../../../../api/errors'
 import { answerPanelMutation } from '../../../../api/generated/@tanstack/react-query.gen'
-import type { PanelOut } from '../../../../api/generated/types.gen'
-import { type CachedWish, wishQueryKey } from '../../../../api/wishes'
+import type { DestinationOut, PanelOut } from '../../../../api/generated/types.gen'
+import { type CachedWish, usePanelLimits, wishQueryKey } from '../../../../api/wishes'
 import { Button } from '../../../../components/atoms/Button'
 import { Eyebrow } from '../../../../components/atoms/Eyebrow'
 import { TagGroup } from '../../../../components/molecules/TagGroup'
@@ -46,7 +47,9 @@ function PreferencesPage() {
   const wish = useQueryClient().getQueryData<CachedWish>(wishQueryKey(wishId))
   const { t } = useTranslation('preferences')
 
-  if (wish?.panel) return <PreferencesForm wishId={wishId} text={wish.text} panel={wish.panel} />
+  if (wish?.panel) {
+    return <PreferencesForm wishId={wishId} text={wish.text} panel={wish.panel} destination={wish.destination} />
+  }
   return (
     <AppShell>
       <main className="mx-auto max-w-xl px-5 py-24 text-center">
@@ -63,12 +66,22 @@ function PreferencesPage() {
   )
 }
 
-function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string; panel: PanelOut }) {
+function PreferencesForm({
+  wishId,
+  text,
+  panel,
+  destination,
+}: {
+  wishId: string
+  text: string
+  panel: PanelOut
+  destination: DestinationOut | null
+}) {
   const navigate = useNavigate()
-  const { t } = useTranslation('preferences')
+  const { t, i18n } = useTranslation('preferences')
   const { t: tErrors } = useTranslation('errors')
   const [selection, setSelection] = useState<Selection>(() => initialSelection(panel.sections))
-  const [constraints, setConstraints] = useState<ConstraintsValues>({
+  const [typed, setConstraints] = useState<ConstraintsValues>({
     budget: '',
     persons: 2,
     startDate: '',
@@ -76,7 +89,37 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
   })
   const [errors, setErrors] = useState<ConstraintsErrors>({})
 
+  // What the destination's offers serve (#183). Until it is read, or if it can't be, the usual
+  // bounds stay: the answer is still checked when it is sent.
+  const limits = usePanelLimits(wishId).data
+  // Inside the panel's own 1 to 50, whatever the offers take.
+  const within = (persons: number) => Math.min(Math.max(persons, MIN_PERSONS), MAX_PERSONS)
+  const minPersons = within(limits?.persons_min ?? MIN_PERSONS)
+  const maxPersons = within(limits?.persons_max ?? MAX_PERSONS)
+  // The travellers stay inside what the offers take, even when the limits arrive after a choice.
+  const constraints = { ...typed, persons: Math.min(Math.max(typed.persons, minPersons), maxPersons) }
+
+  // Travellers and dates the form would send: ask whether at least one offer fits them, by the
+  // rule the plan uses. Only a "no" holds the sending; a check still running or failed does not.
+  const datesErrors = constraintsErrors(constraints, localIsoDate())
+  const ready = !datesErrors.persons && !datesErrors.startDate && !datesErrors.endDate
+  const fit = usePanelLimits(wishId, ready ? constraints : undefined)
+  const checked = ready && fit.data?.fits !== undefined && fit.data.fits !== null
+  const noFit = checked && fit.data?.fits === false ? noFitMessage(fit.data.open_months) : undefined
+
+  function noFitMessage(months: number[]): string {
+    const place = destination?.city ?? destination?.country ?? ''
+    const first = t('noFit', { place, count: constraints.persons })
+    // The months only help when the trip is outside them: inside, the group or the nights
+    // are the reason, and naming the trip's own months would mislead.
+    const outside = tripMonths(constraints.startDate, constraints.endDate).some((month) => !months.includes(month))
+    if (months.length === 0 || !outside) return first
+    const names = months.map((month) => formatMonthName(i18n.language, month))
+    return `${first} ${t('openMonths', { months: formatList(i18n.language, names) })}`
+  }
+
   const failure = useRef<HTMLParagraphElement>(null)
+  const noFitText = useRef<HTMLParagraphElement>(null)
 
   // The plan is built while the request runs (up to a minute): the waiting screen replaces the
   // form meanwhile. The answers stay in this component's state, so a failure brings the form
@@ -99,6 +142,11 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
     event.preventDefault()
     const found = constraintsErrors(constraints, localIsoDate())
     setErrors(found)
+    if (noFit && Object.keys(found).length === 0) {
+      // Held: say why where the client is, instead of a button that does nothing.
+      noFitText.current?.focus()
+      return
+    }
     if (Object.keys(found).length > 0 || answer.isPending) return
     answer.mutate(
       {
@@ -165,8 +213,12 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
                 setConstraints(values)
                 if (Object.keys(errors).length > 0) setErrors(constraintsErrors(values, localIsoDate()))
               }}
-              minPersons={MIN_PERSONS}
-              maxPersons={MAX_PERSONS}
+              minPersons={minPersons}
+              maxPersons={maxPersons}
+              firstDate={limits?.first_date ?? undefined}
+              lastDate={limits?.last_date ?? undefined}
+              noFit={noFit}
+              noFitRef={noFitText}
             />
             {failed && (
               <p ref={failure} tabIndex={-1} role="alert" className="mt-6 text-danger outline-none">
@@ -188,4 +240,16 @@ function PreferencesForm({ wishId, text, panel }: { wishId: string; text: string
       </div>
     </AppShell>
   )
+}
+
+/** The months (1 to 12) a trip touches, from YYYY-MM-DD dates. */
+function tripMonths(start: string, end: string): number[] {
+  const months: number[] = []
+  let [year, month] = start.split('-').map(Number) as [number, number]
+  const [lastYear, lastMonth] = end.split('-').map(Number) as [number, number]
+  while ((year < lastYear || (year === lastYear && month <= lastMonth)) && months.length < 12) {
+    months.push(month)
+    ;[year, month] = month === 12 ? [year + 1, 1] : [year, month + 1]
+  }
+  return months
 }

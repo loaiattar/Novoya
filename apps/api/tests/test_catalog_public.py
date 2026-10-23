@@ -213,6 +213,28 @@ async def test_search_offers_with_a_session_reads_through_it(seen_sessions):
     assert seen_sessions == [caller_session]
 
 
+async def test_limits_at_with_a_session_reads_through_it(seen_sessions):
+    caller_session = object()
+
+    limits = await public.limits_at("Greece", "Chania", date(2026, 5, 15), session=caller_session)
+
+    assert limits is not None
+    assert (limits.persons_min, limits.persons_max) == (2, 4)
+    assert (limits.first_date, limits.last_date) == (date(2026, 5, 15), SEASON_END)
+    assert limits.open_months == (5, 6, 7, 8, 9, 10)
+    assert seen_sessions == [caller_session]
+
+
+async def test_limits_at_a_destination_without_offers_is_none(seen_sessions):
+    assert await public.limits_at("Spain", "Seville", date(2026, 5, 15), session=object()) is None
+
+
+def test_limits_at_takes_an_optional_keyword_only_session():
+    parameter = inspect.signature(public.limits_at).parameters["session"]
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+    assert parameter.default is None
+
+
 async def test_get_offers_keeps_order_and_inactive_rows():
     hotel = _partner()
     first = _offer(hotel, title="First")

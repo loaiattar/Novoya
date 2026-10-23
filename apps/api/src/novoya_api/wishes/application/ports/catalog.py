@@ -1,5 +1,7 @@
+from datetime import date
 from typing import Protocol
 
+from novoya_api.wishes.application.dto import PanelLimits
 from novoya_api.wishes.domain.wish import Destination
 
 
@@ -12,4 +14,16 @@ class Catalog(Protocol):
 
     async def tags_at(self, destination: Destination) -> list[str]:
         """Tags ("section:tag") of the active offers there; the whole country without a city."""
+        ...
+
+    async def limits(
+        self, destination: Destination, today: date, persons: int | None = None
+    ) -> PanelLimits | None:
+        """What the listed offers there can serve from today on, only those taking the group
+        when persons is given; None when none is left."""
+        ...
+
+    async def fits(self, destination: Destination, persons: int, start: date, end: date) -> bool:
+        """Whether a plan can be built for this trip there, whatever the model writes: the
+        plan's own rule, so a yes never ends in no_offer_fits (#182, #183)."""
         ...

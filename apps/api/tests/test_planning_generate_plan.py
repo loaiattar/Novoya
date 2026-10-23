@@ -652,3 +652,25 @@ async def test_the_fallback_hotel_of_a_one_day_trip_must_be_open_that_day():
     view = await setup.generate(plan_request(tags=(), days=1))
 
     assert [(i.offer_id, i.day) for i in view.items] == [(WALK.id, 1)]
+
+
+# plannable: what the panel asks before sending (#183), the same rule as the fallback
+
+
+def test_a_trip_with_an_activity_open_on_one_of_its_days_is_plannable():
+    from novoya_api.planning.application.use_cases.generate_plan import plannable
+
+    assert plannable([LATE_BOAT], trip_days=4) is True
+
+
+def test_a_trip_with_only_a_hotel_open_every_night_is_plannable():
+    from novoya_api.planning.application.use_cases.generate_plan import plannable
+
+    assert plannable([HOTEL], trip_days=4) is True
+
+
+def test_a_trip_with_only_hotels_not_open_every_night_is_not_plannable():
+    from novoya_api.planning.application.use_cases.generate_plan import plannable
+
+    assert plannable([GAP_HOTEL], trip_days=4) is False
+    assert plannable([], trip_days=4) is False

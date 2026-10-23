@@ -93,6 +93,12 @@ class GeneratePlan:
         )
 
 
+def plannable(offers: list[OfferSummary], trip_days: int) -> bool:
+    """Whether a plan can be built from these fitting offers whatever the model does: the
+    fallback's own rule, so a "yes" here never ends in no_offer_fits (#183)."""
+    return bool(_fallback_items([], offers, trip_days))
+
+
 def _fallback_items(
     ranked: list[OfferSummary], allowed: list[OfferSummary], trip_days: int
 ) -> list[DraftItem]:
