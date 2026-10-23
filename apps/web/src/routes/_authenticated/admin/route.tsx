@@ -17,6 +17,7 @@ export const Route = createFileRoute('/_authenticated/admin')({
 
 function AdminArea() {
   const { t } = useTranslation('admin')
+  const { me } = Route.useRouteContext()
   return (
     <AppShell>
       <BackofficeLayout
@@ -24,6 +25,8 @@ function AdminArea() {
         items={[
           { label: t('nav.overview'), to: '/admin', exact: true },
           { label: t('nav.users'), to: '/admin/users' },
+          // A super admin only: the page is refused to the others (admins/index.tsx).
+          ...(canOpen(me.role, 'admins') ? [{ label: t('nav.admins'), to: '/admin/admins' as const }] : []),
           { label: t('nav.partners'), to: '/admin/partners' },
           { label: t('nav.extras'), to: '/admin/extras' },
           { label: t('nav.reviews'), to: '/admin/reviews' },

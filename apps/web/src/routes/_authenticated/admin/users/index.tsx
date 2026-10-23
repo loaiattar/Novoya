@@ -17,6 +17,7 @@ import { RoleChangeDialog, type RoleChange } from '../../../../components/organi
 import { type Role, ROLES } from '../../../../components/organisms/roles'
 import { StatusChangeDialog, type StatusChange } from '../../../../components/organisms/StatusChangeDialog'
 import { UsersTable } from '../../../../components/organisms/UsersTable'
+import { roleErrorKey } from '../../../-roleErrors'
 
 // The guard is in ../route.tsx: admins only.
 export const Route = createFileRoute('/_authenticated/admin/users/')({
@@ -145,14 +146,6 @@ function AdminPage() {
 }
 
 // Texts in admin.json. A refusal that a retry cannot fix gets its own message.
-function roleErrorKey(error: unknown) {
-  const code = error instanceof ApiError ? error.code : undefined
-  if (code === 'cannot_change_admin_role') return 'changeRefused.adminRole'
-  if (code === 'super_admin_server_only') return 'changeRefused.superAdmin'
-  if (code === 'cannot_promote_disabled') return 'changeRefused.disabledAccount'
-  return 'changeFailed'
-}
-
 function statusErrorKey(error: unknown) {
   const code = error instanceof ApiError ? error.code : undefined
   if (code === 'cannot_change_admin_status') return 'changeRefused.adminStatus'

@@ -3,6 +3,7 @@
   "nav": {
     "overview": "Vue d'ensemble",
     "users": "Utilisateurs",
+    "admins": "Admins",
     "partners": "Partenaires",
     "extras": "Extras",
     "reviews": "Avis",
@@ -35,7 +36,8 @@
     "adminRole": "Seul un super admin peut donner ou retirer le rôle Admin.",
     "adminStatus": "Cette personne est admin : seul un super admin peut désactiver ou réactiver son compte.",
     "superAdmin": "Cette personne est super admin : son rôle et son compte se gèrent uniquement sur le serveur.",
-    "disabledAccount": "Ce compte est désactivé : réactivez-le avant de lui donner le rôle Agent ou Admin."
+    "disabledAccount": "Ce compte est désactivé : réactivez-le avant de lui donner le rôle Agent ou Admin.",
+    "emailNotVerified": "L'e-mail de cette personne n'est pas encore vérifié : elle ne peut être que Client tant qu'elle ne l'a pas confirmé."
   },
   "loading": "Chargement des utilisateurs…",
   "loadFailed": "Impossible de charger les utilisateurs.",
@@ -60,7 +62,38 @@
     "title": "Changer le rôle de {{name}} ?",
     "body": "{{name}} passera de {{from}} à {{to}}. Cela change ce que cette personne peut ouvrir dans {{agency}}.",
     "action": "Changer le rôle",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "newRole": "Nouveau rôle"
+  },
+  "admins": {
+    "title": "Admins",
+    "intro": "L'équipe d'administration. Donnez le rôle Admin à un client ou à un agent, ou retirez-le. Les super admins se gèrent uniquement sur le serveur.",
+    "caption": "Admins et super admins",
+    "action": "Action",
+    "loading": "Chargement des admins…",
+    "loadFailed": "Les admins n'ont pas pu être chargés.",
+    "locked": "Serveur uniquement",
+    "revoke": "Retirer le rôle",
+    "revokeOf": "Retirer le rôle admin de {{name}}",
+    "grantTitle": "Donner le rôle Admin",
+    "grantIntro": "Cherchez un client ou un agent. Son e-mail doit être vérifié et son compte actif.",
+    "searchLabel": "Chercher un utilisateur par e-mail ou par nom",
+    "searchPlaceholder": "E-mail ou nom…",
+    "searching": "Recherche…",
+    "results": "Résultats de la recherche",
+    "noMatch": "Aucun client ni agent ne correspond à cette recherche.",
+    "grant": "Nommer admin",
+    "grantOf": "Donner le rôle admin à {{name}}",
+    "cannot": {
+      "disabled": "Compte désactivé",
+      "unverified": "E-mail non vérifié"
+    },
+    "help": {
+      "title": "Les super admins se gèrent uniquement sur le serveur",
+      "body": "Lancez ces commandes dans l'environnement de l'API, sur le serveur (le shell Render pour la démo), après alembic upgrade head.",
+      "grant": "Donner le rôle super admin",
+      "demote": "Le retirer (redevenir admin)"
+    }
   },
   "statusConfirm": {
     "disable": {

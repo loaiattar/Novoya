@@ -3,6 +3,7 @@
   "nav": {
     "overview": "Overview",
     "users": "Users",
+    "admins": "Admins",
     "partners": "Partners",
     "extras": "Extras",
     "reviews": "Reviews",
@@ -35,7 +36,8 @@
     "adminRole": "Only a super admin can give or take the Admin role.",
     "adminStatus": "This person is an admin: only a super admin can disable or enable their account.",
     "superAdmin": "This person is a super admin: their role and account are managed on the server only.",
-    "disabledAccount": "This account is disabled: enable it before giving it the Agent or Admin role."
+    "disabledAccount": "This account is disabled: enable it before giving it the Agent or Admin role.",
+    "emailNotVerified": "This person's email is not verified yet: they can only be a Client until they confirm it."
   },
   "loading": "Loading users…",
   "loadFailed": "The users could not be loaded.",
@@ -60,7 +62,38 @@
     "title": "Change {{name}}'s role?",
     "body": "{{name}} will go from {{from}} to {{to}}. This changes what they can open in {{agency}}.",
     "action": "Change role",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "newRole": "New role"
+  },
+  "admins": {
+    "title": "Admins",
+    "intro": "The admin team. Give the Admin role to a client or an agent, or take it back. Super admins are managed on the server only.",
+    "caption": "Admins and super admins",
+    "action": "Action",
+    "loading": "Loading the admins…",
+    "loadFailed": "The admins could not be loaded.",
+    "locked": "Server only",
+    "revoke": "Take back the role",
+    "revokeOf": "Take back {{name}}'s admin role",
+    "grantTitle": "Give the Admin role",
+    "grantIntro": "Find a client or an agent. Their email must be verified and their account active.",
+    "searchLabel": "Find a user by email or name",
+    "searchPlaceholder": "Email or name…",
+    "searching": "Searching…",
+    "results": "Search results",
+    "noMatch": "No client or agent matches this search.",
+    "grant": "Make admin",
+    "grantOf": "Give {{name}} the admin role",
+    "cannot": {
+      "disabled": "Account disabled",
+      "unverified": "Email not verified"
+    },
+    "help": {
+      "title": "Super admins are managed on the server only",
+      "body": "Run these commands in the API's environment on the server (the Render shell for the demo), after alembic upgrade head.",
+      "grant": "Give the super admin role",
+      "demote": "Take it back (demote to admin)"
+    }
   },
   "statusConfirm": {
     "disable": {

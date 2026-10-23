@@ -4,6 +4,8 @@ export type Role = 'client' | 'agent' | 'admin' | 'super_admin'
 const AREAS = {
   agent: ['agent', 'admin', 'super_admin'],
   admin: ['admin', 'super_admin'],
+  // The admins page: only a super admin gives and takes the admin role.
+  admins: ['super_admin'],
 } satisfies Record<string, Role[]>
 
 export function canOpen(role: Role, area: keyof typeof AREAS): boolean {
