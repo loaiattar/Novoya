@@ -3,6 +3,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from novoya_api.shared.domain.value_objects import Locale
+
 
 @dataclass(frozen=True)
 class PlanRequest:
@@ -231,6 +233,27 @@ class PricedPlan:
     budget_max: Decimal | None
     currency: str | None
     tags: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ClientContact:
+    """Where to write to the client who sent the trip, and in which language."""
+
+    email: str
+    name: str | None
+    locale: Locale
+
+
+@dataclass(frozen=True)
+class RequestReceivedEmail:
+    """The email confirming the agency received the trip: when to expect an answer, and a
+    link to the plan. No price and no partner."""
+
+    to: str
+    name: str | None
+    locale: Locale
+    plan_url: str
+    answer_days: int
 
 
 @dataclass(frozen=True)

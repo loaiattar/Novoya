@@ -72,6 +72,7 @@ const PLAN: Plan = {
       available: true,
     },
   ],
+  answer_within_days: 4,
 }
 
 function mockApi() {

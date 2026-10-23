@@ -119,6 +119,15 @@ class SqlWishRepository:
         )
         return list(result)
 
+    async def list_for_user(self, user_id: UUID) -> list[Wish]:
+        """This user's wishes, newest first."""
+        rows = await self._session.scalars(
+            select(WishModel)
+            .where(WishModel.user_id == user_id)
+            .order_by(WishModel.created_at.desc(), WishModel.id)
+        )
+        return [wish_to_entity(row) for row in rows]
+
     async def delete_for_user(self, user_id: UUID) -> None:
         """Erase every wish of this user. The caller commits."""
         await self._session.execute(

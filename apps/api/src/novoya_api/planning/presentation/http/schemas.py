@@ -38,10 +38,14 @@ class Plan(BaseModel):
     based_on_preferences: bool
     summary: str
     items: list[PlanItemResponse]
+    answer_within_days: int = Field(
+        description="Days within which the agency answers once the trip is sent (a setting)."
+    )
 
     @classmethod
-    def of(cls, plan: PlanView) -> "Plan":
+    def of(cls, plan: PlanView, answer_within_days: int) -> "Plan":
         return cls(
+            answer_within_days=answer_within_days,
             id=plan.id,
             wish_id=plan.wish_id,
             status=plan.status,

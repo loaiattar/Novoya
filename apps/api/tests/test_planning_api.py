@@ -24,6 +24,7 @@ from novoya_api.planning.presentation.http.dependencies import (
     get_request_quote,
 )
 from novoya_api.shared.domain.value_objects import Locale
+from tests.test_planning_request_quote import FakeClients, FakeNotifier
 
 USER_ID = UUID("00000000-0000-0000-0000-000000000001")
 OTHER_ID = UUID("00000000-0000-0000-0000-000000000002")
@@ -98,7 +99,15 @@ def app(plan):
     app = create_app()
     app.dependency_overrides[get_get_plan] = lambda: GetPlan(plans, catalog, wishes)
     app.dependency_overrides[get_request_quote] = lambda: RequestQuote(
-        plans, catalog, wishes, FakeUow(), FixedClock()
+        plans,
+        catalog,
+        wishes,
+        FakeUow(),
+        FixedClock(),
+        clients=FakeClients(),
+        notifier=FakeNotifier(),
+        frontend_url="https://novoya.test",
+        answer_days=4,
     )
     app.dependency_overrides[get_current_user_id] = lambda: USER_ID
     return app
@@ -129,6 +138,7 @@ async def test_the_owner_reads_the_plan(plan, client):
         "based_on_preferences",
         "summary",
         "items",
+        "answer_within_days",
     }
     assert set(body["items"][0]) == {
         "id",
@@ -178,6 +188,7 @@ async def test_the_owner_requests_a_quote(plan, client):
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "requested"
+    assert body["answer_within_days"] == 4
     assert body["items"][0]["title"] == "Sea view hotel"
     assert body["items"][0]["available"] is True
     assert set(body) == {
@@ -187,6 +198,7 @@ async def test_the_owner_requests_a_quote(plan, client):
         "based_on_preferences",
         "summary",
         "items",
+        "answer_within_days",
     }
     assert set(body["items"][0]) == {
         "id",

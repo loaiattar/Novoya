@@ -147,6 +147,7 @@ The allowed moves are methods on `Plan`, for example `plan.request_quote(by=user
 | wishes | `SendWish`, `AnswerPanel` | `POST /wishes`, `POST /wishes/{id}/answers` | WishRepository, Catalog, PanelBuilder, PlanStarter |
 | planning | `GeneratePlan`, `GetPlan`, `RequestQuote`, `ListQuoteQueue`, `TakePlan`, `SetItemPrice`, `SetExtraPrice` | `GET /plans/{id}`, `POST /plans/{id}/request-quote`, `/agent/plans/*` | PlanRepository, PlanGenerator, Catalog |
 | quoting | `SendQuote`, `GetQuote`, `DownloadQuotePdf`, `DecideQuote` | `POST /agent/plans/{id}/quote`, `/quotes/{id}`, `/quotes/{id}/pdf`, `/accept`, `/reject` | QuoteRepository, Plans, Users, QuoteRenderer, QuoteNotifier |
+| trips | `ListMyTrips` | `GET /me/trips` | TripWishes, TripPlans, TripQuotes |
 | dashboard | `GetAdminStats` | `GET /admin/stats` | Counts |
 | health | `CheckDatabase` | `GET /health`, `GET /health/db` | DatabaseProbe |
 

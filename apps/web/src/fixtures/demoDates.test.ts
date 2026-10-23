@@ -11,7 +11,6 @@ import { localIsoDate } from '../lib/dates'
 import { daysFromToday, monthFromToday, monthOf, timeDaysAgo } from './demoDates'
 import { DEMO_PLAN_ID, getPlan } from './plans'
 import { getQuote } from './quotes'
-import { listThreads } from './trips'
 
 afterAll(() => {
   vi.useRealTimers()
@@ -47,13 +46,11 @@ describe('monthOf', () => {
   })
 })
 
-// The demo trips must look upcoming and recently updated, whatever the day the demo runs.
+// The demo plan and quote must look upcoming and recent, whatever the day the demo runs.
 describe('demo fixtures', () => {
   const today = localIsoDate()
   const plan = getPlan(DEMO_PLAN_ID)!
   const quote = getQuote('NV-2026-0182')!
-  const threads = listThreads()
-  const thread = (id: string) => threads.find((entry) => entry.id === id)!
 
   it('read the pinned day', () => {
     expect(today).toBe('2026-10-31')
@@ -65,32 +62,18 @@ describe('demo fixtures', () => {
     plan.days.forEach((day, index) => expect(day.date).toBe(daysAfter(plan.startDate, index)))
   })
 
-  it('give the Chania plan, quote and trip card the same dates', () => {
-    const range = { startDate: plan.startDate, endDate: plan.endDate }
-    expect({ startDate: quote.startDate, endDate: quote.endDate }).toEqual(range)
-    expect(thread('chania').dates).toEqual({ start: plan.startDate, end: plan.endDate })
+  it('give the Chania plan and quote the same dates', () => {
+    expect({ startDate: quote.startDate, endDate: quote.endDate }).toEqual({ startDate: plan.startDate, endDate: plan.endDate })
   })
 
-  it('update the Chania plan and trip card before the quote is issued, and every open trip before now', () => {
-    expect(thread('chania').updatedAt).toBe(plan.updatedAt)
+  it('update the Chania plan before the quote is issued', () => {
     expect(localIsoDate(new Date(plan.updatedAt)) < quote.issuedAt).toBe(true)
-    for (const entry of threads.filter((candidate) => candidate.status !== 'refused')) {
-      expect(new Date(entry.updatedAt) < new Date(), entry.id).toBe(true)
-    }
   })
 
   it('issue the quote before today, valid a week from then', () => {
     expect(quote.issuedAt < today).toBe(true)
     expect(quote.validUntil).toBe(daysAfter(quote.issuedAt, 7))
     expect(quote.validUntil > today).toBe(true)
-  })
-
-  it('date every open trip after today', () => {
-    for (const entry of threads.filter((candidate) => candidate.status !== 'refused')) {
-      if (entry.dates === null) continue
-      const first = 'start' in entry.dates ? entry.dates.start : entry.dates.month
-      expect(first > today, entry.id).toBe(true)
-    }
   })
 })
 

@@ -18,6 +18,15 @@ class SqlQuoteRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def ids_for_plans(self, plan_ids: Sequence[UUID]) -> dict[UUID, UUID]:
+        """The id of the quote of each of these plans, keyed by plan id."""
+        if not plan_ids:
+            return {}
+        rows = await self._session.execute(
+            select(QuoteModel.plan_id, QuoteModel.id).where(QuoteModel.plan_id.in_(plan_ids))
+        )
+        return {plan_id: quote_id for plan_id, quote_id in rows}
+
     async def add(self, quote: Quote) -> None:
         # uq_quotes_plan_id is the last guard against a second quote for the plan; the plan's
         # own status check (409) normally stops it first.

@@ -63,6 +63,7 @@ const PLAN: Plan = {
     },
     { id: 'i2', offer_id: 'o2', day: 2, quantity: 1, note: null, kind: 'guide', title: 'Chania à pied', description: null, available: true },
   ],
+  answer_within_days: 4,
 }
 
 // The one request waiting in the agency queue.
@@ -100,6 +101,7 @@ function mockApi() {
       return signedIn ? Response.json(me) : Response.json({ code: 'unauthenticated', detail: 'no session' }, { status: 401 })
     }
     if (url.pathname === '/admin/users') return Response.json(users)
+    if (url.pathname === '/me/trips') return Response.json([])
     if (url.pathname === '/agent/plans' && request.method === 'GET') {
       return Response.json([REQUEST].filter((entry) => url.searchParams.getAll('status').includes(entry.status)))
     }
@@ -458,8 +460,8 @@ describe('back-office and plan screens', () => {
   it('does not lead from the plan to a priced quote', async () => {
     renderAt('/plans/chania')
 
-    expect(await screen.findByRole('button', { name: 'Ask an advisor for a quote' })).toBeDisabled()
-    expect(screen.getByText('Asking for a quote is coming soon.')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Send to the agency' })).toBeDisabled()
+    expect(screen.getByText('The demo trip cannot be sent.')).toBeInTheDocument()
     expect(document.querySelector('a[href^="/quotes/"]')).toBeNull()
   })
 
@@ -588,7 +590,7 @@ describe('back-office and plan screens', () => {
     expect(screen.getByText(/Answering an offer is coming soon/)).toBeInTheDocument()
   })
 
-  it.each(['/trips', '/plans/chania', '/quotes/NV-2026-0182'])(
+  it.each(['/plans/chania', '/quotes/NV-2026-0182'])(
     'says %s shows demo data',
     async (url) => {
       renderAt(url)
@@ -613,20 +615,13 @@ describe('back-office and plan screens', () => {
     },
   )
 
-  it('does not show a concierge chat on the plan or on trips', async () => {
+  it('does not show a concierge chat on the plan', async () => {
     renderAt('/plans/chania')
 
     expect(await screen.findByRole('note')).toHaveTextContent('Demo data.')
     expect(screen.queryByRole('button', { name: 'Open the conversation' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
     expect(screen.queryByText(/messages can't be sent yet/)).not.toBeInTheDocument()
-
-    renderAt('/trips')
-
-    expect(await screen.findByRole('heading', { name: 'My previews' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Open the conversation' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/\d+ messages?/)).not.toBeInTheDocument()
   })
 
   it('shows the real agency queue, without the demo banner', async () => {
@@ -648,22 +643,5 @@ describe('back-office and plan screens', () => {
     await waitFor(() =>
       expect(requests).toContainEqual(expect.objectContaining({ method: 'POST', path: `/agent/plans/${REQUEST.id}/take` })),
     )
-  })
-
-  it('names the preview version once in the trip panel', async () => {
-    renderAt('/trips')
-
-    const panel = await screen.findByRole('region', { name: /^Trip: Chania/ })
-
-    expect(within(panel).getAllByText(/^Preview v\d+$/)).toHaveLength(1)
-  })
-
-  it('shows the chosen trip', async () => {
-    renderAt('/trips')
-
-    fireEvent.click(await screen.findByRole('button', { name: /Marrakech, derrière les portes/ }))
-
-    expect(await screen.findByRole('region', { name: 'Trip: Marrakech, derrière les portes' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
   })
 })

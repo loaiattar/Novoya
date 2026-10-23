@@ -11,6 +11,8 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from novoya_api.accounts.public import CurrentUserView, require_agent, require_client
+from novoya_api.config import get_settings
+from novoya_api.planning.application.ports.request_notifier import RequestNotifier
 from novoya_api.planning.application.use_cases.get_admin_plan import GetAdminPlan
 from novoya_api.planning.application.use_cases.get_agent_plan import GetAgentPlan
 from novoya_api.planning.application.use_cases.get_plan import GetPlan
@@ -21,7 +23,9 @@ from novoya_api.planning.application.use_cases.set_extra_price import SetExtraPr
 from novoya_api.planning.application.use_cases.set_item_price import SetItemPrice
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.infrastructure.catalog import PartnerOffers
+from novoya_api.planning.infrastructure.clients import AccountClients
 from novoya_api.planning.infrastructure.db.repository import SqlPlanRepository
+from novoya_api.planning.infrastructure.email.smtp_request_notifier import SmtpRequestNotifier
 from novoya_api.planning.infrastructure.people import AccountPeople
 from novoya_api.planning.infrastructure.wish_owners import WishOwners
 from novoya_api.planning.infrastructure.wish_search import WishesSearch
@@ -44,6 +48,25 @@ def get_get_plan(session: Annotated[AsyncSession, Depends(get_session)]) -> GetP
     )
 
 
+def get_answer_days() -> int:
+    """The answer time promised to the client, in days: one setting (NOVOYA_QUOTE_ANSWER_DAYS)."""
+    return get_settings().quote_answer_days
+
+
+def get_request_notifier() -> RequestNotifier:
+    """The same NOVOYA_SMTP_* settings as the other emails."""
+    settings = get_settings()
+    password = settings.smtp_password.get_secret_value() if settings.smtp_password else None
+    return SmtpRequestNotifier(
+        settings.smtp_host,
+        settings.smtp_port,
+        settings.mail_from,
+        username=settings.smtp_username,
+        password=password,
+        start_tls=settings.smtp_start_tls,
+    )
+
+
 def get_request_quote(session: Annotated[AsyncSession, Depends(get_session)]) -> RequestQuote:
     return RequestQuote(
         plans=SqlPlanRepository(session),
@@ -51,6 +74,10 @@ def get_request_quote(session: Annotated[AsyncSession, Depends(get_session)]) ->
         wishes=WishOwners(session),
         uow=SqlAlchemyUnitOfWork(session),
         clock=SystemClock(),
+        clients=AccountClients(session),
+        notifier=get_request_notifier(),
+        frontend_url=get_settings().frontend_url,
+        answer_days=get_answer_days(),
     )
 
 

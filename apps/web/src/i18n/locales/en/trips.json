@@ -1,10 +1,10 @@
 {
   "eyebrow": "Your space",
-  "title": "My previews",
-  "intro": "Every proposal, in one place.",
+  "title": "My trips",
+  "intro": "Every wish, and where it stands.",
   "newWish": "+ New wish",
   "tabs": {
-    "trips": "Previews",
+    "trips": "Trips",
     "profile": "Personal information",
     "preferences": "Preferences"
   },
@@ -12,24 +12,29 @@
     "profile": "Coming soon: your personal information.",
     "preferences": "Coming soon: your travel preferences."
   },
-  "listLabel": "Your previews",
+  "listLabel": "Your trips",
   "status": {
-    "offer_sent": "Agency offer sent",
-    "preview_proposed": "Preview proposed",
-    "in_discussion": "With an advisor",
+    "draft": "Draft",
+    "not_covered": "Destination not covered",
+    "panel_shown": "Preferences to choose",
+    "answered": "Plan on its way",
+    "plan_proposed": "Plan proposed",
+    "sent": "Sent to the agency",
+    "in_progress": "An advisor is working on it",
+    "quoted": "Quote ready",
     "accepted": "Accepted",
-    "refused": "Declined"
+    "rejected": "Declined"
   },
-  "placeAndDates": "{{country}} · {{dates}}",
+  "answerWithin_one": "Answer within {{count}} day",
+  "answerWithin_other": "Answer within {{count}} days",
+  "placeAndDates": "{{place}} · {{dates}}",
+  "noDestination": "Destination to be set",
   "datesToBeSet": "Dates to be set",
-  "previewSummary": "Preview v{{version}}",
-  "draftSummary": "Draft",
-  "previewVersion": "Preview v{{version}}",
-  "history": {
-    "label": "Trip: {{title}}",
-    "eyebrow": "This trip",
-    "viewPreview": "View the preview →",
-    "current": "Current version"
-  },
-  "empty": "No trips yet. Describe your first one and it will appear here."
+  "travellers": "Travellers: {{count}}",
+  "sentOn": "Sent {{date}}",
+  "loading": "Loading your trips…",
+  "error": "Your trips could not be loaded.",
+  "retry": "Try again",
+  "empty": "No trips yet. Describe your first one and it will appear here.",
+  "emptyCta": "Describe a trip"
 }

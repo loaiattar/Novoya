@@ -67,6 +67,17 @@ class SqlPlanRepository:
             .execution_options(synchronize_session=False)
         )
 
+    async def summaries_for_wishes(self, wish_ids: Sequence[UUID]) -> list[tuple[UUID, UUID, str]]:
+        """(plan id, wish id, status) of the plans of these wishes, oldest plan first."""
+        if not wish_ids:
+            return []
+        rows = await self._session.execute(
+            select(PlanModel.id, PlanModel.wish_id, PlanModel.status)
+            .where(PlanModel.wish_id.in_(wish_ids))
+            .order_by(PlanModel.created_at, PlanModel.id)
+        )
+        return [(row.id, row.wish_id, row.status) for row in rows]
+
     async def get(self, plan_id: UUID) -> Plan | None:
         row = await self._session.get(PlanModel, plan_id, populate_existing=True)
         if row is None:

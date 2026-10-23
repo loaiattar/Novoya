@@ -10,8 +10,19 @@
     "eyebrow": "La suite",
     "title": "Cet aperçu vous ressemble ?",
     "text": "Lorsqu’il vous convient, transmettez-le à un conseiller {{agency}}. Il établira un devis.",
-    "button": "Demander un devis à un conseiller",
-    "unavailable": "La demande de devis arrive bientôt."
+    "button": "Envoyer à l’agence",
+    "demo": "Le voyage de démonstration ne peut pas être envoyé.",
+    "confirmTitle": "Envoyer ce voyage à l’agence ?",
+    "confirmBody_one": "Un conseiller vérifie chaque journée, négocie les prix et vous envoie un devis. Il répond sous {{count}} jour, et nous vous le confirmons par e-mail.",
+    "confirmBody_other": "Un conseiller vérifie chaque journée, négocie les prix et vous envoie un devis. Il répond sous {{count}} jours, et nous vous le confirmons par e-mail.",
+    "confirmCancel": "Annuler",
+    "confirmAction": "Envoyer",
+    "sending": "Envoi…",
+    "failed": "Votre voyage n’a pas pu être envoyé. Réessayez.",
+    "sent_one": "Envoyé à l’agence. Un conseiller vous répondra sous {{count}} jour.",
+    "sent_other": "Envoyé à l’agence. Un conseiller vous répondra sous {{count}} jours.",
+    "inProgress": "Un conseiller s’en occupe.",
+    "followOnTrips": "Suivre sur Mes voyages"
   },
   "notFound": "Cet aperçu n’existe pas.",
   "day": {

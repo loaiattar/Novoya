@@ -21,6 +21,8 @@
 - mark_accepted(plan_id), mark_rejected(plan_id): the client's answer to the quote, in the
   caller's session (the caller commits, with the answer on its quote). Raises PlanNotFound
   (404) or InvalidTransition (409, not quoted, or changed meanwhile).
+- plans_for_wishes(wish_ids) -> {wish id: WishPlan}: the plan id and status of each of these
+  wishes, for the client's list of trips. Wishes without a plan are left out.
 - plans_of_wish(wish_id) -> [WishPlanAccess]: the status and assigned agent of each plan of
   this wish, for the advisor chat's read rule (messaging). Empty when the wish has no plan.
 - delete_for_user(user_id): erases the plans of this user's wishes; their items and extras
@@ -75,6 +77,7 @@ __all__ = [
     "PricedPlan",
     "TripBrief",
     "WishPlanAccess",
+    "WishPlan",
     "count_plans_by_status",
     "delete_for_user",
     "find_plan_ids",
@@ -84,6 +87,7 @@ __all__ = [
     "plan_trip",
     "plans_of_wish",
     "plan_trips",
+    "plans_for_wishes",
     "priced_plan",
     "quote_plan",
 ]
@@ -106,6 +110,15 @@ class WishPlanAccess:
 
 # The client waits for the plan; the fallback covers a slow model.
 DEADLINE_SECONDS = 60
+
+
+@dataclass(frozen=True)
+class WishPlan:
+    """The plan built for a wish, as the client's list of trips shows it."""
+
+    plan_id: UUID
+    wish_id: UUID
+    status: str  # the plan's status: proposed, requested, quoted, accepted...
 
 
 async def generate_plan(request: PlanRequest, *, session: AsyncSession) -> PlanView:
@@ -212,3 +225,11 @@ async def plans_of_wish(wish_id: UUID, *, session: AsyncSession) -> list[WishPla
     """The status and assigned agent of each plan of this wish. Empty without a plan."""
     plans = await SqlPlanRepository(session).search([], [wish_id], limit=WISH_PLANS_CAP)
     return [WishPlanAccess(plan.status.value, plan.assigned_agent_id) for plan in plans]
+
+
+async def plans_for_wishes(
+    wish_ids: Sequence[UUID], *, session: AsyncSession
+) -> dict[UUID, WishPlan]:
+    """The plan of each of these wishes, keyed by wish id. Wishes without a plan are left out."""
+    rows = await SqlPlanRepository(session).summaries_for_wishes(wish_ids)
+    return {wish_id: WishPlan(plan_id, wish_id, status) for plan_id, wish_id, status in rows}

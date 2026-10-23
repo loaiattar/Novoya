@@ -19,6 +19,7 @@ from novoya_api.planning.application.use_cases.set_item_price import SetItemComm
 from novoya_api.planning.application.use_cases.take_plan import TakePlan
 from novoya_api.planning.domain.plan import PlanStatus
 from novoya_api.planning.presentation.http.dependencies import (
+    get_answer_days,
     get_current_agent_id,
     get_current_user_id,
     get_get_admin_plan,
@@ -53,10 +54,11 @@ async def get_plan(
     plan_id: UUID,
     reader_id: Annotated[UUID, Depends(get_current_user_id)],
     use_case: Annotated[GetPlan, Depends(get_get_plan)],
+    answer_days: Annotated[int, Depends(get_answer_days)],
 ) -> Plan:
     """The plan day by day. Never a price: the quote has it. Never the partners' names.
     404 if it is missing or not the caller's, so the id stays hidden."""
-    return Plan.of(await use_case(plan_id, reader_id))
+    return Plan.of(await use_case(plan_id, reader_id), answer_days)
 
 
 @router.post(
@@ -68,13 +70,16 @@ async def request_quote(
     plan_id: UUID,
     client_id: Annotated[UUID, Depends(get_current_user_id)],
     use_case: Annotated[RequestQuote, Depends(get_request_quote)],
+    answer_days: Annotated[int, Depends(get_answer_days)],
     body: Annotated[RequestQuoteRequest | None, Body()] = None,
 ) -> Plan:
-    """Ask an agent to price this plan, with optional extras. proposed becomes requested.
-    Never a price here. 404 if it is missing or not the caller's. 409 if it is not proposed
-    (a second click too). 422 if an extra is unknown or no longer offered."""
+    """Send this plan to the agency, with optional extras: proposed becomes requested, and the
+    client gets one email saying the agency will answer within answer_within_days days. Never
+    a price here. 404 if it is missing or not the caller's. 409 if it is not proposed (a second
+    click too: no second request, no second email). 422 if an extra is unknown or no longer
+    offered. A failed email does not fail the request."""
     extra_ids = body.extra_ids if body is not None else []
-    return Plan.of(await use_case(plan_id, client_id, extra_ids))
+    return Plan.of(await use_case(plan_id, client_id, extra_ids), answer_days)
 
 
 QueueStatus = Literal["requested", "negotiating", "quoted", "accepted", "rejected"]

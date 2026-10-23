@@ -2196,6 +2196,11 @@
       "Plan": {
         "description": "The plan day by day. Never a price: the quote has it. Never a partner name.",
         "properties": {
+          "answer_within_days": {
+            "description": "Days within which the agency answers once the trip is sent (a setting).",
+            "title": "Answer Within Days",
+            "type": "integer"
+          },
           "based_on_preferences": {
             "title": "Based On Preferences",
             "type": "boolean"
@@ -2231,7 +2236,8 @@
           "status",
           "based_on_preferences",
           "summary",
-          "items"
+          "items",
+          "answer_within_days"
         ],
         "title": "Plan",
         "type": "object"
@@ -3487,6 +3493,158 @@
           "token"
         ],
         "title": "TokenRequest",
+        "type": "object"
+      },
+      "Trip": {
+        "description": "A wish of the client and how far it has got.",
+        "properties": {
+          "answer_within_days": {
+            "description": "Days within which the agency answers once the trip is sent (a setting).",
+            "title": "Answer Within Days",
+            "type": "integer"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "persons": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persons"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "plan_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "proposed",
+                  "requested",
+                  "negotiating",
+                  "quoted",
+                  "accepted",
+                  "rejected"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Status"
+          },
+          "quote_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "not_covered",
+              "panel_shown",
+              "answered",
+              "planned"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "wish_id": {
+            "format": "uuid",
+            "title": "Wish Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "wish_id",
+          "text",
+          "status",
+          "country",
+          "city",
+          "persons",
+          "start_date",
+          "end_date",
+          "created_at",
+          "plan_id",
+          "plan_status",
+          "quote_id",
+          "answer_within_days"
+        ],
+        "title": "Trip",
         "type": "object"
       },
       "UpdateExtraRequest": {
@@ -8423,6 +8581,52 @@
         ]
       }
     },
+    "/me/trips": {
+      "get": {
+        "description": "The signed-in client's wishes, newest first, each with its status and the ids of its\nplan and its quote when they exist. Only their own wishes. 401 without a session, 403 for\nan agent. answer_within_days is the answer time promised once the trip is sent.",
+        "operationId": "listMyTrips",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Trip"
+                  },
+                  "title": "Response Listmytrips",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          }
+        },
+        "summary": "List My Trips",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
     "/offers/{offer_id}": {
       "get": {
         "description": "A listed offer: indicative price per person, opening months and terms. Never the partner.\nThe agent still negotiates the trip's price. 404 if it is unknown or not listed.",
@@ -8563,7 +8767,7 @@
     },
     "/plans/{plan_id}/request-quote": {
       "post": {
-        "description": "Ask an agent to price this plan, with optional extras. proposed becomes requested.\nNever a price here. 404 if it is missing or not the caller's. 409 if it is not proposed\n(a second click too). 422 if an extra is unknown or no longer offered.",
+        "description": "Send this plan to the agency, with optional extras: proposed becomes requested, and the\nclient gets one email saying the agency will answer within answer_within_days days. Never\na price here. 404 if it is missing or not the caller's. 409 if it is not proposed (a second\nclick too: no second request, no second email). 422 if an extra is unknown or no longer\noffered. A failed email does not fail the request.",
         "operationId": "requestQuote",
         "parameters": [
           {

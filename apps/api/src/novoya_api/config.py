@@ -2,7 +2,7 @@ import json
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     mail_from: str = "Novoya <no-reply@novoya.local>"
     argon2_time_cost: int = 3
     argon2_memory_cost_kib: int = 65536
+
+    # Planning: the answer time promised to the client once their trip is sent (#168).
+    # A promise of the agency: shown on My trips and in the confirmation email. Out of
+    # 1 to 30, the API does not start.
+    quote_answer_days: int = Field(default=4, ge=1, le=30)
 
     # The DÉTOUR export an admin uploads from the back office (#132). The first export is
     # well under this; a bigger one is refused with 413 before it is all received.
