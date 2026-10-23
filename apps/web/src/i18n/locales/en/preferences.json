@@ -44,5 +44,16 @@
     "empty": "No preferences yet. They come from the preference panel you fill in after describing a trip.",
     "emptyCta": "Describe a trip",
     "locked": "Part of a trip sent to the agency"
+  },
+  "noFitOptions": {
+    "title": "What you can do",
+    "closest": "Closest dates for the same trip:",
+    "dates_one": "{{dates}} · {{count}} offer fits",
+    "dates_other": "{{dates}} · {{count}} offers fit",
+    "noCloseDates": "No other dates work within three months.",
+    "anywayText": "Or send your trip to the agency as it is: an advisor builds it with you.",
+    "anyway": "Send to the agency anyway",
+    "sending": "Sending…",
+    "failed": "Your trip could not be sent. Try again."
   }
 }

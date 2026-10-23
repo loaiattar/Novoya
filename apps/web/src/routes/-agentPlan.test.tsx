@@ -68,6 +68,8 @@ const TRANSFER: AgentPlanExtra = {
 
 // Two lines still without a price: not ready.
 const NOT_READY: AgentPlan = {
+  custom: false,
+  outline: null,
   id: PLAN_ID,
   wish_id: '00000000-0000-4000-8000-000000000010',
   status: 'negotiating',

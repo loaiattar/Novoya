@@ -8,7 +8,11 @@ import { useDebounced } from '@/hooks/ui/useDebounced'
 import { formatList, formatMonthName } from '@/lib/format'
 
 import { ApiError } from '../../../../api/errors'
-import { answerPanelMutation } from '../../../../api/generated/@tanstack/react-query.gen'
+import {
+  answerPanelMutation,
+  listMyTripsQueryKey,
+  sendCustomRequestMutation,
+} from '../../../../api/generated/@tanstack/react-query.gen'
 import type { DestinationOut, PanelOut } from '../../../../api/generated/types.gen'
 import { type CachedWish, usePanelLimits, wishQueryKey } from '../../../../api/wishes'
 import { Button } from '../../../../components/atoms/Button'
@@ -17,6 +21,7 @@ import { TagGroup } from '../../../../components/molecules/TagGroup'
 import { AdvisorChat } from '../../../../components/organisms/AdvisorChat'
 import { ConstraintsFields, type ConstraintsValues } from '../../../../components/organisms/ConstraintsFields'
 import { IntentAside } from '../../../../components/organisms/IntentAside'
+import { NoFitOptions } from '../../../../components/organisms/NoFitOptions'
 import { PlanBuilding } from '../../../../components/organisms/PlanBuilding'
 import { StickyAction } from '../../../../components/organisms/StickyAction'
 import { AppShell } from '../../../../components/templates/AppShell'
@@ -79,6 +84,7 @@ function PreferencesForm({
   destination: DestinationOut | null
 }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { t, i18n } = useTranslation('preferences')
   const { t: tErrors } = useTranslation('errors')
   const [selection, setSelection] = useState<Selection>(() => initialSelection(panel.sections))
@@ -144,6 +150,49 @@ function PreferencesForm({
     failure.current?.focus()
   }, [answer.error])
 
+  // The answers as the API takes them, for these dates.
+  const body = (startDate: string, endDate: string) => ({
+    selected_tags: selectedTags(selection),
+    budget_max: parseBudget(constraints.budget)!,
+    currency: 'EUR' as const,
+    persons: constraints.persons,
+    start_date: startDate,
+    end_date: endDate,
+  })
+
+  const send = (startDate: string, endDate: string) =>
+    answer.mutate(
+      { path: { wish_id: wishId }, body: body(startDate, endDate) },
+      // Here and not in useMutation: this one does not run once the client has left the page,
+      // so a plan ready later never pulls them away from where they went. `replace`: going
+      // back must not reopen a panel already answered.
+      { onSuccess: (plan) => navigate({ to: '/plans/$planId', params: { planId: plan.id }, replace: true }) },
+    )
+
+  // No offer fits (#184): the trip goes to the agency as it is, and an advisor builds it.
+  const custom = useMutation({
+    ...sendCustomRequestMutation(),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: listMyTripsQueryKey() }),
+  })
+  const sendAnyway = () => {
+    const found = constraintsErrors(constraints, localIsoDate())
+    setErrors(found)
+    if (Object.keys(found).length > 0 || custom.isPending || answer.isPending) return
+    custom.mutate(
+      { path: { wish_id: wishId }, body: body(constraints.startDate, constraints.endDate) },
+      { onSuccess: (plan) => navigate({ to: '/plans/$planId', params: { planId: plan.id }, replace: true }) },
+    )
+  }
+
+  // Other dates that work: the form shows them, and the plan is built for them at once.
+  const pickDates = (startDate: string, endDate: string) => {
+    setConstraints({ ...typed, startDate, endDate })
+    const found = constraintsErrors({ ...constraints, startDate, endDate }, localIsoDate())
+    setErrors(found)
+    if (Object.keys(found).length > 0 || answer.isPending || custom.isPending) return
+    send(startDate, endDate)
+  }
+
   const submit = (event: FormEvent) => {
     event.preventDefault()
     const found = constraintsErrors(constraints, localIsoDate())
@@ -154,30 +203,19 @@ function PreferencesForm({
       return
     }
     if (Object.keys(found).length > 0 || answer.isPending) return
-    answer.mutate(
-      {
-        path: { wish_id: wishId },
-        body: {
-          selected_tags: selectedTags(selection),
-          budget_max: parseBudget(constraints.budget)!,
-          currency: 'EUR',
-          persons: constraints.persons,
-          start_date: constraints.startDate,
-          end_date: constraints.endDate,
-        },
-      },
-      // Here and not in useMutation: this one does not run once the client has left the page,
-      // so a plan ready later never pulls them away from where they went. `replace`: going
-      // back must not reopen a panel already answered.
-      { onSuccess: (plan) => navigate({ to: '/plans/$planId', params: { planId: plan.id }, replace: true }) },
-    )
+    send(constraints.startDate, constraints.endDate)
   }
 
   const tones = sectionTones(panel.sections.map((section) => section.id))
   const labels = new Map(panel.sections.flatMap((section) => section.tags.map((tag) => [`${section.id}:${tag.id}`, tag.label])))
   const picked = selectedTags(selection).map(({ section, tag }) => labels.get(`${section}:${tag}`) ?? tag)
 
-  if (answer.isPending) {
+  // The plan was built for no offer after all (the catalog changed since the check): the same
+  // ways out as when the check says so.
+  const noOfferFits = failed?.key === 'answers.noOfferFits'
+  const customFailed = custom.isError && !(custom.error instanceof ApiError && custom.error.status === 401)
+
+  if (answer.isPending || custom.isPending) {
     return (
       <AppShell className="bg-ink">
         <PlanBuilding />
@@ -229,6 +267,22 @@ function PreferencesForm({
             {failed && (
               <p ref={failure} tabIndex={-1} role="alert" className="mt-6 text-danger outline-none">
                 {tErrors(failed.key, { count: failed.count })}
+              </p>
+            )}
+            {(noFit || noOfferFits) && (
+              <NoFitOptions
+                wishId={wishId}
+                persons={constraints.persons}
+                startDate={constraints.startDate}
+                endDate={constraints.endDate}
+                onPickDates={pickDates}
+                onSendAnyway={sendAnyway}
+                sending={custom.isPending}
+              />
+            )}
+            {customFailed && (
+              <p role="alert" className="mt-4 text-danger">
+                {t('noFitOptions.failed')}
               </p>
             )}
           </form>

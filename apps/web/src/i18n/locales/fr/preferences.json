@@ -44,5 +44,16 @@
     "empty": "Pas encore de préférences. Elles viennent du panneau de préférences que vous remplissez après avoir décrit un voyage.",
     "emptyCta": "Décrire un voyage",
     "locked": "Fait partie d’un voyage envoyé à l’agence"
+  },
+  "noFitOptions": {
+    "title": "Ce que vous pouvez faire",
+    "closest": "Dates les plus proches pour le même voyage :",
+    "dates_one": "{{dates}} · {{count}} offre disponible",
+    "dates_other": "{{dates}} · {{count}} offres disponibles",
+    "noCloseDates": "Aucune autre date ne convient dans les trois mois.",
+    "anywayText": "Ou envoyez votre voyage à l’agence tel quel : un conseiller le construit avec vous.",
+    "anyway": "Envoyer quand même à l’agence",
+    "sending": "Envoi…",
+    "failed": "Votre voyage n’a pas pu être envoyé. Réessayez."
   }
 }

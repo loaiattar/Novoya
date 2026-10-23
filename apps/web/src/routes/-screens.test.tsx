@@ -43,6 +43,7 @@ const LEA: UserResponse = {
 const PLAN_ID = '00000000-0000-4000-8000-000000000020'
 
 const PLAN: Plan = {
+  custom: false,
   id: PLAN_ID,
   wish_id: '00000000-0000-4000-8000-000000000010',
   status: 'proposed',
@@ -68,6 +69,7 @@ const PLAN: Plan = {
 
 // The one request waiting in the agency queue.
 const REQUEST: QueueEntry = {
+  custom: false,
   id: '00000000-0000-4000-8000-000000000030',
   wish_id: '00000000-0000-4000-8000-000000000010',
   status: 'requested',

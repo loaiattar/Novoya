@@ -54,6 +54,7 @@ let offerAnswer: () => Response
 const PLAN_ID = '00000000-0000-4000-8000-000000000020'
 
 const PLAN: Plan = {
+  custom: false,
   id: PLAN_ID,
   wish_id: '00000000-0000-4000-8000-000000000010',
   status: 'proposed',

@@ -98,6 +98,8 @@ const PLAN: AdminPlan = {
   client: ALICE,
   agent: PAUL,
   plan: {
+    custom: false,
+    outline: null,
     id: PLAN_ID,
     wish_id: WISH_ID,
     status: 'negotiating',

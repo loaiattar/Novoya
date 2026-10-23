@@ -44,6 +44,8 @@ const PER_NIGHT: AgentPlanExtra = {
 }
 
 const PLAN: AgentPlan = {
+  custom: false,
+  outline: null,
   id: 'p1',
   wish_id: 'w1',
   status: 'negotiating',

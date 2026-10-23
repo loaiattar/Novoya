@@ -30,6 +30,9 @@ const CAMILLE: MeResponse = {
 const WISH_ID = '0b5f8a52-0000-4000-8000-000000000010'
 const LIMITS_PATH = `/wishes/${WISH_ID}/limits`
 const ANSWERS_PATH = `/wishes/${WISH_ID}/answers`
+const CLOSEST_PATH = `/wishes/${WISH_ID}/closest-dates`
+const CUSTOM_PATH = `/wishes/${WISH_ID}/custom-request`
+const CUSTOM_PLAN_ID = '0b5f8a52-0000-4000-8000-000000000030'
 
 const PANEL_WISH: WishResponse = {
   id: WISH_ID,
@@ -98,6 +101,11 @@ function mockApi() {
     if (url.pathname === '/me') return Response.json(signedIn)
     if (url.pathname === LIMITS_PATH) return url.searchParams.has('persons') ? fitAnswer(url.searchParams) : limitsAnswer()
     if (url.pathname === ANSWERS_PATH) return Response.json(PLAN, { status: 201 })
+    // The nearest summer trip of the same length (#184).
+    if (url.pathname === CLOSEST_PATH)
+      return Response.json([{ start_date: '2027-05-01', end_date: '2027-05-08', offers: 3 }])
+    if (url.pathname === CUSTOM_PATH)
+      return Response.json({ id: CUSTOM_PLAN_ID, wish_id: WISH_ID, status: 'requested' }, { status: 201 })
     return Response.json({ status: 'ok' })
   })
 }
@@ -118,6 +126,7 @@ const limitsReads = () => calls.filter((call) => call.method === 'GET' && call.p
 const plainLimitsReads = () => limitsReads().filter((call) => !call.search.has('persons'))
 const fitReads = () => limitsReads().filter((call) => call.search.has('persons'))
 const answerPosts = () => calls.filter((call) => call.method === 'POST' && call.path === ANSWERS_PATH)
+const customPosts = () => calls.filter((call) => call.method === 'POST' && call.path === CUSTOM_PATH)
 
 /** Waits until the page has the limits in hand (the stepper shows their bounds). */
 async function openPanel() {
@@ -511,4 +520,50 @@ describe('the preferences panel within the catalogue limits', () => {
     expect(described.split(' ')).toContain(message.id)
   })
 
+
+  it('offers the closest dates that fit, and builds the plan for them when picked (#184)', async () => {
+    const { router } = renderPreferences()
+    await openPanel()
+    fill(WINTER)
+    await screen.findByText(/No offer in Chania/)
+
+    const pick = await screen.findByRole('button', { name: /May 1.+8, 2027 · 3 offers fit/ })
+    const closest = calls.find((call) => call.path === CLOSEST_PATH)!
+    expect(Object.fromEntries(closest.search)).toEqual({ persons: '2', start_date: WINTER.start, end_date: WINTER.end })
+
+    fireEvent.click(pick)
+    await waitFor(() => expect(answerPosts()).toHaveLength(1))
+    expect(answerPosts()[0]!.body).toMatchObject({ persons: 2, start_date: '2027-05-01', end_date: '2027-05-08' })
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/plans/${PLAN.id}`))
+  })
+
+  it('sends the trip to the agency anyway, with the answers as they are (#184)', async () => {
+    const { router } = renderPreferences()
+    await openPanel()
+    fill(WINTER)
+    await screen.findByText(/No offer in Chania/)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Send to the agency anyway' }))
+
+    await waitFor(() => expect(customPosts()).toHaveLength(1))
+    expect(customPosts()[0]!.body).toMatchObject({
+      persons: 2,
+      start_date: WINTER.start,
+      end_date: WINTER.end,
+      currency: 'EUR',
+      selected_tags: [{ section: 'mood', tag: 'calm' }],
+    })
+    expect(answerPosts()).toHaveLength(0)
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/plans/${CUSTOM_PLAN_ID}`))
+  })
+
+  it('shows no way out while the trip fits', async () => {
+    renderPreferences()
+    await openPanel()
+    fill(SUMMER)
+    await waitFor(() => expect(fitReads().some((call) => call.search.get('start_date') === SUMMER.start)).toBe(true))
+
+    expect(screen.queryByRole('button', { name: 'Send to the agency anyway' })).not.toBeInTheDocument()
+    expect(calls.some((call) => call.path === CLOSEST_PATH)).toBe(false)
+  })
 })

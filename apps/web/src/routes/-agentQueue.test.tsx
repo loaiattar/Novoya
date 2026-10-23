@@ -24,6 +24,7 @@ const AGENT: MeResponse = {
 }
 
 const CHANIA: QueueEntry = {
+  custom: false,
   id: '00000000-0000-4000-8000-000000000020',
   wish_id: '00000000-0000-4000-8000-000000000010',
   status: 'requested',
@@ -75,6 +76,8 @@ const SETE: QueueEntry = {
 }
 
 const TAKEN: AgentPlan = {
+  custom: false,
+  outline: null,
   id: CHANIA.id,
   wish_id: CHANIA.wish_id,
   status: 'negotiating',
