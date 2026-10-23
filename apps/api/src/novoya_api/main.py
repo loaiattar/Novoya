@@ -53,7 +53,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="Novoya API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Novoya API", version="1.0.0", lifespan=lifespan)
     app.add_middleware(OriginCheckMiddleware, allowed_origins=settings.cors_origins)
     app.add_middleware(
         CORSMiddleware,

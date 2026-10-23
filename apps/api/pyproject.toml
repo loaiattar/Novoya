@@ -1,6 +1,6 @@
 [project]
 name = "novoya-api"
-version = "0.1.0"
+version = "1.0.0"
 description = "Novoya backend: REST API, agent orchestrator and workers"
 readme = "README.md"
 authors = [
