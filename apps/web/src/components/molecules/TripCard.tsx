@@ -17,7 +17,7 @@ type Props = {
   className?: string
 }
 
-/** An inspiration: photo, place, title and a line. The whole card is one link. */
+/** An inspiration: photo, place, title and two lines at most. The whole card is one link. */
 export function TripCard({ image, imageAlt, badge, place, title, copy, renderLink, className }: Props) {
   return (
     <article className={cn('group', className)}>
@@ -42,7 +42,7 @@ export function TripCard({ image, imageAlt, badge, place, title, copy, renderLin
           <h3 className="mt-1.5 mb-2.5 font-serif text-[30px] leading-[1.04] font-extrabold tracking-[-0.025em] md:text-[34px]">
             {title}
           </h3>
-          <p className="m-0 text-sm text-muted">{copy}</p>
+          <p className="m-0 line-clamp-2 text-sm text-muted">{copy}</p>
         </>,
       )}
     </article>

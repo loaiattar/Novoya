@@ -9,12 +9,14 @@ from novoya_api.accounts.domain.role import Role
 from novoya_api.accounts.public import current_user
 from novoya_api.catalog.application.use_cases.get_offer_detail import GetOfferDetail
 from novoya_api.catalog.application.use_cases.list_extras import ListExtras
+from novoya_api.catalog.application.use_cases.list_featured_offers import ListFeaturedOffers
 from novoya_api.catalog.application.use_cases.list_reviews import ListReviews
 from novoya_api.catalog.domain import Extra, ExtraPricing, PriceUnit, Review
 from novoya_api.catalog.presentation.http.dependencies import (
     get_get_offer_detail,
     get_list_destinations,
     get_list_extras,
+    get_list_featured_offers,
     get_list_reviews,
 )
 from novoya_api.main import create_app
@@ -70,6 +72,65 @@ async def test_destinations_updates_when_coverage_changes(app, client):
     fake.places = [("Greece", "Chania")]
     second = await client.get("/destinations")
     assert second.json() == [{"country": "Greece", "city": "Chania"}]
+
+
+# Featured offers
+
+
+def _featured(app, *pairs) -> None:
+    partners = FakePartners([partner for partner, _offer in pairs])
+    offers = FakeOffers([offer for _partner, offer in pairs])
+    offers.partners = partners
+    app.dependency_overrides[get_list_featured_offers] = lambda: ListFeaturedOffers(offers)
+
+
+async def test_featured_offers_are_public_and_show_only_the_card(app, client):
+    partner = _partner()
+    offer = _priced_offer(partner, featured=True)
+    _featured(app, (partner, offer))
+
+    response = await client.get("/offers/featured")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": str(offer.id),
+            "kind": "hotel",
+            "title": "Sea room",
+            "description": "A room",
+            "country": "Greece",
+            "city": "Chania",
+        }
+    ]
+    assert partner.name not in response.text
+
+
+async def test_featured_offers_skip_unfeatured_hidden_and_unlisted_ones(app, client):
+    partner = _partner()
+    hidden_partner = _partner(hidden=True)
+    shown = _offer(partner, title="Shown", featured=True)
+    pairs = [
+        (partner, shown),
+        (partner, _offer(partner, title="Not featured")),
+        (partner, _offer(partner, title="Hidden", featured=True, hidden=True)),
+        (partner, _offer(partner, title="Inactive", featured=True, active=False)),
+        (hidden_partner, _offer(hidden_partner, title="Hidden partner", featured=True)),
+    ]
+    _featured(app, *pairs)
+
+    response = await client.get("/offers/featured")
+
+    assert [row["title"] for row in response.json()] == ["Shown"]
+
+
+async def test_featured_offers_are_three_at_most_by_title(app, client):
+    partner = _partner()
+    titles = ["Delta", "Alpha", "Charlie", "Bravo"]
+    _featured(app, *[(partner, _offer(partner, title=t, featured=True)) for t in titles])
+
+    response = await client.get("/offers/featured")
+
+    assert [row["title"] for row in response.json()] == ["Alpha", "Bravo", "Charlie"]
 
 
 # Offer detail

@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError } from '../../api/errors'
+import { ApiError, serverErrorKey } from '../../api/errors'
 import { resendVerificationEmailMutation } from '../../api/generated/@tanstack/react-query.gen'
 import { verifyEmail } from '../../api/generated/sdk.gen'
 import { Button } from '../../components/atoms/Button'
@@ -70,7 +70,7 @@ function VerifyEmailPage() {
   }
 
   if (verification.isError) {
-    return <ErrorNote message={tErrors('serverUnreachable')} onRetry={() => void verification.refetch()} />
+    return <ErrorNote message={tErrors(serverErrorKey(verification.error))} onRetry={() => void verification.refetch()} />
   }
 
   if (verification.isPending) {

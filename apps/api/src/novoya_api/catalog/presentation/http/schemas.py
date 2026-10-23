@@ -215,6 +215,30 @@ class DestinationResponse(BaseModel):
     city: str
 
 
+class FeaturedOfferResponse(BaseModel):
+    """A featured offer as a public inspiration card: no price, terms or partner."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: UUID
+    kind: KindName
+    title: str
+    description: str
+    country: str
+    city: str
+
+    @classmethod
+    def of(cls, offer: Offer) -> "FeaturedOfferResponse":
+        return cls(
+            id=offer.id,
+            kind=offer.kind.value,
+            title=offer.title,
+            description=offer.description,
+            country=offer.country,
+            city=offer.city,
+        )
+
+
 class OfferDetailResponse(BaseModel):
     """A listed offer for its page. The price is indicative, per person (ADR 0014): the agent
     negotiates the price of the trip and the quote has it. Never the partner."""

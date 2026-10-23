@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import './client'
-import { ApiError, isUnauthenticated, retryAfterSeconds } from './errors'
+import { ApiError, isUnauthenticated, retryAfterSeconds, serverErrorKey } from './errors'
 import { getMe } from './generated/sdk.gen'
 import { client } from './generated/client.gen'
 
@@ -22,6 +22,21 @@ describe('isUnauthenticated', () => {
     expect(isUnauthenticated(new ApiError(500, 'unauthenticated', 'odd'))).toBe(false)
     expect(isUnauthenticated({ code: 'unauthenticated' })).toBe(false)
     expect(isUnauthenticated(new TypeError('Failed to fetch'))).toBe(false)
+  })
+})
+
+describe('serverErrorKey', () => {
+  it('says the service is busy for 503 database_busy', () => {
+    expect(serverErrorKey(new ApiError(503, 'database_busy', 'the database is busy', 2))).toBe(
+      'databaseBusy',
+    )
+  })
+
+  it('keeps the generic message for any other failure', () => {
+    expect(serverErrorKey(new ApiError(503, 'email_not_sent', 'smtp down'))).toBe('serverUnreachable')
+    expect(serverErrorKey(new ApiError(500, 'unknown', 'Internal Server Error'))).toBe('serverUnreachable')
+    expect(serverErrorKey(new TypeError('Failed to fetch'))).toBe('serverUnreachable')
+    expect(serverErrorKey(undefined)).toBe('serverUnreachable')
   })
 })
 
@@ -59,6 +74,20 @@ describe('the API client', () => {
     const error = await getMe({ throwOnError: true }).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 429, code: 'too_many_requests', retryAfterSeconds: 720 })
+  })
+
+  it('keeps Retry-After seconds on a 503 database_busy', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json(
+        { code: 'database_busy', detail: 'the database is busy, try again' },
+        { status: 503, headers: { 'Retry-After': '2' } },
+      ),
+    )
+
+    const error = await getMe({ throwOnError: true }).catch((e: unknown) => e)
+
+    expect(error).toMatchObject({ status: 503, code: 'database_busy', retryAfterSeconds: 2 })
+    expect(serverErrorKey(error)).toBe('databaseBusy')
   })
 
   it('keeps a network error as it is', async () => {

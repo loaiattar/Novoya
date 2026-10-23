@@ -30,6 +30,10 @@ class OfferRepository(Protocol):
         """
         ...
 
+    async def list_listed_featured(self, limit: int) -> list[Offer]:
+        """Listed offers an agent featured, by title, at most `limit`."""
+        ...
+
     async def list_at(self, country: str, city: str | None) -> list[tuple[Offer, Partner]]:
         """Offers at this destination, with their partner. city None means the whole country."""
         ...

@@ -15,25 +15,8 @@
   },
   "popular": {
     "eyebrow": "À contre-courant",
-    "title": "Trois idées pour bifurquer.",
+    "title": "Quelques idées pour bifurquer.",
     "all": "Toutes les destinations"
-  },
-  "trips": {
-    "elounda": {
-      "place": "Grèce · Chania",
-      "title": "Chambre vue mer, Elounda",
-      "copy": "Une semaine calme au bord de l’eau, petit-déjeuner inclus."
-    },
-    "biarritz": {
-      "place": "France · Biarritz",
-      "title": "Cours de surf, Grande Plage",
-      "copy": "Une demi-journée face à l’Atlantique, planche incluse."
-    },
-    "marrakech": {
-      "place": "Maroc · Marrakech",
-      "title": "Chambre de riad dans la médina",
-      "copy": "Une maison à cour confidentielle, séjour de 2 nuits minimum."
-    }
   },
   "method": {
     "eyebrow": "Le bon détour, en trois temps",

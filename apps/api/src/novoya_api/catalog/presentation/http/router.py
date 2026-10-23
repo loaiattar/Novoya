@@ -15,6 +15,7 @@ from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtr
 from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
 from novoya_api.catalog.application.use_cases.list_extras import ListExtras
+from novoya_api.catalog.application.use_cases.list_featured_offers import ListFeaturedOffers
 from novoya_api.catalog.application.use_cases.list_offers import ListOffers
 from novoya_api.catalog.application.use_cases.list_partners import ListPartners
 from novoya_api.catalog.application.use_cases.list_reviews import ListReviews
@@ -39,6 +40,7 @@ from novoya_api.catalog.presentation.http.dependencies import (
     get_list_all_reviews,
     get_list_destinations,
     get_list_extras,
+    get_list_featured_offers,
     get_list_offers,
     get_list_partners,
     get_list_reviews,
@@ -54,6 +56,7 @@ from novoya_api.catalog.presentation.http.schemas import (
     CreatePartnerRequest,
     DestinationResponse,
     ExtraResponse,
+    FeaturedOfferResponse,
     ImportCountsResponse,
     ImportLimitsResponse,
     OfferDetailResponse,
@@ -127,6 +130,16 @@ async def list_reviews(
     to publish, under "First name I." or "Voyageur anonyme". Hidden reviews are omitted.
     Filter by country and city."""
     return [ReviewResponse.of(review) for review in await use_case(country, city)]
+
+
+# Before /offers/{offer_id}, so "featured" is never read as an offer id.
+@destinations_router.get("/offers/featured", operation_id="listFeaturedOffers")
+async def list_featured_offers(
+    use_case: Annotated[ListFeaturedOffers, Depends(get_list_featured_offers)],
+) -> list[FeaturedOfferResponse]:
+    """Public: up to three listed offers an agent featured, by title, for the home page.
+    Only what a card shows: never the price, the terms or the partner."""
+    return [FeaturedOfferResponse.of(offer) for offer in await use_case()]
 
 
 @signed_in_router.get("/offers/{offer_id}", operation_id="getOffer")

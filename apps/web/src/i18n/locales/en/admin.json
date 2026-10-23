@@ -208,7 +208,7 @@
       "tags": "Tags",
       "tagsHint": "section:tag, separated by commas or spaces, for example style:riad, mood:calm.",
       "featured": "Featured",
-      "featuredHint": "Shown first among the offers that fit.",
+      "featuredHint": "Suggested first among matching offers. The first three in alphabetical order also appear on the home page.",
       "active": "Active",
       "activeHint": "An inactive offer is not used in plans.",
       "hidden": "Hidden",

@@ -77,10 +77,18 @@ async def run_async_migrations() -> None:
 
     """
 
+    # Not the app's engine (shared/infrastructure/db/session.py): no statement or idle
+    # timeout, so a long index build or backfill is not cancelled halfway through a deploy.
+    # A lock timeout only: the app's timeouts limit each statement and each idle gap, not a
+    # whole transaction, and a DÉTOUR import holds its row locks until it commits. Behind a
+    # migration waiting for an ACCESS EXCLUSIVE lock, every app query on that table queues
+    # (and gets 503). With this, the migration gives up instead; the deploy can be retried.
+    lock_timeout = str(get_settings().db_migration_lock_timeout_ms)
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={"server_settings": {"lock_timeout": lock_timeout}},
     )
 
     async with connectable.connect() as connection:

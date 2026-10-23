@@ -110,6 +110,16 @@ class FakeOffers:
     async def list_listed_destinations(self) -> list[tuple[str, str]]:
         return []
 
+    async def list_listed_featured(self, limit: int) -> list[Offer]:
+        assert self.partners is not None
+        partners = self.partners.by_id
+        featured = [
+            offer
+            for offer in self.by_id.values()
+            if offer.featured and offer.is_listed_with(partners[offer.partner_id])
+        ]
+        return sorted(featured, key=lambda offer: (offer.title, str(offer.id)))[:limit]
+
     async def list_at(self, country: str, city: str | None) -> list[tuple[Offer, Partner]]:
         return []
 

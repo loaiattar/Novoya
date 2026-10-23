@@ -208,7 +208,7 @@
       "tags": "Tags",
       "tagsHint": "section:tag, séparés par des virgules ou des espaces, par exemple style:riad, mood:calm.",
       "featured": "Mise en avant",
-      "featuredHint": "Proposée en premier parmi les offres qui conviennent.",
+      "featuredHint": "Proposée en priorité parmi les offres adaptées. Les trois premières par ordre alphabétique apparaissent aussi sur la page d’accueil.",
       "active": "Active",
       "activeHint": "Une offre inactive n’est pas utilisée dans les plans.",
       "hidden": "Masquée",

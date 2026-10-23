@@ -17,6 +17,7 @@ from novoya_api.catalog.application.use_cases.list_all_extras import ListAllExtr
 from novoya_api.catalog.application.use_cases.list_all_reviews import ListAllReviews
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
 from novoya_api.catalog.application.use_cases.list_extras import ListExtras
+from novoya_api.catalog.application.use_cases.list_featured_offers import ListFeaturedOffers
 from novoya_api.catalog.application.use_cases.list_offers import ListOffers
 from novoya_api.catalog.application.use_cases.list_partners import ListPartners
 from novoya_api.catalog.application.use_cases.list_reviews import ListReviews
@@ -40,6 +41,12 @@ def get_list_destinations(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListDestinations:
     return ListDestinations(SqlOfferRepository(session))
+
+
+def get_list_featured_offers(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ListFeaturedOffers:
+    return ListFeaturedOffers(SqlOfferRepository(session))
 
 
 def get_list_partners(session: Annotated[AsyncSession, Depends(get_session)]) -> ListPartners:

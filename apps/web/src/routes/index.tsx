@@ -3,30 +3,29 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { googleSignInUrl } from '../api/auth'
-import { getMeOptions } from '../api/generated/@tanstack/react-query.gen'
+import { getMeOptions, listFeaturedOffersOptions } from '../api/generated/@tanstack/react-query.gen'
 import { Button } from '../components/atoms/Button'
 import { GoogleLogo } from '../components/atoms/GoogleLogo'
 import { TripCard } from '../components/molecules/TripCard'
 import { LandingHero } from '../components/organisms/LandingHero'
 import { Advisors, Closing, Manifesto, Method, PopularTrips, Reviews } from '../components/organisms/LandingSections'
 import { SiteFooter } from '../components/organisms/SiteFooter'
+import { destinationPhoto } from '../domain/wish/destination'
+import { localizeCountry } from '../lib/countries'
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
 })
 
-// Three partner offers from the seed catalogue, shown as inspirations. Texts in home.json, trips.<id>.
-const TRIPS = [
-  { id: 'elounda', image: '/images/elounda-sea-view' },
-  { id: 'biarritz', image: '/images/biarritz-surf' },
-  { id: 'marrakech', image: '/images/marrakech-riad' },
-] as const
-
 function LandingPage() {
   // Visitors are welcome: a 401 here only means "not signed in".
   const me = useQuery({ ...getMeOptions(), retry: false })
   const signedIn = me.isSuccess
-  const { t } = useTranslation('home')
+  // The offers an agent featured, as inspirations. Never let a section break the landing page:
+  // anything but a list (loading, error) shows no section.
+  const featured = useQuery({ ...listFeaturedOffersOptions(), retry: false })
+  const offers = Array.isArray(featured.data) ? featured.data : []
+  const { t, i18n } = useTranslation('home')
 
   return (
     <>
@@ -54,24 +53,27 @@ function LandingPage() {
           }
         />
         <Manifesto />
-        <PopularTrips>
-          {TRIPS.map((trip, index) => (
-            <TripCard
-              key={trip.id}
-              image={trip.image}
-              imageAlt={t(`trips.${trip.id}.title`)}
-              place={t(`trips.${trip.id}.place`)}
-              title={t(`trips.${trip.id}.title`)}
-              copy={t(`trips.${trip.id}.copy`)}
-              badge={String(index + 1).padStart(2, '0')}
-              renderLink={(content) => (
-                <Link to="/wish" className="block text-ink no-underline">
-                  {content}
-                </Link>
-              )}
-            />
-          ))}
-        </PopularTrips>
+        {offers.length > 0 && (
+          <PopularTrips>
+            {offers.map((offer, index) => (
+              <TripCard
+                key={offer.id}
+                image={destinationPhoto(offer)}
+                imageAlt={offer.title}
+                place={`${localizeCountry(i18n.language, offer.country)} · ${offer.city}`}
+                title={offer.title}
+                copy={offer.description}
+                badge={String(index + 1).padStart(2, '0')}
+                renderLink={(content) => (
+                  // A visitor signs in first, then lands on the offer (the _authenticated guard).
+                  <Link to="/offers/$offerId" params={{ offerId: offer.id }} className="block text-ink no-underline">
+                    {content}
+                  </Link>
+                )}
+              />
+            ))}
+          </PopularTrips>
+        )}
         <Method />
         <Reviews />
         <Advisors />

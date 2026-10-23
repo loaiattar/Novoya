@@ -182,6 +182,22 @@ class SqlOfferRepository:
         )
         return [(country, city) for country, city in (await self._session.execute(stmt)).all()]
 
+    async def list_listed_featured(self, limit: int) -> list[Offer]:
+        stmt = (
+            select(OfferRow)
+            .join(PartnerRow, OfferRow.partner_id == PartnerRow.id)
+            .where(
+                OfferRow.featured.is_(True),
+                OfferRow.active.is_(True),
+                OfferRow.hidden.is_(False),
+                PartnerRow.active.is_(True),
+                PartnerRow.hidden.is_(False),
+            )
+            .order_by(OfferRow.title, OfferRow.id)
+            .limit(limit)
+        )
+        return [offer_to_entity(row) for row in (await self._session.scalars(stmt)).all()]
+
     async def list_at(self, country: str, city: str | None) -> list[tuple[Offer, Partner]]:
         stmt = (
             select(OfferRow, PartnerRow)

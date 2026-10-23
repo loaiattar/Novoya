@@ -20,7 +20,10 @@ from novoya_api.quoting.presentation.http.router import agent_quotes_router
 from novoya_api.quoting.presentation.http.router import agent_router as quoting_agent_router
 from novoya_api.quoting.presentation.http.router import router as quoting_router
 from novoya_api.shared.infrastructure.db.session import get_sessionmaker
-from novoya_api.shared.presentation.http.errors import register_error_handlers
+from novoya_api.shared.presentation.http.errors import (
+    DATABASE_BUSY_RESPONSE,
+    register_error_handlers,
+)
 from novoya_api.shared.presentation.http.origin_middleware import OriginCheckMiddleware
 from novoya_api.trips.presentation.http.router import router as trips_router
 from novoya_api.wishes.presentation.http.router import admin_router as admin_wishes_router
@@ -60,22 +63,28 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     register_error_handlers(app)
+    # health never answers database_busy: /health does not touch the database, and /health/db
+    # answers its own 503. Every other router does, so its routes list 503 database_busy.
+    # A route that declares its own 503 replaces this one: it must name database_busy too.
     app.include_router(health_router)
-    app.include_router(accounts_router)
-    app.include_router(catalog_router)
-    app.include_router(wishes_router)
-    app.include_router(admin_wishes_router)
-    app.include_router(my_preferences_router)
-    app.include_router(messaging_router)
-    app.include_router(planning_router)
-    app.include_router(planning_agent_router)
-    app.include_router(admin_plans_router)
-    app.include_router(quoting_router)
-    app.include_router(quoting_agent_router)
-    app.include_router(agent_quotes_router)
-    app.include_router(trips_router)
-    app.include_router(admin_quotes_router)
-    app.include_router(dashboard_router)
+    for router in (
+        accounts_router,
+        catalog_router,
+        wishes_router,
+        admin_wishes_router,
+        my_preferences_router,
+        messaging_router,
+        planning_router,
+        planning_agent_router,
+        admin_plans_router,
+        quoting_router,
+        quoting_agent_router,
+        agent_quotes_router,
+        trips_router,
+        admin_quotes_router,
+        dashboard_router,
+    ):
+        app.include_router(router, responses={503: DATABASE_BUSY_RESPONSE})
     return app
 
 

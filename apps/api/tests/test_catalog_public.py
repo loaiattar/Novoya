@@ -67,6 +67,9 @@ class FakeOffers:
         }
         return sorted(destinations)
 
+    async def list_listed_featured(self, limit: int) -> list[Offer]:
+        return []
+
     async def list_at(self, country: str, city: str | None) -> list[tuple[Offer, Partner]]:
         found: list[tuple[Offer, Partner]] = []
         for offer, partner in self._pairs:

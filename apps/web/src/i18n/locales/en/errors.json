@@ -1,5 +1,6 @@
 {
   "serverUnreachable": "{{agency}} can't reach the server right now. Please try again in a moment.",
+  "databaseBusy": "The service is busy. Try again in a moment.",
   "wishFailed": "Something went wrong, please try again.",
   "rateLimit": {
     "waitSeconds_one": "Try again in {{count}} second",

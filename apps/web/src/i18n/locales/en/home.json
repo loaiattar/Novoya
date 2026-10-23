@@ -15,25 +15,8 @@
   },
   "popular": {
     "eyebrow": "Off the beaten track",
-    "title": "Three ideas to branch off.",
+    "title": "A few ideas to branch off.",
     "all": "All destinations"
-  },
-  "trips": {
-    "elounda": {
-      "place": "Greece · Chania",
-      "title": "Sea-view room, Elounda",
-      "copy": "A quiet week by the water, breakfast included."
-    },
-    "biarritz": {
-      "place": "France · Biarritz",
-      "title": "Surf lesson, Grande Plage",
-      "copy": "Half a day facing the Atlantic, board included."
-    },
-    "marrakech": {
-      "place": "Morocco · Marrakech",
-      "title": "Riad room in the medina",
-      "copy": "A house around a hidden courtyard, 2 nights minimum."
-    }
   },
   "method": {
     "eyebrow": "The right détour, in three steps",

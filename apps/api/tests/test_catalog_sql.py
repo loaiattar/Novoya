@@ -20,6 +20,7 @@ from sqlalchemy.pool import NullPool
 
 from alembic import command
 from novoya_api.catalog.application.use_cases.list_destinations import ListDestinations
+from novoya_api.catalog.application.use_cases.list_featured_offers import ListFeaturedOffers
 from novoya_api.catalog.application.use_cases.update_partner import (
     UpdatePartner,
     UpdatePartnerCommand,
@@ -178,6 +179,26 @@ async def test_list_destinations_drops_place_when_partner_is_deactivated(session
     assert ("Morocco", "Marrakech") not in listed
     assert ("France", "Biarritz") in listed
     assert ("Greece", "Chania") in listed
+
+
+async def test_featured_offers_are_the_listed_featured_seed_offers(session):
+    await seed_catalog()
+    session.expire_all()
+    offers = SqlOfferRepository(session)
+    featured = {offer.id for offer in await ListFeaturedOffers(offers)()}
+    expected = {offer["id"] for offer in OFFERS if offer["featured"]}
+    assert featured == expected
+
+    stay = await session.get(OfferRow, O_CRETE_STAY)
+    assert stay is not None and stay.featured
+    stay.hidden = True
+    riad = await session.scalar(select(PartnerRow).where(PartnerRow.name == "Riad Atlas"))
+    assert riad is not None
+    riad.active = False
+    await session.commit()
+
+    featured = {offer.id for offer in await ListFeaturedOffers(offers)()}
+    assert featured == expected - {O_CRETE_STAY, O_MARRAKECH_RIAD}
 
 
 async def test_update_partner_hides_destinations_from_search(session):
